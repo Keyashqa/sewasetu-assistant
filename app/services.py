@@ -884,6 +884,172 @@ def eligibility_warnings(row):
     return [text for _, text in _warnings(row)]
 
 
+STATUSES = ("PENDING", "APPROVED", "DEEMED_APPROVED", "REJECTED", "WITHDRAWN")
+PAGE_SIZE = 20
+
+
+def next_deemed_run():
+    """The next run of the nightly deemed-approval job, naive UTC."""
+    now = datetime.now()
+    run = now.replace(hour=DEEMED_RUN_HOUR_UTC, minute=0, second=0, microsecond=0)
+    return run if run > now else run + timedelta(days=1)
+
+
+def _deemed_on(submitted_at):
+    """When the job will actually deem this row approved: its statutory date, or the next
+    nightly run if that date has already passed."""
+    nxt = to_ist(next_deemed_run())
+    due = deemed_date(submitted_at)
+    return max(due, nxt)
+
+
+def _days_since(dt):
+    return max(0, (datetime.now() - dt).days) if dt else None
+
+
+def queue_summary():
+    """What is waiting: per block, past the 15-day SLA, and due to be deemed approved
+    within 48 hours. Overdue uses the same cutoff as the dashboard and the job."""
+    cutoff = datetime.now() - timedelta(days=portal.SLA_DAYS)
+    horizon = portal.now_ist() + timedelta(hours=48)
+    with db() as cur:
+        cur.execute("SELECT block, count(*) FROM applications WHERE status = 'PENDING' "
+                    "GROUP BY block")
+        counts = dict(cur.fetchall())
+        cur.execute("SELECT count(*), min(submitted_at) FROM applications "
+                    "WHERE status = 'PENDING'")
+        total, oldest = cur.fetchone()
+        cur.execute("SELECT count(*) FROM applications WHERE status = 'PENDING' "
+                    "AND submitted_at < %s", (cutoff,))
+        overdue = cur.fetchone()[0]
+        # anything submitted more than 13 days ago can fall due within 48 hours
+        cur.execute("SELECT id, application_no, block, submitted_at FROM applications "
+                    "WHERE status = 'PENDING' AND submitted_at < %s "
+                    "ORDER BY submitted_at ASC, id ASC",
+                    (datetime.now() - timedelta(days=portal.SLA_DAYS - 2),))
+        due = [(r, _deemed_on(r[3])) for r in cur.fetchall()]
+    due = [(r, d) for r, d in due if d <= horizon]
+    by_block = [{"block": b, "pending": counts.get(b, 0)} for b in BLOCKS]
+    other = sum(n for b, n in counts.items() if b not in BLOCKS)
+    if other:
+        by_block.append({"block": "(other)", "pending": other})
+    return {
+        "pending_total": total, "by_block": by_block, "overdue_15d": overdue,
+        "deemed_within_48h": {
+            "count": len(due),
+            "first_20": [{"id": r[0], "application_no": r[1], "block": r[2],
+                          "deemed_on_ist": _fmt(d)} for r, d in due[:PAGE_SIZE]]},
+        "oldest_pending_ist": fmt_ist(oldest) if oldest else None,
+        "next_nightly_run_ist": _fmt(to_ist(next_deemed_run())),
+    }
+
+
+def list_applications(status=None, block=None, overdue_only=False, search=None, page=1):
+    """Oldest first, 20 a page. With no status: PENDING, unless searching (then all)."""
+    st = None
+    if status not in (None, ""):
+        st = str(status).strip().upper()
+        if st not in STATUSES:
+            return {"status": "bad_status", "valid": list(STATUSES)}
+    blk = None
+    if block not in (None, ""):
+        blk = match_block(block)
+        if not blk:
+            return {"status": "bad_block", "valid": list(BLOCKS)}
+    try:
+        page = max(1, int(page))
+    except (TypeError, ValueError):
+        page = 1
+    s = (search or "").strip()
+    if st is None and not s:
+        st = "PENDING"
+
+    where, args = [], []
+    if st:
+        where.append("status = %s"); args.append(st)
+    if blk:
+        where.append("block = %s"); args.append(blk)
+    if overdue_only:
+        where.append("status = 'PENDING' AND submitted_at < %s")
+        args.append(datetime.now() - timedelta(days=portal.SLA_DAYS))
+    if s:
+        if re.fullmatch(r"(?i)SSP\d{8}", s):
+            where.append("application_no = %s"); args.append(s.upper())
+        elif re.fullmatch(r"\d{10}", s):
+            where.append("mobile = %s"); args.append(s)
+        else:
+            where.append("applicant_name ILIKE %s")
+            args.append("%" + s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%")
+    w = ("WHERE " + " AND ".join(where)) if where else ""
+    with db() as cur:
+        cur.execute("SELECT count(*) FROM applications " + w, args)
+        total = cur.fetchone()[0]
+        cur.execute("SELECT id, application_no, applicant_name, mobile, block, status, "
+                    "submitted_at FROM applications " + w +
+                    " ORDER BY submitted_at ASC, id ASC LIMIT %s OFFSET %s",
+                    args + [PAGE_SIZE, (page - 1) * PAGE_SIZE])
+        rows = cur.fetchall()
+    pages = max(1, -(-total // PAGE_SIZE))
+    return {"status": "ok", "filter": {"status": st or "any", "block": blk,
+                                       "overdue_only": bool(overdue_only), "search": s or None},
+            "total": total, "page": page, "pages": pages,
+            "rows": [{"id": r[0], "application_no": r[1], "applicant_name": r[2],
+                      "mobile": r[3], "block": r[4], "status": r[5],
+                      "submitted_at_ist": fmt_ist(r[6]),
+                      "days_pending": _days_since(r[6]) if r[5] == "PENDING" else None}
+                     for r in rows]}
+
+
+def get_application(application_id=None, application_no=None):
+    """One application in full: record, history, document provenance and computed
+    eligibility warnings."""
+    if (application_id is None) == (not application_no):
+        raise ServiceError("bad_field", "give exactly one of application_id or application_no")
+    with db() as cur:
+        if application_id is not None:
+            cur.execute("SELECT %s FROM applications WHERE id = %%s"
+                        % ", ".join(APPLICATION_COLUMNS), (application_id,))
+        else:
+            cur.execute("SELECT %s FROM applications WHERE application_no = %%s"
+                        % ", ".join(APPLICATION_COLUMNS), (application_no.strip().upper(),))
+        r = cur.fetchone()
+        if not r:
+            return {"status": "not_found"}
+        row = _row_dict(r)
+        cur.execute("SELECT at, action, actor, note FROM audit_log WHERE application_id = %s "
+                    "ORDER BY at ASC, id ASC", (row["id"],))
+        audit = cur.fetchall()
+    dob = row["dob"]
+    pending = row["status"] == "PENDING"
+    ttd = None
+    if row["decided_at"] and row["submitted_at"]:
+        ttd = max(0, (row["decided_at"] - row["submitted_at"]).days)
+    return {
+        "status": "ok",
+        "application": {
+            "id": row["id"], "application_no": row["application_no"],
+            "applicant_name": row["applicant_name"], "mobile": row["mobile"],
+            "date_of_birth": dob.strftime("%d/%m/%Y") if dob else None,
+            "age_today": portal.age_on(dob, portal.now_ist().date()) if dob else None,
+            "gender": row["gender"] or None, "marital_status": row["marital_status"] or None,
+            "husband_name": row["husband_name"] or None, "village": row["village"],
+            "block": row["block"], "bank_account": row["bank_account"],
+            "ifsc": row["ifsc"] or None,
+            "doc_attached": bool((row["doc_path"] or "").strip()),
+            "app_status": row["status"], "submitted_at_ist": fmt_ist(row["submitted_at"]),
+            "decided_at_ist": fmt_ist(row["decided_at"]), "decided_by": row["decided_by"],
+            "days_pending": _days_since(row["submitted_at"]) if pending else None,
+            "days_to_decision": ttd,
+            "deemed_on_ist": _fmt(_deemed_on(row["submitted_at"])) if pending else None,
+        },
+        "document": (document_provenance(application_id=row["id"])
+                     if (row["doc_path"] or "").strip() else None),
+        "warnings": eligibility_warnings(row),
+        "history": [{"at_ist": fmt_ist(a[0]), "action": a[1], "by": a[2], "note": a[3] or ""}
+                    for a in audit],
+    }
+
+
 DOC_READ_CAP = 10 * 1024 * 1024
 DOC_MIMETYPES = {"pdf": "application/pdf", "jpg": "image/jpeg", "jpeg": "image/jpeg",
                  "png": "image/png"}
