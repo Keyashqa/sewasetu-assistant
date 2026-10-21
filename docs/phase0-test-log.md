@@ -52,6 +52,25 @@ confirmed by SQL:
 reading of a date and speculated about future application windows. The server instructions
 now forbid both; re-check them in the evals.
 
+**Officer run with Haiku — FINDING (2026-10-21): the assistant chose the rejection reason.**
+On S11's "Reject it." (no reason given) for `SSP26896862`, Haiku picked "age proof does not
+match stated date of birth" from its own review of the document and rejected at once:
+
+```
+SSP26896862 | REJECTED | admin | officer:admin via assistant |
+age proof does not match stated date of birth — Age proof shows name Test Jpeg Applicant and
+date of birth 02/02/1955; application records Test Reject Applicant and 05/05/1952. ...
+```
+
+The mismatch was real (the fixture reused another fixture's document), so the review was
+accurate; the defect is that the decision and its reason were the assistant's, not the
+officer's. Fix: officer server instructions gain a "Decisions belong to the officer" section
+(approve only on an explicit instruction for that application; a rejection reason must be
+stated or confirmed by the officer — suggest one with the evidence, then ask; keep surfacing
+mismatches), and the approve/reject descriptions and the reason-required message say the
+same. `SSP26896862` is used up, so S11's "reject without a reason" check is re-tested on a
+fresh fixture, `SSP26306140` (Test Reason Applicant, document matches the record).
+
 ## Step 7 — OAuth with Claude Code
 
 Claude Code registers as a **client ID metadata document (CIMD)** client, not via DCR:

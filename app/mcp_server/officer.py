@@ -28,8 +28,19 @@ signed-in officer's name, marked as made through the assistant.
 - If nobody decides within 15 days, the law approves an application automatically (deemed \
 approval, by a nightly job). Overdue cases are the urgent ones.
 - Decisions are final. An approved or rejected application cannot be reopened or changed; a \
-rejected applicant has to apply again. Decide one application at a time, only when the \
-officer clearly asks for that decision on that application.
+rejected applicant has to apply again.
+
+Decisions belong to the officer:
+- Call approve_application only when the officer has explicitly said to approve that specific \
+application. Never approve on your own judgement or as a follow-on step.
+- The reason for a rejection must be the officer's: one they stated, or one you suggested and \
+they confirmed. If the officer says "reject it" without a reason, do not pick one and reject. \
+Suggest the canonical reason that fits, with the evidence you saw, and ask them to confirm or \
+choose another; call reject_application only after they answer.
+- Reviewing is your job; deciding is theirs. Do point out what you notice — a name or date of \
+birth on the document that differs from the record, an illegible scan, a warning from the \
+tools — and then let the officer decide.
+- One application at a time.
 
 Honesty:
 - Never say or imply that a document was looked at, read or verified unless view_age_proof \
@@ -262,8 +273,10 @@ def _decision_error(r, application_id, application_no):
         return ("Only a pending application can be decided; %s is %s. Nothing was changed."
                 % (r["application_no"], r.get("current", "already decided")))
     if s == "reason_required":
-        return ("A reason is required to reject. Use one of: %s ('other' needs the explanation "
-                "in note)." % "; ".join('"%s"' % x for x in services.REJECTION_REASONS))
+        return ("A reason is required to reject, and it must be the officer's. Ask the officer "
+                "which applies (you may suggest one, with your evidence): %s ('other' needs the "
+                "explanation in note). Nothing was changed."
+                % "; ".join('"%s"' % x for x in services.REJECTION_REASONS))
     if s == "blocked":
         msg = ("Not approved. %s The counter would refuse this application, so it cannot be "
                "approved through the assistant." % " ".join(r["warnings"]))
@@ -297,8 +310,9 @@ def _decided(r, verb):
 @officer.tool(
     description=(
         "Approves a pending application in the officer's name. This is final: an approved "
-        "application cannot be reopened. Only call when the officer has clearly asked to "
-        "approve this application. Pass both application_id and application_no — they must "
+        "application cannot be reopened. Only call when the officer has explicitly said to "
+        "approve this specific application — never on your own judgement, even if every check "
+        "passed. Pass both application_id and application_no — they must "
         "refer to the same application; that is the confirmation step. The optional note is "
         "recorded in the audit trail. Approval is refused when the record has a problem the "
         "counter would refuse (age under 60, no age proof). "
@@ -321,11 +335,14 @@ async def approve_application(application_id: int, application_no: str,
     description=(
         "Rejects a pending application with a reason recorded against the officer's name. This "
         "is final: the applicant would have to apply again. Only call when the officer has "
-        "clearly asked to reject this application. reason must be one of: \"bank account not "
-        "in applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
-        "document illegible\", \"age proof does not match stated date of birth\", or \"other\" "
-        "with the explanation in note. Pass application_id and application_no; they must "
-        "match. The reason is sent to the applicant by SMS. "
+        "asked to reject this application AND the reason is theirs — one they stated, or one "
+        "you suggested and they confirmed. If they said \"reject it\" without a reason, do not "
+        "choose one yourself: suggest the reason that fits, with the evidence, and ask them to "
+        "confirm first. reason must be one of: \"bank account not in applicant's name\", "
+        "\"duplicate of an earlier beneficiary record\", \"age proof document illegible\", "
+        "\"age proof does not match stated date of birth\", or \"other\" with the explanation "
+        "in note. Pass application_id and application_no; they must match. The reason is sent "
+        "to the applicant by SMS. "
         'Example: {"application_id":100021,"application_no":"SSP26540132",'
         '"reason":"age proof document illegible"}'),
     annotations=ToolAnnotations(title="Reject (final)", readOnlyHint=False,
