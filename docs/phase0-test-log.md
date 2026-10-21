@@ -90,6 +90,17 @@ observation. Checked over JSON-RPC: no quote → refused, nothing written; with 
 `bank account not in applicant's name — Officer: "reject it, the bank account isn't in her name"`,
 SMS carries only the canonical reason. Re-test fixture: `SSP26288550`.
 
+**S11 re-test on `SSP26288550` with Haiku — PASS (2026-10-21).** On "Reject it." it asked for
+the officer's reason, offering options with evidence, and changed nothing. On "The bank
+account isn't in his name." it rejected with the canonical reason and the officer's verbatim
+words, and kept its own TEST DOCUMENT observation out of the record:
+
+```
+REJECTED | admin | officer:admin via assistant |
+bank account not in applicant's name — Officer: "The bank account isn't in his name."
+SMS: ... has been rejected. Reason: bank account not in applicant's name. ...
+```
+
 **S12 and S13 with Haiku — PASS.** `SSP26558440` (age 59, no document) blocked; id 99325 with
 number `SSP26361385` refused. Both still PENDING with no decision rows.
 
