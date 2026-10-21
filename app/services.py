@@ -375,9 +375,10 @@ def get_draft(mobile):
 def save_draft(mobile, fields):
     """Merge any subset of fields into the draft. Never refuses a half-filled draft.
 
-    A value that cannot be read (a date that is not a date, a village or block that
-    does not exist, a gender outside the form's choices) is not stored: it is reported
-    in `problems` so the assistant asks again, and the earlier value is kept.
+    A value that cannot be read (a date that is not a date, a block that does not
+    exist, a gender outside the form's choices) is not stored: it is reported in
+    `problems` so the assistant asks again, and the earlier value is kept. A village
+    outside the known 19 is stored once a valid block is known, with a warning.
     """
     clean, corrections = normalise(fields)
     problems = []
@@ -402,11 +403,21 @@ def save_draft(mobile, fields):
     with db(commit=True) as cur:
         d = _load_draft(cur, mobile, lock=True)
         merged = dict(d["data"]) if d else {}
+        warnings = []
+        # The portal accepts any village, so the assistant does too: an unknown village
+        # is stored as given once a valid block anchors it, and the officer is warned
+        # (eligibility_warnings). Without a block there is nothing to check it against.
         if clean.get("village") and clean["village"] not in VILLAGES:
-            bad = clean.pop("village")
-            problems.append("I do not know the village '%s'. %s Ask which one is nearest, "
-                            "or give the block." % (bad, _villages_text(
-                                clean.get("block") or merged.get("block"))))
+            block = clean.get("block") or merged.get("block")
+            if block in BLOCKS:
+                warnings.append("Village '%s' is not in the list of known villages. It has "
+                                "been saved as given, in %s block; the block officer will "
+                                "see this note." % (clean["village"], block))
+            else:
+                bad = clean.pop("village")
+                problems.append("I do not know the village '%s' and no block is given. If "
+                                "the village is right, send it again together with the "
+                                "block. %s" % (bad, _villages_text()))
         merged.update(clean)
 
         suggested_block = VILLAGES.get(merged.get("village"))
@@ -437,7 +448,8 @@ def save_draft(mobile, fields):
     missing, validator_problems, _ = _assess(merged, doc_path)
     problems += [p for p in validator_problems if p not in problems]
     return {"status": "ok", "saved": merged, "missing": missing, "problems": problems,
-            "corrections": corrections, "suggested_block": suggested_block,
+            "corrections": corrections, "warnings": warnings,
+            "suggested_block": suggested_block,
             "ready_to_submit": not missing and not problems}
 
 
