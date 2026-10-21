@@ -92,6 +92,79 @@ async def check_eligibility(date_of_birth: str) -> dict:
     return out
 
 
+@citizen.tool(
+    description=(
+        "The status of this mobile number's application, in plain words. Use it whenever the "
+        "person asks whether it has been approved or what is happening, and after submitting. "
+        "No input — it only ever reads the application belonging to the signed-in mobile "
+        "number."),
+    annotations=ToolAnnotations(title="My application status", readOnlyHint=True))
+async def get_my_application() -> dict:
+    p = current_principal()
+    a = await _run(services.my_application, p.mobile)
+    draft = a.get("draft")
+    draft_note = None
+    if draft:
+        draft_note = {"missing": draft["missing"], "document_attached": draft["doc_attached"],
+                      "ready_to_submit": draft["ready_to_submit"],
+                      "kept_until": draft["expires_at"]}
+    if not a["found"]:
+        out = {"found": False,
+               "message": "No application on this mobile number yet. Call check_eligibility "
+                          "to start one."}
+        if draft_note:
+            out["draft_in_progress"] = draft_note
+            out["message"] = ("No application has been filed on this mobile number yet, but "
+                              "details are saved in a draft. Continue with "
+                              "save_application_details.")
+        return out
+    means = fmt.STATUS_MEANING.get(a["status"], a["status"])
+    if a["status"] == "REJECTED":
+        means += " Reason recorded: %s. The applicant may apply again." % (
+            a["reason"] or "none recorded")
+    out = {"found": True, "application_number": a["application_no"], "status": a["status"],
+           "means": means, "submitted": a["submitted_at_ist"], "decided": a["decided_at_ist"],
+           "village": a["village"], "block": a["block"],
+           "age_proof_attached": a["doc_attached"]}
+    if a["status"] == "PENDING":
+        out["auto_approval_if_no_decision"] = a["deemed_date_ist"]
+    if draft_note and a["status"] in ("WITHDRAWN", "REJECTED"):
+        out["draft_in_progress"] = draft_note
+    return out
+
+
+@citizen.tool(
+    description=(
+        "Withdraws a pending application so the person can apply again. Only their own, only "
+        "while it is still pending. Input: application_no (e.g. SSP26540132) and confirm must "
+        "be true. Ask the person out loud before calling this; it cannot be undone."),
+    annotations=ToolAnnotations(title="Withdraw the application", readOnlyHint=False,
+                                destructiveHint=True, idempotentHint=False))
+async def withdraw_application(application_no: str, confirm: bool) -> dict:
+    p = current_principal()
+    if confirm is not True:
+        return {"withdrawn": False,
+                "message": "Not withdrawn. Ask the applicant to confirm first."}
+    number = (application_no or "").strip().upper()
+    if not number:
+        return {"withdrawn": False,
+                "message": "Give the application number, for example SSP26540132. "
+                           "get_my_application shows it."}
+    r = await _run(services.withdraw, p.mobile, application_no=number,
+                   actor="applicant:%s" % p.mobile)
+    if r["status"] == "ok":
+        return {"withdrawn": True, "status": "WITHDRAWN",
+                "application_number": r["application_no"],
+                "next": "You may submit a new application for this mobile number now."}
+    if r["status"] == "not_found":
+        return {"withdrawn": False,
+                "message": "That application number does not belong to this mobile number. "
+                           "Check it with get_my_application."}
+    return {"withdrawn": False,
+            "message": "Only a pending application can be withdrawn. This one is %s."
+                       % r["current"]}
+
+
 def _ifsc_problem(ifsc):
     return ("The portal accepts an 11-character IFSC like SBIN0003077. '%s' is %d characters, "
             "so it will be refused — please check the passbook, or clear it by sending ifsc "

@@ -767,6 +767,43 @@ def submit_web(mobile, form_data, doc_path):
 
 
 # ---------------------------------------------------------------------------
+# Citizen: their own application
+# ---------------------------------------------------------------------------
+
+
+def my_application(mobile):
+    """The signed-in mobile's most recent application, and any draft in progress.
+    Reads only rows for this mobile."""
+    with db() as cur:
+        cur.execute("SELECT %s FROM applications WHERE mobile = %%s "
+                    "ORDER BY submitted_at DESC, id DESC LIMIT 1"
+                    % ", ".join(APPLICATION_COLUMNS), (mobile,))
+        r = cur.fetchone()
+        reason = None
+        if r:
+            row = _row_dict(r)
+            if row["status"] == "REJECTED":
+                cur.execute("SELECT note FROM audit_log WHERE application_id = %s "
+                            "AND action = 'REJECTED' ORDER BY at DESC LIMIT 1", (row["id"],))
+                n = cur.fetchone()
+                reason = (n[0] or "").strip() if n else None
+    draft = get_draft(mobile)
+    if not r:
+        return {"found": False, "draft": draft}
+    return {
+        "found": True, "application_no": row["application_no"], "status": row["status"],
+        "submitted_at_ist": fmt_ist(row["submitted_at"]),
+        "decided_at_ist": fmt_ist(row["decided_at"]), "decided_by": row["decided_by"],
+        "reason": reason or None,
+        "deemed_date_ist": (_fmt(deemed_date(row["submitted_at"]))
+                            if row["status"] == "PENDING" else None),
+        "village": row["village"], "block": row["block"],
+        "doc_attached": bool((row["doc_path"] or "").strip()),
+        "draft": draft,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Withdrawal
 # ---------------------------------------------------------------------------
 

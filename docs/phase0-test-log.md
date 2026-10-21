@@ -14,6 +14,12 @@ Running record of each build step's "done when" check (IMPLEMENTATION_PLAN.md §
 | 6 | `2ad6603` | `curl -F` upload (HTML + JSON) accepted; `.txt` and 6 MB refused, no partial file; distinct filenames; `document_uploads` sha256/size match disk and host. Browser upload: emulated form POST only; a real-browser attempt did not reach the portal (no request in the proxy log) |
 | — | `9d91e37` | villages outside the known 19 accepted once a valid block is given (warning to assistant and officer); unknown village with no block is the only problem case |
 | 7 | `2f9ff77` | §7.1 curl pre-flight passes in full (see below); Claude Code OAuth completed for both servers |
+| 8 | `461e6cb` | tools/list = 2 citizen tools (readOnlyHint). S2: age 58, eligible on 03/08/2028, nothing written. S9 (closed window): `open:false`, not eligible |
+| 9 | `ba08a4e` | S1: PENDING, Dhemaji Pathar auto-filled, has_doc, one SUBMIT/applicant row, draft cleared, provenance stamped with the application id, sha256 = host file, SMS sent. S3: 1957-04-10 → 10/04/1957; 32/13/1957 refused, draft unchanged. S4: `no_document`, nothing written. S5: duplicate explained with no other person's details; 3 concurrent submits → 1 row. S9 submit: refused, window closed |
+| 10 | (this commit) | S6: withdraw (confirm required; another mobile's number refused without detail), reapply → WITHDRAWN/APPLICANT then PENDING; audit SUBMIT, WITHDRAW, SUBMIT. S7: PENDING, submitted 21:17 IST = `submitted_at` + 5:30, auto-approval 06/11/2026 07:30 IST = cron-rule SQL |
+
+Steps 8–10 were checked at the tool level over JSON-RPC through Caddy, with citizen tokens
+minted by the portal's own signer; the conversational runs in Claude Code follow.
 
 ## Step 7 — OAuth with Claude Code
 
