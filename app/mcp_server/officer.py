@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP, Image
 from mcp.types import ToolAnnotations
 
 import services
-from mcp_server.auth import current_principal          # noqa: F401  (decision tools, step 14)
+from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
 
 INSTRUCTIONS = """\
@@ -248,3 +248,117 @@ async def view_age_proof(application_id: int):
         line += " Shown: %s (hash is of the original file, not the render)." % note
     line += " What the image shows is for you to judge."
     return [line, Image(data=jpeg, format="jpeg")]
+
+
+def _decision_error(r, application_id, application_no):
+    s = r["status"]
+    if s == "not_found":
+        return "No application with id %s. Nothing was changed — check with list_applications." \
+               % application_id
+    if s == "no_match":
+        return ("application_id %s is %s, not %s. Nothing was changed — check with "
+                "get_application." % (application_id, r["application_no"], application_no))
+    if s == "not_pending":
+        return ("Only a pending application can be decided; %s is %s. Nothing was changed."
+                % (r["application_no"], r.get("current", "already decided")))
+    if s == "reason_required":
+        return ("A reason is required to reject. Use one of: %s ('other' needs the explanation "
+                "in note)." % "; ".join('"%s"' % x for x in services.REJECTION_REASONS))
+    if s == "blocked":
+        msg = ("Not approved. %s The counter would refuse this application, so it cannot be "
+               "approved through the assistant." % " ".join(r["warnings"]))
+        if any(w.startswith("Age today") for w in r["warnings"]):
+            msg += (" If the date of birth on the document differs from the record, reject with "
+                    "'age proof does not match stated date of birth' and ask the applicant to "
+                    "apply again with the correct date.")
+        if any("No age-proof document" in w for w in r["warnings"]):
+            msg += " Without an age proof there is nothing to verify the age against."
+        return msg
+    return "Unexpected result: %s. Nothing was changed." % s
+
+
+def _decided(r, verb):
+    out = {"status": verb, "application_no": r["application_no"],
+           "decided_by": r["decided_by"], "decided_at": r["decided_at_ist"],
+           "recorded_in_audit_as": r["actor"], "citizen_notified": r["sms_sent"]}
+    if r["note"]:
+        out["recorded_reason_or_note"] = r["note"]
+    if r["sms_sent"]:
+        out["message"] = "%s. An SMS has been sent to %s." % (verb.capitalize(), r["mobile"])
+    else:
+        out["message"] = ("%s, but the SMS could not be sent — the applicant has NOT been "
+                          "notified." % verb.capitalize())
+    soft = [w for w in r["warnings"]]
+    if soft:
+        out["warnings_on_record"] = soft
+    return out
+
+
+@officer.tool(
+    description=(
+        "Approves a pending application in the officer's name. This is final: an approved "
+        "application cannot be reopened. Only call when the officer has clearly asked to "
+        "approve this application. Pass both application_id and application_no — they must "
+        "refer to the same application; that is the confirmation step. The optional note is "
+        "recorded in the audit trail. Approval is refused when the record has a problem the "
+        "counter would refuse (age under 60, no age proof). "
+        'Example: {"application_id":100021,"application_no":"SSP26540132"}'),
+    annotations=ToolAnnotations(title="Approve (final)", readOnlyHint=False,
+                                destructiveHint=True, idempotentHint=False))
+async def approve_application(application_id: int, application_no: str,
+                              note: str | None = None) -> dict:
+    p = current_principal()
+    r = await _run(services.decide, application_id=application_id, decision="APPROVED",
+                   reason=note or "", note="", officer=p.officer, channel="mcp",
+                   expect_application_no=application_no)
+    if r["status"] != "ok":
+        return {"approved": False, "status": r["status"],
+                "message": _decision_error(r, application_id, application_no)}
+    return _decided(r, "approved")
+
+
+@officer.tool(
+    description=(
+        "Rejects a pending application with a reason recorded against the officer's name. This "
+        "is final: the applicant would have to apply again. Only call when the officer has "
+        "clearly asked to reject this application. reason must be one of: \"bank account not "
+        "in applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
+        "document illegible\", \"age proof does not match stated date of birth\", or \"other\" "
+        "with the explanation in note. Pass application_id and application_no; they must "
+        "match. The reason is sent to the applicant by SMS. "
+        'Example: {"application_id":100021,"application_no":"SSP26540132",'
+        '"reason":"age proof document illegible"}'),
+    annotations=ToolAnnotations(title="Reject (final)", readOnlyHint=False,
+                                destructiveHint=True, idempotentHint=False))
+async def reject_application(application_id: int, application_no: str,
+                             reason: str | None = None, note: str | None = None) -> dict:
+    p = current_principal()
+    given = (reason or "").strip().strip("'\"").lower()
+    note = (note or "").strip()
+    canonical = {x.lower(): x for x in services.REJECTION_REASONS}
+    if not given:
+        return {"rejected": False, "status": "reason_required",
+                "message": _decision_error({"status": "reason_required"}, application_id,
+                                           application_no)}
+    if given not in canonical:
+        return {"rejected": False, "status": "bad_reason",
+                "message": "reason must be one of: %s. For anything else use \"other\" and put "
+                           "the explanation in note. Nothing was changed."
+                           % "; ".join('"%s"' % x for x in services.REJECTION_REASONS)}
+    if canonical[given] == "other":
+        if not note:
+            return {"rejected": False, "status": "note_required",
+                    "message": "Give the reason in note when reason is 'other'. Nothing was "
+                               "changed."}
+        reason_text, note_text = note, ""
+    else:
+        reason_text, note_text = canonical[given], note
+    r = await _run(services.decide, application_id=application_id, decision="REJECTED",
+                   reason=reason_text, note=note_text, officer=p.officer, channel="mcp",
+                   expect_application_no=application_no)
+    if r["status"] != "ok":
+        return {"rejected": False, "status": r["status"],
+                "message": _decision_error(r, application_id, application_no)}
+    out = _decided(r, "rejected")
+    out["reason"] = reason_text
+    return out

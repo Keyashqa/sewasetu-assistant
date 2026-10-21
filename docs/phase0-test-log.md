@@ -18,8 +18,13 @@ Running record of each build step's "done when" check (IMPLEMENTATION_PLAN.md §
 | 9 | `ba08a4e` | S1: PENDING, Dhemaji Pathar auto-filled, has_doc, one SUBMIT/applicant row, draft cleared, provenance stamped with the application id, sha256 = host file, SMS sent. S3: 1957-04-10 → 10/04/1957; 32/13/1957 refused, draft unchanged. S4: `no_document`, nothing written. S5: duplicate explained with no other person's details; 3 concurrent submits → 1 row. S9 submit: refused, window closed |
 | 10 | (this commit) | S6: withdraw (confirm required; another mobile's number refused without detail), reapply → WITHDRAWN/APPLICANT then PENDING; audit SUBMIT, WITHDRAW, SUBMIT. S7: PENDING, submitted 21:17 IST = `submitted_at` + 5:30, auto-approval 06/11/2026 07:30 IST = cron-rule SQL |
 
-Steps 8–10 were checked at the tool level over JSON-RPC through Caddy, with citizen tokens
-minted by the portal's own signer; the conversational runs in Claude Code follow.
+| 11 | `1d0d54d` | cookie-less `POST /oauth/consent?rid=…` → "Request expired", no code (cookie-less login refused too); full browser flow still completes (token aud/scope/role officer, tools/list 200). S14: program token works → Revoke → `revoked_at` set → 401 "revoked". Clean Claude Code re-auth: to run by hand |
+| 12 | `ed47e98` | officer instructions served. S10 read half: queue (703 pending, 700 overdue), Dhemaji Pathar list, oldest case. `page=0`/`'abc'`/`-3` → page 1; `status=pending` → 703 rows; bad status/block list valid values |
+| 13 | `5d2bf46` | photo.png, JPEG fixture (2400×1600 → 1600×1067) and PDF fixture (page 1 of 2, 150 dpi) render; hash and size equal `sha256sum`/`stat` and `document_uploads`; seeded row → no-document text; web-form row → provenance-not-recorded text |
+| 14 | (this commit) | S10: approve → APPROVED / admin / `officer:admin via assistant`, SMS sent, web view shows it and the document link works. S11: no reason / free text / `other` without note refused; "age proof document illegible" → REJECTED with that note. S12: age 59 + no document → blocked, unchanged. S13: id/number mismatch → refused, unchanged. smsgw stopped → `citizen_notified:false`, "has NOT been notified". Invariants 0/0/0/0 |
+
+Steps 8–14 were checked at the tool level over JSON-RPC through Caddy, with tokens minted by
+the portal's own signer; the conversational runs in Claude Code follow.
 
 ## Manual runs in Claude Code
 
