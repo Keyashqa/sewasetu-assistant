@@ -314,6 +314,74 @@ def age_from_dob(raw):
 
 
 # ---------------------------------------------------------------------------
+# Citizen: scheme facts and eligibility
+# ---------------------------------------------------------------------------
+
+DOCUMENTS_ACCEPTED = ["Birth certificate", "School leaving certificate", "Voter ID"]
+PENSION_AMOUNT_INR = 250
+
+
+def scheme_info():
+    """The scheme's facts, from config and the portal's constants (never hardcoded
+    dates)."""
+    return {
+        "amount_inr": PENSION_AMOUNT_INR,
+        "min_age": portal.MIN_AGE,
+        "residency": "resident of Purvanchal",
+        "documents_accepted": DOCUMENTS_ACCEPTED,
+        "formats": "JPG, PNG or PDF up to 5 MB",
+        "sla_days": portal.SLA_DAYS,
+        "deemed_approval": "If no officer decides within %d days, the application stands "
+                           "approved automatically." % portal.SLA_DAYS,
+        "window": window_status(),
+        "blocks": list(BLOCKS),
+        "villages_by_block": {b: sorted(v for v, bb in VILLAGES.items() if bb == b)
+                              for b in BLOCKS},
+    }
+
+
+def _sixtieth_birthday(dob):
+    try:
+        return dob.replace(year=dob.year + portal.MIN_AGE)
+    except ValueError:                       # born 29 February
+        return date(dob.year + portal.MIN_AGE, 3, 1)
+
+
+def eligibility(mobile, dob_raw=None):
+    """Can this mobile apply now, for someone born on dob_raw? Only the portal's own
+    rules: age on today's IST date, the scheme window, one active application per
+    mobile. No invented criteria."""
+    out = {"status": "ok", "age": None, "age_ok": None, "turns_60_on": None}
+    reasons = []
+    if dob_raw is not None:
+        dob = parse_dob_any(dob_raw)
+        if dob is None:
+            return {"status": "bad_date"}
+        today = portal.now_ist().date()
+        if dob > today:
+            return {"status": "future_date"}
+        age = portal.age_on(dob, today)
+        out.update(age=age, age_ok=age >= portal.MIN_AGE,
+                   date_of_birth=dob.strftime("%d/%m/%Y"))
+        if age < portal.MIN_AGE:
+            out["turns_60_on"] = _sixtieth_birthday(dob).strftime("%d/%m/%Y")
+            reasons.append("under_age")
+    win = window_status()
+    out["window"] = win
+    if not win["open"]:
+        reasons.append("window_closed")
+    with db() as cur:
+        existing = portal.active_application(cur, mobile)
+    out["existing"] = ({"application_no": existing[1], "status": existing[2]}
+                       if existing else None)
+    if existing:
+        reasons.append("active_application")
+    out["reasons"] = reasons
+    out["eligible"] = not reasons and out["age_ok"] is not False
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Drafts (the agent channel's equivalent of the web form's session)
 # ---------------------------------------------------------------------------
 
