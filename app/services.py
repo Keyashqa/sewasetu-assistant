@@ -718,6 +718,44 @@ def _after_submit(mobile, res):
     return res
 
 
+def submit(mobile, confirm_declaration):
+    """The agent path: file this mobile's draft. Same validator, same locked write as
+    the web form; the SUBMIT audit row is written by portal.create_application."""
+    if confirm_declaration is not True:
+        return {"status": "declaration_required"}
+    win = window_status()
+    if not win["open"]:
+        return {"status": "invalid", "errors": ["the application window has closed"],
+                "window": win}
+    with db() as cur:
+        existing = portal.active_application(cur, mobile)
+        d = _load_draft(cur, mobile)
+    if existing:                     # checked again under the lock in _submit_locked
+        return {"status": "duplicate",
+                "existing": {"id": existing[0], "application_no": existing[1],
+                             "status": existing[2]}}
+    fields = d["data"] if d else {}
+    doc_path = d["doc_path"] if d else None
+    missing, _, _ = _assess(fields, doc_path)
+    fields_missing = [m for m in missing if m != DOC_MISSING]
+    if fields_missing:
+        return {"status": "incomplete", "missing": missing}
+    if not doc_path:
+        return {"status": "no_document"}
+    errors, cleaned = portal.validate_application(_portal_fields(fields), doc_path)
+    if errors:
+        return {"status": "invalid", "errors": errors}
+    with db(commit=True) as cur:
+        res = _submit_locked(cur, mobile, cleaned)
+        if res["status"] == "ok":
+            cur.execute("SELECT submitted_at FROM applications WHERE id = %s", (res["id"],))
+            submitted_at = cur.fetchone()[0]
+            res.update(submitted_at_ist=fmt_ist(submitted_at),
+                       deemed_date_ist=_fmt(deemed_date(submitted_at)),
+                       date_of_birth=cleaned["dob"].strftime("%d/%m/%Y"))
+    return _after_submit(mobile, res)
+
+
 def submit_web(mobile, form_data, doc_path):
     """The web form's submission. form_data uses the form's own field names."""
     errors, cleaned = portal.validate_application(form_data or {}, doc_path)

@@ -90,3 +90,149 @@ async def check_eligibility(date_of_birth: str) -> dict:
         out["message"] = " ".join(messages)
         out["next_step"] = "Nothing can be filed now. Explain this to the person."
     return out
+
+
+def _ifsc_problem(ifsc):
+    return ("The portal accepts an 11-character IFSC like SBIN0003077. '%s' is %d characters, "
+            "so it will be refused — please check the passbook, or clear it by sending ifsc "
+            "as an empty string, as IFSC is not mandatory." % (ifsc, len(ifsc)))
+
+
+@citizen.tool(
+    description=(
+        "Saves or updates the applicant's details on the server. Send any subset of fields — "
+        "call it several times as the conversation goes. It tells you what is saved, what is "
+        "still missing and what is wrong. Fields: full_name, date_of_birth (DD/MM/YYYY), "
+        "gender (Male/Female/Other), marital_status (Married/Unmarried/Widowed), "
+        "husband_name (only if widowed), village (the block is filled in for known villages), "
+        "block (one of the six from get_scheme_info), bank_account (9-18 digits), "
+        "ifsc (11 characters, e.g. SBIN0003077; optional). Only send what the applicant "
+        "actually said; never guess a value. "
+        'Example: {"full_name":"Sewali Gogoi","date_of_birth":"10/04/1957","village":"Kathoni"}'),
+    annotations=ToolAnnotations(title="Save applicant details", readOnlyHint=False,
+                                destructiveHint=False, idempotentHint=True))
+async def save_application_details(full_name: str | None = None,
+                                   date_of_birth: str | None = None,
+                                   gender: str | None = None,
+                                   marital_status: str | None = None,
+                                   husband_name: str | None = None,
+                                   village: str | None = None,
+                                   block: str | None = None,
+                                   bank_account: str | None = None,
+                                   ifsc: str | None = None) -> dict:
+    p = current_principal()
+    given = {k: v for k, v in (("full_name", full_name), ("date_of_birth", date_of_birth),
+                               ("gender", gender), ("marital_status", marital_status),
+                               ("husband_name", husband_name), ("village", village),
+                               ("block", block), ("bank_account", bank_account),
+                               ("ifsc", ifsc)) if v is not None}
+    if not given:
+        return {"error": "No fields were given. Send at least one field the applicant told you."}
+    r = await _run(services.save_draft, p.mobile, given)
+    saved_ifsc = r["saved"].get("ifsc") or ""
+    problems = [_ifsc_problem(saved_ifsc) if pr.startswith("IFSC must be") else pr
+                for pr in r["problems"]]
+    out = {"saved": r["saved"], "missing": r["missing"], "problems": problems,
+           "corrections": r["corrections"], "warnings": r["warnings"],
+           "suggested_block": r["suggested_block"], "ready_to_submit": r["ready_to_submit"]}
+    if problems:
+        out["next_step"] = "Ask the applicant about each problem, then save again."
+    elif [m for m in r["missing"] if m != services.DOC_MISSING]:
+        out["next_step"] = "Ask the applicant for the missing details."
+    elif services.DOC_MISSING in r["missing"]:
+        out["next_step"] = "Details are complete. Call get_document_upload_link for the age proof."
+    else:
+        out["next_step"] = ("Read all the details back to the applicant, read the declaration, "
+                            "and call submit_application only after they say yes.")
+    return out
+
+
+@citizen.tool(
+    description=(
+        "Gives a link for uploading the age proof (birth certificate, school leaving "
+        "certificate or Voter ID). The person opens it on a phone, or whoever is helping them "
+        "uploads it with curl. A document is required before the application can be "
+        "submitted. No input.\n\n"
+        "Only a real document provided by the applicant may be uploaded — a photo or scan of "
+        "the actual certificate they hold. You must never create, generate, draw, edit, fill "
+        "in, convert or substitute a document, and never upload a file from anywhere other "
+        "than the applicant. If they do not have their age proof to hand, give them the link "
+        "and stop: the application waits until they upload it. An invented document is a "
+        "false government record."),
+    annotations=ToolAnnotations(title="Get an upload link", readOnlyHint=False,
+                                destructiveHint=False, idempotentHint=True))
+async def get_document_upload_link() -> dict:
+    p = current_principal()
+    t = await _run(services.issue_upload_token, p.mobile)
+    out = {"upload_url": t["url"], "expires": t["expires_at_ist"],
+           "document_attached": t["doc_attached"],
+           "curl_example": "curl -F document=@age-proof.jpg %s" % t["url"],
+           "instructions": "Open the link on the phone, choose the photo of the birth "
+                           "certificate or Voter ID, and press Upload. JPG, PNG or PDF, "
+                           "up to 5 MB.",
+           "recorded": "Every upload is recorded with its SHA-256 hash, size, original "
+                       "filename and time, and the block officer sees all four."}
+    prov = t.get("provenance") or {}
+    if t["doc_attached"]:
+        out.update(document_name=t["doc_name"], sha256=prov.get("sha256"),
+                   byte_size=prov.get("byte_size"), uploaded=prov.get("uploaded_at_ist"),
+                   note="A document is already attached. Uploading again replaces it.")
+    return out
+
+
+@citizen.tool(
+    description=(
+        "Files the application with the portal. Only call after the details are complete, "
+        "the age proof is uploaded, and you have read the declaration back to the person and "
+        "they said yes. Input: confirm_declaration must be true, meaning the applicant has "
+        "confirmed the information is correct and consents to the department verifying it.\n\n"
+        "Everything filed must have come from the applicant. Never invent, guess or fill in a "
+        "detail they did not give you — not a name, not a date of birth, not a village, not a "
+        "bank account, and above all not the age-proof document, which must be a file the "
+        "applicant themselves uploaded and which you must never create, generate or "
+        "substitute. If something is missing, ask for it. A guessed field becomes a sworn "
+        "declaration on a government record."),
+    annotations=ToolAnnotations(title="File the application", readOnlyHint=False,
+                                destructiveHint=False, idempotentHint=False))
+async def submit_application(confirm_declaration: bool) -> dict:
+    p = current_principal()
+    r = await _run(services.submit, p.mobile, confirm_declaration)
+    s = r["status"]
+    if s == "ok":
+        dob = r["date_of_birth"]
+        return {
+            "application_number": r["application_no"], "status": "PENDING",
+            "submitted": r["submitted_at_ist"],
+            "what_happens_next": "A block officer decides within 15 days. If nobody decides, "
+                                 "it stands approved automatically on %s." % r["deemed_date_ist"],
+            "how_to_check": "Ask me any time. On the portal: mobile number plus password, and "
+                            "the password is the date of birth written as DDMMYYYY — for %s "
+                            "that is %s." % (dob, dob.replace("/", "")),
+            "sms": ("A confirmation SMS has been sent to this number." if r.get("sms_sent")
+                    else "The confirmation SMS could not be sent; the application is filed "
+                         "all the same."),
+        }
+    if s == "declaration_required":
+        msg = ("I cannot submit until the applicant confirms the declaration. Read the details "
+               "back and ask whether all of it is correct.")
+    elif s == "incomplete":
+        msg = ("These are still missing: %s. Ask the applicant and call "
+               "save_application_details." % ", ".join(r["missing"]))
+    elif s == "no_document":
+        msg = "The age proof is not uploaded yet. Use get_document_upload_link."
+    elif s == "invalid":
+        msg = ("The portal refused the application: %s. Correct these with "
+               "save_application_details, then try again." % "; ".join(r["errors"]))
+        if r["errors"] == ["the application window has closed"]:
+            msg = fmt.window_closed_message(r["window"])
+    elif s == "duplicate":
+        msg = fmt.existing_application_message(r["existing"]) + (
+            " A pending application can be withdrawn with withdraw_application if the "
+            "applicant wants to apply afresh.")
+    else:
+        msg = "Unexpected result: %s." % s
+    return {"submitted": False, "reason": s, "message": msg,
+            **({"missing": r["missing"]} if s == "incomplete" else {}),
+            **({"errors": r["errors"]} if s == "invalid" else {}),
+            **({"existing_application": {k: r["existing"][k] for k in ("application_no", "status")}}
+               if s == "duplicate" else {})}
