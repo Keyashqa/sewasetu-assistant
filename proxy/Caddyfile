@@ -1,0 +1,18 @@
+{
+  auto_https off
+}
+
+:8000 {
+  # exact paths first, then the subtree. No rewrite, no uri strip_suffix, no redir:
+  # /mcp/citizen must reach the MCP server as /mcp/citizen, never as /mcp/citizen/.
+  @mcp path /mcp/citizen /mcp/officer /mcp /mcp/* /.well-known/oauth-protected-resource*
+  handle @mcp {
+    reverse_proxy mcp:8080 {
+      flush_interval -1          # stream responses, no buffering
+    }
+  }
+  handle {
+    reverse_proxy app:8000
+  }
+  log
+}

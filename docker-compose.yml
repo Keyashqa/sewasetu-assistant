@@ -12,20 +12,37 @@ services:
 
   app:
     build: ./app
-    ports:
-      - "8000:8000"
+    # no host port: the proxy owns :8000 and forwards everything that is not /mcp/* here
+    expose:
+      - "8000"
     environment:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-before-deploying}
       # the address at which people reach this portal; stamped into sign-in tokens and
       # discovery documents, so it must be the public one when deployed
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      # empty = the value in config/app.ini; set only on a test stack
+      SCHEME_DEADLINE: ${SCHEME_DEADLINE:-}
     depends_on:
       - db
       - smsgw
     volumes:
       - uploads:/var/sewasetu/uploads
       - applogs:/var/log/sewasetu
+
+  proxy:
+    # single public entrypoint: /mcp/* and the protected-resource metadata go to the
+    # MCP servers, everything else to the portal. Same origin for both, so the portal's
+    # issuer and the MCP resource URLs share a host.
+    image: caddy:2-alpine
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - app
 
   scheduler:
     build: ./app
@@ -48,3 +65,4 @@ volumes:
   pgdata:
   uploads:
   applogs:
+  caddydata:
