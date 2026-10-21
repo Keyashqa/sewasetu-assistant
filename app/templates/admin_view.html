@@ -25,7 +25,7 @@
 </form>
 &nbsp;
 <form method="post" action="/admin/reject/{{ app_id }}" style="display:inline">
-  <input type="text" name="note" placeholder="Reason for rejection" style="max-width:300px">
+  <input type="text" name="note" placeholder="Reason for rejection" style="max-width:300px" required>
   <button class="btn" style="background:#a33" type="submit">Reject</button>
 </form>
 {% endif %}

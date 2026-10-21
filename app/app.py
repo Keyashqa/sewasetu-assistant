@@ -49,8 +49,9 @@ ACTIVE_STATUSES = ("PENDING", "APPROVED", "DEEMED_APPROVED")
 SMS_GATEWAY_URL = config.get("app", "sms_gateway_url")
 OTP_VALIDITY_SECONDS = config.getint("app", "otp_validity_seconds")
 UPLOAD_DIR = config.get("app", "upload_dir")
-SCHEME_DEADLINE = datetime.strptime(config.get("pension", "scheme_deadline"),
-                                    "%Y-%m-%d %H:%M")
+SCHEME_DEADLINE = datetime.strptime(
+    os.environ.get("SCHEME_DEADLINE") or config.get("pension", "scheme_deadline"),
+    "%Y-%m-%d %H:%M")
 MIN_AGE = config.getint("pension", "min_age")
 SLA_DAYS = config.getint("pension", "sla_days")
 
@@ -105,8 +106,13 @@ def deadline_remaining():
     return int(delta.total_seconds() // 3600)
 
 
-def new_application_no():
-    return "SSP" + datetime.now().strftime("%y") + str(random.randint(100000, 999999))
+def new_application_no(cur):
+    for _ in range(10):
+        no = "SSP" + now_ist().strftime("%y") + str(random.randint(100000, 999999))
+        cur.execute("SELECT 1 FROM applications WHERE application_no = %s", (no,))
+        if not cur.fetchone():
+            return no
+    raise RuntimeError("could not allocate a unique application number")
 
 
 def write_audit(cur, app_id, action, actor, note=""):
@@ -163,6 +169,12 @@ def validate_application(data, doc_path):
         errors.append("bank account number must be 9 to 18 digits")
     if cleaned["ifsc"] and not re.fullmatch(r"[A-Z]{4}0[A-Z0-9]{6}", cleaned["ifsc"]):
         errors.append("IFSC must be 11 characters, e.g. SBIN0003077")
+    for label, key, maxlen in (("gender", "gender", 10),
+                               ("marital status", "marital_status", 20),
+                               ("village", "village", 100),
+                               ("late husband's name", "husband_name", 100)):
+        if len(cleaned[key]) > maxlen:
+            errors.append("%s must be %d characters or fewer" % (label, maxlen))
     dob = parse_dob(data.get("dob"))
     if dob is None:
         errors.append("date of birth must be given as DD/MM/YYYY")
@@ -190,7 +202,7 @@ def create_application(cur, mobile, cleaned):
 
     The caller commits. Returns (id, application_no).
     """
-    app_no = new_application_no()
+    app_no = new_application_no(cur)
     cur.execute(
         """INSERT INTO applications
            (application_no, applicant_name, mobile, dob, gender, marital_status,
@@ -371,26 +383,18 @@ def declaration():
 
 
 def handle_submission():
+    # Validation, the one-active-application check (under a per-mobile lock), the
+    # insert and the SMS all happen in services, the same path the assistant uses.
     mobile = session.get("verified_mobile")
-    data = session.get("form_data", {})
-    errors, cleaned = validate_application(data, session.get("doc_path", ""))
-    if errors:
-        flash("Please correct the following before submitting: " + "; ".join(errors) + ".")
+    res = services.submit_web(mobile, session.get("form_data", {}), session.get("doc_path", ""))
+    if res["status"] == "invalid":
+        flash("Please correct the following before submitting: " + "; ".join(res["errors"]) + ".")
         return redirect(url_for("form_step", step=1))
-
-    conn = get_db()
-    cur = conn.cursor()
-    existing = active_application(cur, mobile)
-    if existing:
-        cur.close(); conn.close()
+    if res["status"] == "duplicate":
         flash("Application %s (%s) already exists for this mobile number. A pending "
               "application can be withdrawn from the status portal if you need to "
-              "apply afresh." % (existing[1], existing[2]))
+              "apply afresh." % (res["existing"]["application_no"], res["existing"]["status"]))
         return redirect(url_for("index"))
-
-    new_id, app_no = create_application(cur, mobile, cleaned)
-    conn.commit()
-    cur.close(); conn.close()
 
     session.pop("form_data", None)
     session.pop("doc_path", None)
@@ -399,9 +403,7 @@ def handle_submission():
     # see their application and download the acknowledgment without a second login.
     session["logged_in"] = True
     session["portal_mobile"] = mobile
-    send_sms(mobile, "Sewa Setu: application %s received. Track at the status portal "
-                     "with mobile no. and password (DOB as DDMMYYYY)." % app_no)
-    return render_template("confirmation.html", app_no=app_no, app_id=new_id)
+    return render_template("confirmation.html", app_no=res["application_no"], app_id=res["id"])
 
 
 def generate_acknowledgment(cur, app_id):
@@ -493,20 +495,12 @@ def withdraw_application(app_id):
         flash("Please login to manage your application.")
         return redirect(url_for("status_login"))
     mobile = session["portal_mobile"]
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE applications SET status = 'WITHDRAWN', decided_at = %s, "
-                "decided_by = 'APPLICANT' WHERE id = %s AND mobile = %s "
-                "AND status = 'PENDING' RETURNING application_no",
-                (datetime.now(), app_id, mobile))
-    row = cur.fetchone()
-    if row:
-        write_audit(cur, app_id, "WITHDRAW", "applicant:%s" % mobile)
-        conn.commit()
-        flash("Application %s has been withdrawn. You may submit a new application." % row[0])
+    res = services.withdraw(mobile, app_id=app_id, actor="applicant:%s" % mobile)
+    if res["status"] == "ok":
+        flash("Application %s has been withdrawn. You may submit a new application."
+              % res["application_no"])
     else:
         flash("Only a pending application can be withdrawn.")
-    cur.close(); conn.close()
     return redirect(url_for("view_application", app_id=app_id))
 
 
@@ -643,20 +637,15 @@ def _admin_decide(app_id, new_status, note):
     """Approve/reject a PENDING application, recording who decided and when."""
     if not session.get("admin"):
         abort(403)
-    actor = session.get("admin_user", ADMIN_USERNAME)
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE applications SET status = %s, decided_at = %s, decided_by = %s "
-                "WHERE id = %s AND status = 'PENDING' RETURNING application_no",
-                (new_status, datetime.now(), actor, app_id))
-    row = cur.fetchone()
-    if row:
-        write_audit(cur, app_id, new_status, "admin:%s" % actor, note)
-        conn.commit()
-        flash("Application %s %s." % (row[0], new_status.lower()))
-    else:
+    officer = session.get("admin_user", ADMIN_USERNAME)
+    res = services.decide(application_id=app_id, decision=new_status,
+                          reason=note, note="", officer=officer, channel="web")
+    if res["status"] == "reason_required":
+        flash("A reason is required to reject an application.")
+    elif res["status"] in ("not_pending", "not_found"):
         flash("Only a pending application can be decided.")
-    cur.close(); conn.close()
+    else:
+        flash("Application %s %s." % (res["application_no"], new_status.lower()))
     return redirect(url_for("admin_view", app_id=app_id))
 
 
@@ -670,6 +659,7 @@ def admin_reject(app_id):
     return _admin_decide(app_id, "REJECTED", request.form.get("note", ""))
 
 
+import services                               # noqa: E402  (imports this module; same deferral)
 from oauth import oauth as _oauth_blueprint   # noqa: E402  (needs the definitions above)
 app.register_blueprint(_oauth_blueprint)
 

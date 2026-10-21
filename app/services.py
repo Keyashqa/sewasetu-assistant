@@ -307,3 +307,218 @@ def age_from_dob(raw):
     if dob is None:
         return None
     return portal.age_on(dob, portal.now_ist().date())
+
+
+# ---------------------------------------------------------------------------
+# SMS
+# ---------------------------------------------------------------------------
+
+
+def _send_sms_checked(mobile, text):
+    """Send an SMS and report whether the gateway accepted it. portal.send_sms swallows
+    failures, which is fine for a web page but not for a tool that tells an officer
+    the citizen was notified."""
+    try:
+        r = portal.requests.post(portal.SMS_GATEWAY_URL + "/api/send",
+                                 json={"to": mobile, "text": text}, timeout=5)
+        return r.status_code == 200 and (r.json() or {}).get("status") == "queued"
+    except Exception as e:
+        portal.app.logger.error("sms gateway error: %s" % e)
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Submission: the single write path for both channels
+# ---------------------------------------------------------------------------
+
+SUBMIT_SMS = ("Sewa Setu: application %s received. Track at the status portal "
+              "with mobile no. and password (DOB as DDMMYYYY).")
+
+
+def clear_draft(mobile):
+    with db(commit=True) as cur:
+        cur.execute("DELETE FROM agent_drafts WHERE mobile = %s", (mobile,))
+    return {"status": "ok"}
+
+
+def _submit_locked(cur, mobile, cleaned):
+    """Lock the mobile, re-check the one-active-application rule, insert. Caller commits.
+
+    The advisory lock is transaction-scoped and held until commit, so two concurrent
+    submissions for one mobile serialise and the second sees the first's row.
+    """
+    cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (mobile,))
+    existing = portal.active_application(cur, mobile)
+    if existing:
+        return {"status": "duplicate",
+                "existing": {"id": existing[0], "application_no": existing[1],
+                             "status": existing[2]}}
+    new_id, app_no = portal.create_application(cur, mobile, cleaned)   # + SUBMIT audit row
+    if cleaned.get("doc_path"):
+        cur.execute("UPDATE document_uploads SET application_id = %s "
+                    "WHERE doc_path = %s AND application_id IS NULL",
+                    (new_id, cleaned["doc_path"]))
+    return {"status": "ok", "id": new_id, "application_no": app_no}
+
+
+def _after_submit(mobile, res):
+    """After the commit: tell the applicant, and drop the agent draft."""
+    if res["status"] == "ok":
+        res["sms_sent"] = _send_sms_checked(mobile, SUBMIT_SMS % res["application_no"])
+        clear_draft(mobile)
+    return res
+
+
+def submit_web(mobile, form_data, doc_path):
+    """The web form's submission. form_data uses the form's own field names."""
+    errors, cleaned = portal.validate_application(form_data or {}, doc_path)
+    if errors:
+        return {"status": "invalid", "errors": errors}
+    with db(commit=True) as cur:
+        res = _submit_locked(cur, mobile, cleaned)
+    return _after_submit(mobile, res)
+
+
+# ---------------------------------------------------------------------------
+# Withdrawal
+# ---------------------------------------------------------------------------
+
+
+def withdraw(mobile, application_no=None, app_id=None, actor=None):
+    """Withdraw the applicant's own PENDING application, identified by number or id,
+    always looked up within this mobile's applications."""
+    if not application_no and not app_id:
+        raise ServiceError("bad_field", "give application_no or app_id")
+    with db(commit=True) as cur:
+        if app_id:
+            cur.execute("SELECT id, application_no, status FROM applications "
+                        "WHERE id = %s AND mobile = %s FOR UPDATE", (app_id, mobile))
+        else:
+            cur.execute("SELECT id, application_no, status FROM applications "
+                        "WHERE application_no = %s AND mobile = %s FOR UPDATE",
+                        (application_no.strip().upper(), mobile))
+        row = cur.fetchone()
+        if not row:
+            return {"status": "not_found"}
+        if row[2] != "PENDING":
+            return {"status": "not_pending", "application_no": row[1], "current": row[2]}
+        cur.execute("UPDATE applications SET status = 'WITHDRAWN', decided_at = %s, "
+                    "decided_by = 'APPLICANT' WHERE id = %s AND status = 'PENDING'",
+                    (datetime.now(), row[0]))
+        portal.write_audit(cur, row[0], "WITHDRAW", actor or "applicant:%s" % mobile)
+    return {"status": "ok", "id": row[0], "application_no": row[1]}
+
+
+# ---------------------------------------------------------------------------
+# Officer decisions
+# ---------------------------------------------------------------------------
+
+IFSC_RE = re.compile(r"[A-Z]{4}0[A-Z0-9]{6}")
+
+APPLICATION_COLUMNS = ("id", "application_no", "applicant_name", "mobile", "dob", "gender",
+                       "marital_status", "husband_name", "village", "block", "bank_account",
+                       "ifsc", "doc_path", "status", "submitted_at", "decided_at",
+                       "decided_by")
+
+
+def _row_dict(row):
+    return dict(zip(APPLICATION_COLUMNS, row))
+
+
+def _warnings(row):
+    """[(hard, text)] for an application row dict. Hard problems are the ones the
+    portal's own validator refuses today: age under the minimum, no document."""
+    out = []
+    dob = row.get("dob")
+    if dob is None:
+        out.append((True, "No date of birth is recorded."))
+    else:
+        age = portal.age_on(dob, portal.now_ist().date())
+        if age < portal.MIN_AGE:
+            out.append((True, "Age today is %d — below the %d-year minimum."
+                        % (age, portal.MIN_AGE)))
+    if not (row.get("doc_path") or "").strip():
+        out.append((True, "No age-proof document is attached."))
+    ifsc = (row.get("ifsc") or "").strip()
+    if ifsc and not IFSC_RE.fullmatch(ifsc):
+        out.append((False, "IFSC '%s' is not the 11-character form the portal requires "
+                           "(e.g. SBIN0003077)." % ifsc))
+    village, block = (row.get("village") or "").strip(), (row.get("block") or "").strip()
+    known = VILLAGES.get(village)
+    if village and not known:
+        out.append((False, "Village '%s' is not one of the 19 known villages." % village))
+    elif known and block and known != block:
+        out.append((False, "Village %s is in %s block, but the application says %s."
+                    % (village, known, block)))
+    if row.get("decided_at") and row.get("submitted_at") \
+            and row["decided_at"] < row["submitted_at"]:
+        out.append((False, "The record shows a decision before the submission date."))
+    return out
+
+
+def eligibility_warnings(row):
+    return [text for _, text in _warnings(row)]
+
+
+APPROVE_SMS = ("Sewa Setu: your pension application %s has been approved. Rs 250 per "
+               "month will be credited to your bank account by DBT.")
+REJECT_SMS = ("Sewa Setu: your pension application %s has been rejected. Reason: %s. "
+              "You may apply again at the Sewa Setu portal or at your block office.")
+
+
+def decide(application_id, decision, reason, note, officer, channel,
+           expect_application_no=None):
+    """Approve or reject one PENDING application, in one transaction.
+
+    channel "mcp" may not approve a case with a hard eligibility problem; channel
+    "web" (the officer at the keyboard) keeps today's authority. Reject is never
+    blocked. The citizen is told by SMS after the commit, and sms_sent reports whether
+    the gateway actually accepted it.
+    """
+    if decision not in ("APPROVED", "REJECTED"):
+        raise ServiceError("bad_field", "decision must be APPROVED or REJECTED")
+    if channel not in ("web", "mcp"):
+        raise ServiceError("bad_field", "channel must be web or mcp")
+    reason = (reason or "").strip()
+    note = (note or "").strip()
+    with db(commit=True) as cur:
+        cur.execute("SELECT %s FROM applications WHERE id = %%s FOR UPDATE"
+                    % ", ".join(APPLICATION_COLUMNS), (application_id,))
+        r = cur.fetchone()
+        if not r:
+            return {"status": "not_found"}
+        row = _row_dict(r)
+        if expect_application_no is not None and \
+                str(expect_application_no).strip().upper() != row["application_no"]:
+            return {"status": "no_match", "application_no": row["application_no"]}
+        if row["status"] != "PENDING":
+            return {"status": "not_pending", "application_no": row["application_no"],
+                    "current": row["status"]}
+        if decision == "REJECTED" and not reason:
+            return {"status": "reason_required", "application_no": row["application_no"],
+                    "reasons": REJECTION_REASONS}
+        warns = _warnings(row)
+        if decision == "APPROVED" and channel == "mcp" and any(h for h, _ in warns):
+            return {"status": "blocked", "application_no": row["application_no"],
+                    "warnings": [t for h, t in warns if h]}
+        now = datetime.now()
+        cur.execute("UPDATE applications SET status = %s, decided_at = %s, decided_by = %s "
+                    "WHERE id = %s AND status = 'PENDING' RETURNING application_no",
+                    (decision, now, officer, application_id))
+        if not cur.fetchone():          # cannot happen under FOR UPDATE; kept as the guard
+            return {"status": "not_pending", "application_no": row["application_no"]}
+        if channel == "mcp":
+            actor = ("officer:%s via assistant" % officer)[:50]
+        else:
+            actor = "admin:%s" % officer
+        note_text = " — ".join(p for p in (reason, note) if p)[:500]
+        portal.write_audit(cur, application_id, decision, actor, note_text)
+    if decision == "APPROVED":
+        text = APPROVE_SMS % row["application_no"]
+    else:
+        text = REJECT_SMS % (row["application_no"], reason)
+    sms_sent = _send_sms_checked(row["mobile"], text)
+    return {"status": "ok", "decision": decision, "id": application_id,
+            "application_no": row["application_no"], "mobile": row["mobile"],
+            "decided_by": officer, "decided_at_ist": fmt_ist(now), "actor": actor,
+            "note": note_text, "warnings": [t for _, t in warns], "sms_sent": sms_sent}
