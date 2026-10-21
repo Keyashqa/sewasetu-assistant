@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+{% if expired %}
+<h2>Upload link expired</h2>
+<p>This upload link is no longer valid. Ask the assistant helping with the application
+for a new link.</p>
+{% else %}
+<h2>Upload Age Proof Document</h2>
+<p class="note">For the pension application being prepared for mobile number
+<b>{{ d.mobile_masked }}</b>. Link valid until {{ d.token_expires_ist }}.</p>
+
+{% if result and result.status == 'ok' %}
+<div style="background:#e8f5e9;border:1px solid #66bb6a;color:#1b5e20;padding:10px 14px;margin:14px 0">
+  <b>Uploaded.</b> {{ result.doc_name }} ({{ '{:,}'.format(result.byte_size) }} bytes) received at
+  {{ result.uploaded_at_ist }}. You can go back to the assistant now.
+</div>
+{% elif result %}
+<div class="flash">{{ result.message }}</div>
+{% endif %}
+
+{% if d.doc_attached and not (result and result.status == 'ok') %}
+<p class="note">A document is already attached ({{ d.doc_name }}). Uploading again replaces it.</p>
+{% endif %}
+
+<p class="note">Accepted documents: Birth certificate, School leaving certificate,
+Voter ID. Accepted formats: <b>JPG, PNG or PDF, maximum size 5 MB</b>. Upload a photo or
+scan of the applicant's own certificate.</p>
+<form method="post" enctype="multipart/form-data">
+  <label>Select Document</label>
+  <input type="file" name="document" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf">
+  <p><button class="btn" type="submit">Upload</button></p>
+</form>
+<p class="note">Every upload is recorded with its SHA-256 hash, size, original filename and
+time, and the block officer sees all four.</p>
+{% endif %}
+{% endblock %}

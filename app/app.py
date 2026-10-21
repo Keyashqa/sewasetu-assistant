@@ -26,7 +26,7 @@ def now_ist():
 import requests
 import psycopg2
 from flask import (Flask, request, session, redirect, url_for, render_template,
-                   flash, send_file, abort)
+                   flash, send_file, abort, jsonify)
 from fpdf import FPDF
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -366,6 +366,27 @@ def upload():
         session["doc_path"] = path
         return redirect(url_for("declaration"))
     return render_template("upload.html")
+
+
+@app.route("/upload/<token>", methods=["GET", "POST"])
+def draft_upload(token):
+    """Age-proof upload for an application an assistant is preparing. The link is
+    issued to the signed-in applicant; whoever holds their paper opens it on a phone or
+    posts the file with curl. ?format=json returns JSON instead of the page."""
+    d = services.draft_for_upload_token(token)         # None if unknown/expired
+    if not d:
+        if request.args.get("format") == "json":
+            return jsonify({"status": "expired",
+                            "message": "This upload link has expired. Ask for a new one."}), 404
+        return render_template("upload_token.html", expired=True), 404
+    if request.method == "POST":
+        f = request.files.get("document")
+        res = services.attach_draft_document(token, f.filename if f else "", f)
+        if request.args.get("format") == "json":
+            return jsonify(res), (200 if res["status"] == "ok" else 400)
+        return render_template("upload_token.html", d=services.draft_for_upload_token(token) or d,
+                               result=res)
+    return render_template("upload_token.html", d=d)
 
 
 @app.route("/declaration", methods=["GET", "POST"])

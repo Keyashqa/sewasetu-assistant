@@ -24,11 +24,14 @@ import app as portal                      # MUST be first; see the import note a
 
 import os
 import re
+import hashlib
+import secrets
 import threading
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 
 from psycopg2 import pool
+from psycopg2.extras import Json
 
 # ---------------------------------------------------------------------------
 # Connections
@@ -308,6 +311,271 @@ def age_from_dob(raw):
     if dob is None:
         return None
     return portal.age_on(dob, portal.now_ist().date())
+
+
+# ---------------------------------------------------------------------------
+# Drafts (the agent channel's equivalent of the web form's session)
+# ---------------------------------------------------------------------------
+
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/")
+REQUIRED_FIELDS = ("full_name", "date_of_birth", "village", "block", "bank_account")
+DOC_MISSING = "age proof document"
+UPLOAD_MAX_BYTES = 5 * 1024 * 1024
+UPLOAD_EXTENSIONS = ("pdf", "jpg", "jpeg", "png")
+DRAFT_COLUMNS = ("mobile", "data", "doc_path", "doc_name", "upload_token", "token_expires",
+                 "created_at", "updated_at", "expires_at")
+
+
+def _portal_fields(fields):
+    """Draft field names -> the names validate_application() reads."""
+    return {FIELD_MAP[k]: v for k, v in fields.items() if k in FIELD_MAP}
+
+
+def _villages_text(block=None):
+    if block in BLOCKS:
+        names = sorted(v for v, b in VILLAGES.items() if b == block)
+        return "Villages in %s are %s and %s." % (block, ", ".join(names[:-1]), names[-1])
+    return "Known villages: " + "; ".join(
+        "%s: %s" % (b, ", ".join(sorted(v for v, bb in VILLAGES.items() if bb == b)))
+        for b in BLOCKS) + "."
+
+
+def _load_draft(cur, mobile, lock=False):
+    cur.execute("SELECT %s FROM agent_drafts WHERE mobile = %%s AND expires_at > %%s%s"
+                % (", ".join(DRAFT_COLUMNS), " FOR UPDATE" if lock else ""),
+                (mobile, datetime.now()))
+    r = cur.fetchone()
+    return dict(zip(DRAFT_COLUMNS, r)) if r else None
+
+
+def _assess(fields, doc_path):
+    """(missing, problems, ready) for a merged draft, using the portal's own validator.
+    'X is required' errors become `missing`; everything else is a problem."""
+    missing = [k for k in REQUIRED_FIELDS if not (fields.get(k) or "").strip()]
+    if not doc_path:
+        missing.append(DOC_MISSING)
+    errors, _ = portal.validate_application(_portal_fields(fields), doc_path)
+    problems = [e for e in errors
+                if not e.endswith(" is required")
+                and not (e.startswith("date of birth must be") and "date_of_birth" in missing)]
+    return missing, problems, not missing and not problems
+
+
+def get_draft(mobile):
+    with db() as cur:
+        d = _load_draft(cur, mobile)
+    if not d:
+        return None
+    missing, problems, ready = _assess(d["data"], d["doc_path"])
+    return {"fields": d["data"], "doc_attached": bool(d["doc_path"]),
+            "doc_name": d["doc_name"], "missing": missing, "errors": problems,
+            "ready_to_submit": ready, "expires_at": fmt_ist(d["expires_at"])}
+
+
+def save_draft(mobile, fields):
+    """Merge any subset of fields into the draft. Never refuses a half-filled draft.
+
+    A value that cannot be read (a date that is not a date, a village or block that
+    does not exist, a gender outside the form's choices) is not stored: it is reported
+    in `problems` so the assistant asks again, and the earlier value is kept.
+    """
+    clean, corrections = normalise(fields)
+    problems = []
+
+    if "date_of_birth" in clean and clean["date_of_birth"]:
+        d = parse_dob_any(clean["date_of_birth"])
+        if d is None:
+            problems.append("I could not read the date of birth '%s'. Give it as DD/MM/YYYY, "
+                            "for example 10/04/1957." % clean.pop("date_of_birth"))
+        elif d > portal.now_ist().date():
+            problems.append("The date of birth %s is in the future. Please check the year."
+                            % clean.pop("date_of_birth"))
+    for k, allowed in (("gender", GENDERS), ("marital_status", MARITAL_STATUSES)):
+        if clean.get(k) and clean[k] not in allowed:
+            problems.append("%s must be one of %s; '%s' was not saved."
+                            % (k, ", ".join(allowed), clean.pop(k)))
+    if clean.get("block") and clean["block"] not in BLOCKS:
+        problems.append("I do not know the block '%s'. The blocks are %s."
+                        % (clean.pop("block"), ", ".join(BLOCKS)))
+
+    now = datetime.now()
+    with db(commit=True) as cur:
+        d = _load_draft(cur, mobile, lock=True)
+        merged = dict(d["data"]) if d else {}
+        if clean.get("village") and clean["village"] not in VILLAGES:
+            bad = clean.pop("village")
+            problems.append("I do not know the village '%s'. %s Ask which one is nearest, "
+                            "or give the block." % (bad, _villages_text(
+                                clean.get("block") or merged.get("block"))))
+        merged.update(clean)
+
+        suggested_block = VILLAGES.get(merged.get("village"))
+        if suggested_block:
+            if not merged.get("block"):
+                merged["block"] = suggested_block
+                corrections.append("block set to %s, the block %s is in"
+                                   % (suggested_block, merged["village"]))
+            elif merged["block"] != suggested_block:
+                problems.append("%s is in %s block, not %s. Ask the applicant which is right."
+                                % (merged["village"], suggested_block, merged["block"]))
+
+        doc_path = d["doc_path"] if d else None
+        if d:
+            cur.execute("UPDATE agent_drafts SET data = %s, updated_at = %s, expires_at = %s "
+                        "WHERE mobile = %s",
+                        (Json(merged), now, now + DRAFT_TTL, mobile))
+        else:
+            cur.execute("INSERT INTO agent_drafts (mobile, data, created_at, updated_at, "
+                        "expires_at) VALUES (%s, %s, %s, %s, %s) "
+                        "ON CONFLICT (mobile) DO UPDATE SET data = EXCLUDED.data, "
+                        "doc_path = NULL, doc_name = NULL, upload_token = NULL, "
+                        "token_expires = NULL, created_at = EXCLUDED.created_at, "
+                        "updated_at = EXCLUDED.updated_at, expires_at = EXCLUDED.expires_at",
+                        (mobile, Json(merged), now, now,
+                         now + DRAFT_TTL))
+
+    missing, validator_problems, _ = _assess(merged, doc_path)
+    problems += [p for p in validator_problems if p not in problems]
+    return {"status": "ok", "saved": merged, "missing": missing, "problems": problems,
+            "corrections": corrections, "suggested_block": suggested_block,
+            "ready_to_submit": not missing and not problems}
+
+
+def _ensure_draft(cur, mobile):
+    d = _load_draft(cur, mobile, lock=True)
+    if d:
+        return d
+    now = datetime.now()
+    cur.execute("INSERT INTO agent_drafts (mobile, data, created_at, updated_at, expires_at) "
+                "VALUES (%s, '{}'::jsonb, %s, %s, %s) "
+                "ON CONFLICT (mobile) DO UPDATE SET data = '{}'::jsonb, doc_path = NULL, "
+                "doc_name = NULL, upload_token = NULL, token_expires = NULL, "
+                "created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, "
+                "expires_at = EXCLUDED.expires_at", (mobile, now, now, now + DRAFT_TTL))
+    return _load_draft(cur, mobile, lock=True)
+
+
+def issue_upload_token(mobile):
+    """A link for uploading this mobile's age proof. Reuses a live token, so asking
+    twice gives the same link. The token is bound to the mobile and nothing else."""
+    now = datetime.now()
+    with db(commit=True) as cur:
+        d = _ensure_draft(cur, mobile)
+        if d["upload_token"] and d["token_expires"] and d["token_expires"] > now:
+            token, expires = d["upload_token"], d["token_expires"]
+        else:
+            token, expires = secrets.token_urlsafe(24), now + UPLOAD_TOKEN_TTL
+            cur.execute("UPDATE agent_drafts SET upload_token = %s, token_expires = %s, "
+                        "updated_at = %s WHERE mobile = %s", (token, expires, now, mobile))
+    out = {"url": "%s/upload/%s" % (PUBLIC_BASE_URL, token), "token": token,
+           "expires_at_ist": fmt_ist(expires), "doc_attached": bool(d["doc_path"]),
+           "doc_name": d["doc_name"]}
+    if d["doc_path"]:
+        out["provenance"] = document_provenance(doc_path=d["doc_path"])
+    return out
+
+
+def draft_for_upload_token(token):
+    """The draft a live upload token belongs to, or None (unknown or expired)."""
+    if not token:
+        return None
+    now = datetime.now()
+    with db() as cur:
+        cur.execute("SELECT mobile, doc_name, token_expires FROM agent_drafts "
+                    "WHERE upload_token = %s AND token_expires > %s AND expires_at > %s",
+                    (token, now, now))
+        r = cur.fetchone()
+    if not r:
+        return None
+    return {"mobile_masked": "******" + r[0][-4:], "doc_attached": bool(r[1]),
+            "doc_name": r[1], "token_expires_ist": fmt_ist(r[2])}
+
+
+def attach_draft_document(token, filename, stream):
+    """Store an uploaded age proof against the draft its token belongs to.
+
+    The only writer of a document on the agent path. Same rules as /upload (pdf, jpg,
+    jpeg, png; at most 5 MB), read in chunks and abandoned past the limit. The file
+    gets a fresh server-chosen name, so nothing the uploader sends becomes part of a
+    path and no earlier file is overwritten. The bytes are hashed as they are read and
+    the provenance row records exactly what arrived.
+    """
+    original = (filename or "").strip()
+    if stream is None or not original:
+        return {"status": "no_file",
+                "message": "Choose a file to upload (JPG, PNG or PDF, up to 5 MB)."}
+    ext = original.rsplit(".", 1)[-1].lower() if "." in original else ""
+    if ext not in UPLOAD_EXTENSIONS:
+        return {"status": "bad_type", "message": "Please upload a JPG, PNG or PDF file."}
+
+    now = datetime.now()
+    with db(commit=True) as cur:
+        cur.execute("SELECT mobile FROM agent_drafts WHERE upload_token = %s "
+                    "AND token_expires > %s AND expires_at > %s FOR UPDATE",
+                    (token, now, now))
+        r = cur.fetchone()
+        if not r:
+            return {"status": "expired",
+                    "message": "This upload link has expired. Ask for a new one."}
+        mobile = r[0]
+        name = "draft_%s_%s_%s.%s" % (mobile, now.strftime("%Y%m%d%H%M%S"),
+                                      secrets.token_hex(2), ext)
+        path = os.path.join(portal.UPLOAD_DIR, name)
+        os.makedirs(portal.UPLOAD_DIR, exist_ok=True)
+        h, size = hashlib.sha256(), 0
+        try:
+            with open(path, "xb") as out:
+                while True:
+                    chunk = stream.read(64 * 1024)
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    if size > UPLOAD_MAX_BYTES:
+                        raise _TooLarge()
+                    h.update(chunk)
+                    out.write(chunk)
+        except _TooLarge:
+            os.remove(path)
+            return {"status": "too_large",
+                    "message": "File is larger than 5 MB. Please upload a smaller file."}
+        if size == 0:
+            os.remove(path)
+            return {"status": "no_file", "message": "The file is empty."}
+        content_type = (getattr(stream, "mimetype", None) or DOC_MIMETYPES.get(ext))[:60]
+        digest = h.hexdigest()
+        cur.execute("INSERT INTO document_uploads (mobile, doc_path, original_name, sha256, "
+                    "byte_size, content_type, source, uploaded_at) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, 'upload_token', %s)",
+                    (mobile, path, original[:200], digest, size, content_type, now))
+        cur.execute("UPDATE agent_drafts SET doc_path = %s, doc_name = %s, updated_at = %s "
+                    "WHERE mobile = %s", (path, original[:120], now, mobile))
+    return {"status": "ok", "doc_name": original, "sha256": digest, "byte_size": size,
+            "uploaded_at_ist": fmt_ist(now)}
+
+
+class _TooLarge(Exception):
+    pass
+
+
+def document_provenance(application_id=None, doc_path=None):
+    """What was recorded when a document arrived through the agent channel."""
+    if application_id is None and not doc_path:
+        raise ServiceError("bad_field", "give application_id or doc_path")
+    with db() as cur:
+        if application_id is not None:
+            cur.execute("SELECT original_name, sha256, byte_size, content_type, source, "
+                        "uploaded_at FROM document_uploads WHERE application_id = %s "
+                        "ORDER BY id DESC LIMIT 1", (application_id,))
+        else:
+            cur.execute("SELECT original_name, sha256, byte_size, content_type, source, "
+                        "uploaded_at FROM document_uploads WHERE doc_path = %s "
+                        "ORDER BY id DESC LIMIT 1", (doc_path,))
+        r = cur.fetchone()
+    if not r:
+        return {"recorded": False,
+                "reason": "uploaded through the web form or predates this release"}
+    return {"recorded": True, "original_name": r[0], "sha256": r[1], "byte_size": r[2],
+            "content_type": r[3], "source": r[4], "uploaded_at_ist": fmt_ist(r[5])}
 
 
 # ---------------------------------------------------------------------------
