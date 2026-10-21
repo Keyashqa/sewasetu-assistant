@@ -633,6 +633,16 @@ def admin_view(app_id):
     return render_template("admin_view.html", a=row, app_id=app_id, audit=audit)
 
 
+@app.route("/admin/application/<int:app_id>/document")
+def admin_document(app_id):
+    if not session.get("admin"):
+        return redirect(url_for("admin_login"))
+    doc = services.application_document(app_id)        # (bytes, mimetype, filename) or None
+    if not doc:
+        abort(404)
+    return send_file(io.BytesIO(doc[0]), mimetype=doc[1], download_name=doc[2])
+
+
 def _admin_decide(app_id, new_status, note):
     """Approve/reject a PENDING application, recording who decided and when."""
     if not session.get("admin"):

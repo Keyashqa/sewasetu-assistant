@@ -22,6 +22,7 @@ display, with to_ist() / fmt_ist().
 
 import app as portal                      # MUST be first; see the import note above
 
+import os
 import re
 import threading
 from contextlib import contextmanager
@@ -458,6 +459,40 @@ def _warnings(row):
 
 def eligibility_warnings(row):
     return [text for _, text in _warnings(row)]
+
+
+DOC_READ_CAP = 10 * 1024 * 1024
+DOC_MIMETYPES = {"pdf": "application/pdf", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                 "png": "image/png"}
+
+
+def _safe_doc_path(doc_path):
+    """The real path of a stored document, or None if it resolves outside UPLOAD_DIR."""
+    if not (doc_path or "").strip():
+        return None
+    root = os.path.realpath(portal.UPLOAD_DIR)
+    real = os.path.realpath(doc_path)
+    if os.path.commonpath([root, real]) != root or real == root:
+        return None
+    return real
+
+
+def application_document(application_id):
+    """(bytes, mimetype, filename) of an application's age proof, or None when there is
+    no document, the file is missing, it lies outside UPLOAD_DIR, or it exceeds 10 MB."""
+    with db() as cur:
+        cur.execute("SELECT doc_path FROM applications WHERE id = %s", (application_id,))
+        row = cur.fetchone()
+    real = _safe_doc_path(row[0] if row else None)
+    if not real or not os.path.isfile(real):
+        return None
+    with open(real, "rb") as fh:
+        data = fh.read(DOC_READ_CAP + 1)
+    if len(data) > DOC_READ_CAP:
+        return None
+    name = os.path.basename(real)
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    return data, DOC_MIMETYPES.get(ext, "application/octet-stream"), name
 
 
 APPROVE_SMS = ("Sewa Setu: your pension application %s has been approved. Rs 250 per "
