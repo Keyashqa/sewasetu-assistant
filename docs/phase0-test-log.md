@@ -32,7 +32,20 @@ applicant", and a small model read the signed-in mobile as the applicant. Fix: c
 server `instructions` now state that a helper may apply with consent, that the mobile is
 only the contact number, that the helper may confirm the declaration, and that the only
 mobile rule is one active application per number; the four tool descriptions and the
-shared-phone message were reworded to match. To re-run.
+shared-phone message were reworded to match (`13f489e`).
+
+**Citizen re-run with Haiku after the fix — S2, S3, S4, S1, S7, S5, S6 all PASS (2026-10-21).**
+Signed in as `9445816403` (the grandson), filing for Sewali Gogoi. Final database state,
+confirmed by SQL:
+
+| id | application_no | name | block | status | decided_by | audit | documents |
+|---|---|---|---|---|---|---|---|
+| 100017 | SSP26116432 | Sewali Gogoi | Dhemaji Pathar | WITHDRAWN | APPLICANT | SUBMIT, WITHDRAW | 1 |
+| 100018 | SSP26779717 | Sewali Gogoi | Dhemaji Pathar | PENDING | — | SUBMIT | 1 |
+
+**For Phase 1 evals (no fix now):** before the helper fix, Haiku offered a month-first
+reading of a date and speculated about future application windows. The server instructions
+now forbid both; re-check them in the evals.
 
 ## Step 7 — OAuth with Claude Code
 
