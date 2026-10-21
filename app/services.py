@@ -571,14 +571,15 @@ def draft_for_upload_token(token):
             "doc_name": r[1], "token_expires_ist": fmt_ist(r[2])}
 
 
-def attach_draft_document(token, filename, stream):
+def attach_draft_document(token, filename, stream, source="upload_token"):
     """Store an uploaded age proof against the draft its token belongs to.
 
     The only writer of a document on the agent path. Same rules as /upload (pdf, jpg,
     jpeg, png; at most 5 MB), read in chunks and abandoned past the limit. The file
     gets a fresh server-chosen name, so nothing the uploader sends becomes part of a
     path and no earlier file is overwritten. The bytes are hashed as they are read and
-    the provenance row records exactly what arrived.
+    the provenance row records exactly what arrived. `source` is 'upload_token' for the
+    /upload/<token> route; only scripts/seed_demo_queue.py passes 'demo_seed'.
     """
     original = (filename or "").strip()
     if stream is None or not original:
@@ -625,8 +626,8 @@ def attach_draft_document(token, filename, stream):
         digest = h.hexdigest()
         cur.execute("INSERT INTO document_uploads (mobile, doc_path, original_name, sha256, "
                     "byte_size, content_type, source, uploaded_at) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, 'upload_token', %s)",
-                    (mobile, path, original[:200], digest, size, content_type, now))
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    (mobile, path, original[:200], digest, size, content_type, source, now))
         cur.execute("UPDATE agent_drafts SET doc_path = %s, doc_name = %s, updated_at = %s "
                     "WHERE mobile = %s", (path, original[:120], now, mobile))
     return {"status": "ok", "doc_name": original, "sha256": digest, "byte_size": size,
