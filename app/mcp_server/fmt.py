@@ -30,8 +30,10 @@ def window_closed_message(win):
 
 
 def existing_application_message(existing):
-    return ("This mobile number already has application %s (%s). One application per mobile "
-            "number is the portal's rule. If it is your own, use get_my_application. If it "
-            "belongs to someone else who shares this phone, they must apply from their own "
-            "number or at the block office." % (existing["application_no"],
-                                                existing["status"]))
+    return ("This mobile number already has an active application, %s (%s). If that "
+            "application is for this same applicant, there is nothing new to file — use "
+            "get_my_application to see where it stands. A different applicant cannot be filed "
+            "on this mobile number while that one is active (one active application per mobile "
+            "number); they can apply using another mobile number, such as another family "
+            "member's, or at the block office." % (existing["application_no"],
+                                                   existing["status"]))

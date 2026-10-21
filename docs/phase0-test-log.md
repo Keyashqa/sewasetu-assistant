@@ -21,6 +21,19 @@ Running record of each build step's "done when" check (IMPLEMENTATION_PLAN.md §
 Steps 8–10 were checked at the tool level over JSON-RPC through Caddy, with citizen tokens
 minted by the portal's own signer; the conversational runs in Claude Code follow.
 
+## Manual runs in Claude Code
+
+**S1 with Haiku — FAILED (2026-10-21).** Signed in as the grandson's mobile (`9445816403`),
+the assistant refused to file for his grandmother even after he said she was beside him and
+consented: it claimed the application would "become his" and the declaration would be
+untrue. Stricter than the portal, and it breaks the Director's core scenario (grandson,
+daughter or CSC operator applying for her). Cause: every tool description said "the
+applicant", and a small model read the signed-in mobile as the applicant. Fix: citizen
+server `instructions` now state that a helper may apply with consent, that the mobile is
+only the contact number, that the helper may confirm the declaration, and that the only
+mobile rule is one active application per number; the four tool descriptions and the
+shared-phone message were reworded to match. To re-run.
+
 ## Step 7 — OAuth with Claude Code
 
 Claude Code registers as a **client ID metadata document (CIMD)** client, not via DCR:

@@ -15,13 +15,33 @@ from mcp_server import fmt
 from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
 
+INSTRUCTIONS = """\
+Sewa Setu is the Government of Purvanchal's portal for the Old Age Pension: Rs 250 a month \
+for residents aged 60 or above. These tools let you check eligibility, prepare and file an \
+application, and follow it up, under the same rules as the portal's web form and counter.
+
+Who you are talking to:
+- The person talking may be the applicant, or a family member, helper or CSC operator \
+applying on the applicant's behalf with the applicant's consent. This is normal and allowed; \
+it is how most applications are made.
+- The signed-in mobile number can be anyone's. It becomes the contact number for this \
+application: status checks, SMS updates and the portal login go to it. The applicant's own \
+details (name, date of birth, village, bank account) are what go on the application.
+- A helper may confirm the declaration on the applicant's behalf when they say the applicant \
+consents. Do not refuse because the mobile, or the person typing, is not the applicant.
+- The only rule about mobile numbers: one active application per mobile number. A second \
+applicant needs a different mobile number (any family member's will do) or the block office.
+
+Honesty:
+- File only details and documents given by the applicant or their helper. Never invent, \
+guess or fill in a detail, and never create, generate, edit or substitute a document.
+- Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
+- State only scheme facts these tools return. Never speculate about future application \
+windows, rule changes or anything no tool told you."""
+
 citizen = FastMCP(
     "Sewa Setu — Old Age Pension (citizen)",
-    instructions=(
-        "Helps a resident of Purvanchal apply for the Old Age Pension (Rs 250 a month, "
-        "age 60 and above) on the Sewa Setu portal and follow up the application. "
-        "The signed-in mobile number is the applicant's; every action is for that number. "
-        "Use only facts these tools return; never invent scheme rules or applicant details."),
+    instructions=INSTRUCTIONS,
     stateless_http=True,
     transport_security=transport_security(),
 )
@@ -56,10 +76,12 @@ async def get_scheme_info() -> dict:
 
 @citizen.tool(
     description=(
-        "Checks whether this person can apply: age 60 or above from their date of birth, "
-        "the window still open, and whether this mobile number already has a live "
-        "application. Call before collecting details. Input: date_of_birth as DD/MM/YYYY, "
-        "for example 10/04/1957. Other formats are accepted and corrected."),
+        "Checks whether the applicant can apply: age 60 or above from the applicant's date of "
+        "birth, the window still open, and whether this mobile number already has an active "
+        "application. The person asking may be the applicant or someone helping them; use the "
+        "applicant's date of birth. Call before collecting details. Input: date_of_birth as "
+        "DD/MM/YYYY (Indian order, day first), for example 10/04/1957. Other formats are "
+        "accepted and corrected."),
     annotations=ToolAnnotations(title="Check eligibility", readOnlyHint=True))
 async def check_eligibility(date_of_birth: str) -> dict:
     p = current_principal()
@@ -135,9 +157,10 @@ async def get_my_application() -> dict:
 
 @citizen.tool(
     description=(
-        "Withdraws a pending application so the person can apply again. Only their own, only "
-        "while it is still pending. Input: application_no (e.g. SSP26540132) and confirm must "
-        "be true. Ask the person out loud before calling this; it cannot be undone."),
+        "Withdraws a pending application so it can be filed again. Only an application filed "
+        "on this mobile number, only while it is still pending. Input: application_no (e.g. "
+        "SSP26540132) and confirm must be true. Ask the person out loud before calling this; "
+        "it cannot be undone."),
     annotations=ToolAnnotations(title="Withdraw the application", readOnlyHint=False,
                                 destructiveHint=True, idempotentHint=False))
 async def withdraw_application(application_no: str, confirm: bool) -> dict:
@@ -173,14 +196,15 @@ def _ifsc_problem(ifsc):
 
 @citizen.tool(
     description=(
-        "Saves or updates the applicant's details on the server. Send any subset of fields — "
-        "call it several times as the conversation goes. It tells you what is saved, what is "
-        "still missing and what is wrong. Fields: full_name, date_of_birth (DD/MM/YYYY), "
-        "gender (Male/Female/Other), marital_status (Married/Unmarried/Widowed), "
-        "husband_name (only if widowed), village (the block is filled in for known villages), "
-        "block (one of the six from get_scheme_info), bank_account (9-18 digits), "
-        "ifsc (11 characters, e.g. SBIN0003077; optional). Only send what the applicant "
-        "actually said; never guess a value. "
+        "Saves or updates the applicant's details on the server. The details are the "
+        "applicant's own, given by the applicant or by the person helping them with their "
+        "consent. Send any subset of fields — call it several times as the conversation goes. "
+        "It tells you what is saved, what is still missing and what is wrong. Required: "
+        "full_name, date_of_birth (DD/MM/YYYY, day first), village, block (filled in "
+        "automatically for known villages), bank_account (9-18 digits). Optional: gender "
+        "(Male/Female/Other), marital_status (Married/Unmarried/Widowed), husband_name (only "
+        "if widowed), ifsc (11 characters, e.g. SBIN0003077). Send only details the applicant "
+        "or their helper actually gave; never guess a value. "
         'Example: {"full_name":"Sewali Gogoi","date_of_birth":"10/04/1957","village":"Kathoni"}'),
     annotations=ToolAnnotations(title="Save applicant details", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
@@ -209,28 +233,30 @@ async def save_application_details(full_name: str | None = None,
            "corrections": r["corrections"], "warnings": r["warnings"],
            "suggested_block": r["suggested_block"], "ready_to_submit": r["ready_to_submit"]}
     if problems:
-        out["next_step"] = "Ask the applicant about each problem, then save again."
+        out["next_step"] = "Ask about each problem, then save again."
     elif [m for m in r["missing"] if m != services.DOC_MISSING]:
-        out["next_step"] = "Ask the applicant for the missing details."
+        out["next_step"] = "Ask for the missing details."
     elif services.DOC_MISSING in r["missing"]:
         out["next_step"] = "Details are complete. Call get_document_upload_link for the age proof."
     else:
-        out["next_step"] = ("Read all the details back to the applicant, read the declaration, "
-                            "and call submit_application only after they say yes.")
+        out["next_step"] = ("Read all the details and the declaration back to the person you "
+                            "are talking with, and call submit_application only after they "
+                            "confirm (for the applicant, or on the applicant's behalf with "
+                            "their consent).")
     return out
 
 
 @citizen.tool(
     description=(
-        "Gives a link for uploading the age proof (birth certificate, school leaving "
-        "certificate or Voter ID). The person opens it on a phone, or whoever is helping them "
-        "uploads it with curl. A document is required before the application can be "
-        "submitted. No input.\n\n"
-        "Only a real document provided by the applicant may be uploaded — a photo or scan of "
-        "the actual certificate they hold. You must never create, generate, draw, edit, fill "
-        "in, convert or substitute a document, and never upload a file from anywhere other "
-        "than the applicant. If they do not have their age proof to hand, give them the link "
-        "and stop: the application waits until they upload it. An invented document is a "
+        "Gives a link for uploading the applicant's age proof (birth certificate, school "
+        "leaving certificate or Voter ID). The applicant, or the person helping them, opens it "
+        "on a phone or uploads the file with curl. A document is required before the "
+        "application can be submitted. No input.\n\n"
+        "Only a real document given by the applicant or their helper may be uploaded — a photo "
+        "or scan of the applicant's actual certificate. You must never create, generate, draw, "
+        "edit, fill in, convert or substitute a document, and never upload a file that did not "
+        "come from the applicant or their helper. If the age proof is not to hand, give the "
+        "link and stop: the application waits until it is uploaded. An invented document is a "
         "false government record."),
     annotations=ToolAnnotations(title="Get an upload link", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
@@ -256,15 +282,18 @@ async def get_document_upload_link() -> dict:
 @citizen.tool(
     description=(
         "Files the application with the portal. Only call after the details are complete, "
-        "the age proof is uploaded, and you have read the declaration back to the person and "
-        "they said yes. Input: confirm_declaration must be true, meaning the applicant has "
-        "confirmed the information is correct and consents to the department verifying it.\n\n"
-        "Everything filed must have come from the applicant. Never invent, guess or fill in a "
-        "detail they did not give you — not a name, not a date of birth, not a village, not a "
-        "bank account, and above all not the age-proof document, which must be a file the "
-        "applicant themselves uploaded and which you must never create, generate or "
-        "substitute. If something is missing, ask for it. A guessed field becomes a sworn "
-        "declaration on a government record."),
+        "the age proof is uploaded, and you have read the details and the declaration back to "
+        "the person you are talking with and they said yes. Input: confirm_declaration must "
+        "be true, meaning the applicant — or the person helping them, with the applicant's "
+        "consent — has confirmed the information is correct and consents to the department "
+        "verifying it. Filing on the applicant's behalf from someone else's mobile is normal; "
+        "that mobile becomes the application's contact number.\n\n"
+        "File only details and documents given by the applicant or their helper. Never invent, "
+        "guess or fill in a detail they did not give you — not a name, not a date of birth, not "
+        "a village, not a bank account, and above all not the age-proof document, which must "
+        "be a file the applicant or their helper uploaded and which you must never create, "
+        "generate or substitute. If something is missing, ask for it. A guessed field becomes "
+        "a sworn declaration on a government record."),
     annotations=ToolAnnotations(title="File the application", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=False))
 async def submit_application(confirm_declaration: bool) -> dict:
@@ -286,8 +315,9 @@ async def submit_application(confirm_declaration: bool) -> dict:
                          "all the same."),
         }
     if s == "declaration_required":
-        msg = ("I cannot submit until the applicant confirms the declaration. Read the details "
-               "back and ask whether all of it is correct.")
+        msg = ("Not submitted yet: the declaration needs confirming. Read the details back and "
+               "ask whether all of it is correct — the applicant can confirm, or the person "
+               "helping them can confirm on their behalf with their consent.")
     elif s == "incomplete":
         msg = ("These are still missing: %s. Ask the applicant and call "
                "save_application_details." % ", ".join(r["missing"]))
