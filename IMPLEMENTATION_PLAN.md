@@ -1446,6 +1446,14 @@ one of our two canonical URLs, and each PRM document advertises exactly one scop
 **Verify this first at step 11.** If Claude Code also omits `resource`, the fallback is a
 pair of signed-in entry URLs that pre-set the scope — more code, same outcome.
 
+**Observed at step 7 (2026-10-21):** Claude Code signs in as a **CIMD** client, not by DCR:
+`client_id = https://claude.ai/oauth/claude-code-client-metadata` (`oauth_clients.kind =
+'cimd'`, redirect URIs `http://localhost/callback` and `http://127.0.0.1/callback`). It sent
+`resource` = the canonical server URL, and the minted tokens carried the matching `aud`,
+`scope` and `role` for both servers. The CIMD fetch path (`load_client`, §6-C / D10) is
+therefore on the critical path for sign-in, and the deployed portal must be able to reach
+`claude.ai` over HTTPS.
+
 **R2 — Trailing slash and host spelling.** `resource=…/mcp/officer/` yields an `aud` with a
 slash; handled by comparing `aud.rstrip("/")`. A different host spelling (`127.0.0.1` vs
 `localhost`) is correctly rejected; the test script uses `localhost` throughout, and
