@@ -355,13 +355,22 @@ def authorize():
                 (rid, json.dumps(params), scopes[0], datetime.now()))
     conn.commit()
     cur.close(); conn.close()
+    # Bind the request to this browser: login and consent only proceed for a rid this
+    # browser started, so a rid cannot be completed from another client. The last five
+    # are kept so a kiosk user who starts two sign-ins is not locked out.
+    session["oauth_rids"] = (session.get("oauth_rids", []) + [rid])[-5:]
+    session.modified = True
     return redirect(url_for("oauth.login", rid=rid))
+
+
+def _bound(rid):
+    return bool(rid) and rid in session.get("oauth_rids", [])
 
 
 @oauth.route("/oauth/login", methods=["GET", "POST"])
 def login():
     rid = request.args.get("rid", "")
-    req = _load_request(rid)
+    req = _load_request(rid) if _bound(rid) else None
     if not req:
         return render_template("oauth_error.html", error="Request expired",
                                detail="Please start again from your application."), 400
@@ -411,7 +420,7 @@ def login():
 @oauth.route("/oauth/consent", methods=["GET", "POST"])
 def consent():
     rid = request.args.get("rid", "")
-    req = _load_request(rid)
+    req = _load_request(rid) if _bound(rid) else None
     if not req or not req["subject"]:
         return render_template("oauth_error.html", error="Request expired",
                                detail="Please start again from your application."), 400
@@ -598,12 +607,35 @@ def citizen_connections():
 # program tokens (admin-issued, long-lived, for unattended use)
 # ---------------------------------------------------------------------------
 
+def verify_program_jti(jti):
+    """False if this program token has been revoked. Tokens with no row (issued before
+    revocation existed) are treated as live."""
+    conn = portal.get_db()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT revoked_at FROM oauth_program_tokens WHERE jti = %s", (jti,))
+        row = cur.fetchone()
+        cur.close()
+    finally:
+        conn.close()
+    return not (row and row[0] is not None)
+
+
 @oauth.route("/admin/tokens", methods=["GET", "POST"])
 def admin_tokens():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
     issued = None
-    if request.method == "POST" and not request.form.get("revoke_subject"):
+    if request.method == "POST" and request.form.get("revoke_jti"):
+        conn = portal.get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE oauth_program_tokens SET revoked_at = %s "
+                    "WHERE jti = %s AND revoked_at IS NULL",
+                    (datetime.now(), request.form["revoke_jti"]))
+        conn.commit()
+        cur.close(); conn.close()
+        flash("Program token revoked.")
+    elif request.method == "POST" and not request.form.get("revoke_subject"):
         label = (request.form.get("label") or "program").strip()[:100]
         audience = (request.form.get("audience") or "").strip() or ISSUER
         days = max(1, min(int(request.form.get("days") or 90), 365))
@@ -623,8 +655,8 @@ def admin_tokens():
         flash("%d officer sign-in(s) ended." % n)
     conn = portal.get_db()
     cur = conn.cursor()
-    cur.execute("SELECT label, subject, audience, issued_by, created_at, expires_at FROM "
-                "oauth_program_tokens ORDER BY id DESC LIMIT 20")
+    cur.execute("SELECT jti, label, subject, audience, issued_by, created_at, expires_at, "
+                "revoked_at FROM oauth_program_tokens ORDER BY id DESC LIMIT 20")
     rows = cur.fetchall()
     cur.execute("SELECT client_name, kind, created_at FROM oauth_clients ORDER BY id DESC LIMIT 20")
     clients = cur.fetchall()

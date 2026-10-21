@@ -23,6 +23,9 @@ import jwt
 from jwt import PyJWKClient
 from starlette.responses import JSONResponse, Response
 
+import app as portal              # noqa: F401  must precede `import oauth` (circular import)
+import oauth
+
 ISSUER = os.environ.get("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/")
 # The JWKS is fetched over the internal network: inside this container the public
 # address may not route back to the portal (locally, localhost is this container).
@@ -94,9 +97,12 @@ def authenticate(header, expected_role, canonical_url):
     if claims.get("role") != expected_role or claims.get("scope") != expected_role:
         raise Forbidden("This token is for the %s service. Reconnect with the %s MCP "
                         "server." % (claims.get("role"), expected_role))
-    if claims.get("kind") == "program" and expected_role != "officer":
-        raise Forbidden("Program tokens are for the officer service only.")
-    # Program-token revocation (oauth.verify_program_jti) is added in build step 11.
+    if claims.get("kind") == "program":
+        if expected_role != "officer":
+            raise Forbidden("Program tokens are for the officer service only.")
+        if not oauth.verify_program_jti(claims.get("jti", "")):
+            raise Unauthorized("This program token has been revoked. Please sign in again "
+                               "or ask an administrator for a new token.")
     if claims.get("session_ends") and claims["session_ends"] <= time.time():
         raise Unauthorized("Your sign-in has ended. Please sign in again.")
 
