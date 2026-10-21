@@ -1084,6 +1084,41 @@ def application_document(application_id):
     return data, DOC_MIMETYPES.get(ext, "application/octet-stream"), name
 
 
+def document_for_view(application_id):
+    """Everything view_age_proof needs, with each failure told apart: no document, file
+    missing on disk, path refused, too large. On success the bytes are hashed again so a
+    file changed since upload is caught."""
+    with db() as cur:
+        cur.execute("SELECT application_no, doc_path, dob FROM applications WHERE id = %s",
+                    (application_id,))
+        r = cur.fetchone()
+    if not r:
+        return {"status": "not_found"}
+    app_no, doc_path, dob = r
+    base = {"application_no": app_no, "doc_path": doc_path,
+            "date_of_birth": dob.strftime("%d/%m/%Y") if dob else None}
+    if not (doc_path or "").strip():
+        return dict(base, status="no_document")
+    real = _safe_doc_path(doc_path)
+    if not real:
+        return dict(base, status="refused")
+    if not os.path.isfile(real):
+        return dict(base, status="missing_file")
+    with open(real, "rb") as fh:
+        data = fh.read(DOC_READ_CAP + 1)
+    if len(data) > DOC_READ_CAP:
+        return dict(base, status="too_large")
+    name = os.path.basename(real)
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    prov = document_provenance(application_id=application_id)
+    if not prov["recorded"]:
+        prov = document_provenance(doc_path=doc_path)
+    return dict(base, status="ok", data=data, ext=ext,
+                mimetype=DOC_MIMETYPES.get(ext, "application/octet-stream"),
+                sha256=hashlib.sha256(data).hexdigest(), byte_size=len(data),
+                provenance=prov)
+
+
 APPROVE_SMS = ("Sewa Setu: your pension application %s has been approved. Rs 250 per "
                "month will be credited to your bank account by DBT.")
 REJECT_SMS = ("Sewa Setu: your pension application %s has been rejected. Reason: %s. "
