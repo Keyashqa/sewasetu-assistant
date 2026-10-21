@@ -31,6 +31,30 @@ services:
       - uploads:/var/sewasetu/uploads
       - applogs:/var/log/sewasetu
 
+  mcp:
+    # both MCP servers (/mcp/citizen, /mcp/officer), same image as the portal. Applies the
+    # idempotent migrations before starting, so an existing database picks up new DDL.
+    build: ./app
+    command: ["sh", "-c", "python /app/scripts/apply_migrations.py && exec uvicorn mcp_server.main:app --host 0.0.0.0 --port 8080 --workers 1"]
+    expose:
+      - "8080"
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-before-deploying}
+      SCHEME_DEADLINE: ${SCHEME_DEADLINE:-}
+      # the portal's signing keys, fetched over the internal network
+      JWKS_URL: http://app:8000/.well-known/jwks.json
+    depends_on:
+      - db
+      - app
+      - smsgw
+    volumes:
+      # read-only: the MCP layer reads documents, only the portal writes them
+      - uploads:/var/sewasetu/uploads:ro
+      - applogs:/var/log/sewasetu
+
   proxy:
     # single public entrypoint: /mcp/* and the protected-resource metadata go to the
     # MCP servers, everything else to the portal. Same origin for both, so the portal's
@@ -43,6 +67,7 @@ services:
       - caddydata:/data
     depends_on:
       - app
+      - mcp
 
   scheduler:
     build: ./app

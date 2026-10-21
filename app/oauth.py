@@ -51,6 +51,8 @@ SESSION = {
     "officer": {"access": 30 * 60, "session": 8 * 3600},   # one working day
 }
 CODE_TTL = 300                    # 5 minutes
+# the MCP servers' canonical URLs, and the one scope each accepts
+RESOURCE_SCOPE = {ISSUER + "/mcp/citizen": "citizen", ISSUER + "/mcp/officer": "officer"}
 SCOPES = {
     "citizen": "act for you on the Old Age Pension portal: check eligibility, apply, "
                "see and manage your own application",
@@ -181,7 +183,9 @@ LOOPBACK_HOSTS = ("localhost", "127.0.0.1", "[::1]", "::1")
 
 def redirect_allowed(registered, uri):
     """Exact match, except for loopback redirects (RFC 8252 s7.3): native clients listen
-    on an ephemeral port, so a registered http://localhost/callback matches any port."""
+    on an ephemeral port, so a registered http://localhost/callback matches any port,
+    and any loopback spelling (localhost / 127.0.0.1 / [::1]) matches any other. Path
+    and query must still match exactly."""
     if uri in registered:
         return True
     try:
@@ -193,7 +197,7 @@ def redirect_allowed(registered, uri):
     for r in registered:
         rp = urlparse(r)
         if rp.scheme == "http" and rp.hostname in LOOPBACK_HOSTS and rp.path == u.path \
-                and rp.query == u.query and rp.hostname == u.hostname:
+                and rp.query == u.query:
             return True
     return False
 
@@ -245,7 +249,7 @@ def register():
                         "error_description": "redirect_uris must be a non-empty list"}), 400
     for u in uris:
         p = urlparse(u)
-        if p.scheme not in ("https", "http") or (p.scheme == "http" and p.hostname not in ("localhost", "127.0.0.1")):
+        if p.scheme not in ("https", "http") or (p.scheme == "http" and p.hostname not in LOOPBACK_HOSTS):
             return jsonify({"error": "invalid_redirect_uri",
                             "error_description": "redirect URIs must be https, or http on localhost"}), 400
     method = body.get("token_endpoint_auth_method", "none")
@@ -325,12 +329,20 @@ def authorize():
         return _err_redirect(redirect_uri, state, "unsupported_response_type", "only code is supported")
     if q.get("code_challenge_method", "S256") != "S256" or not q.get("code_challenge"):
         return _err_redirect(redirect_uri, state, "invalid_request", "PKCE with S256 is required")
-    scopes = [s for s in (q.get("scope") or "citizen").split() if s]
+    # A client signing in to one of the two MCP servers may send no scope, or several;
+    # the server it names in `resource` decides the role, so an officer client can
+    # never come back with a citizen token. Any other resource behaves as before.
+    resource = q.get("resource") or ISSUER
+    implied = RESOURCE_SCOPE.get(resource.rstrip("/"))
+    raw = [s for s in (q.get("scope") or "").split() if s]
+    if implied and (not raw or implied in raw):
+        scopes = [implied]
+    else:
+        scopes = raw or ["citizen"]
     unknown = [s for s in scopes if s not in SCOPES]
     if unknown or len(scopes) != 1:
         return _err_redirect(redirect_uri, state, "invalid_scope",
                              "request exactly one of: " + ", ".join(SCOPES))
-    resource = q.get("resource") or ISSUER
     rid = secrets.token_urlsafe(24)
     params = {
         "client_id": client_id, "client_name": client["client_name"], "redirect_uri": redirect_uri,
