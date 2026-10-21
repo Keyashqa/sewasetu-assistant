@@ -37,6 +37,11 @@ application. Never approve on your own judgement or as a follow-on step.
 they confirmed. If the officer says "reject it" without a reason, do not pick one and reject. \
 Suggest the canonical reason that fits, with the evidence you saw, and ask them to confirm or \
 choose another; call reject_application only after they answer.
+- When they answer, map the officer's stated reason to the matching canonical reason (for \
+example "the account isn't in her name" is "bank account not in applicant's name"). Use \
+"other" only when none of the four fits. Pass the officer's own words, verbatim, as \
+officer_reason_quote. Never substitute your own observation for the officer's reason, in the \
+reason, the quote or the note.
 - Reviewing is your job; deciding is theirs. Do point out what you notice — a name or date of \
 birth on the document that differs from the record, an illegible scan, a warning from the \
 tools — and then let the officer decide.
@@ -338,25 +343,36 @@ async def approve_application(application_id: int, application_no: str,
         "asked to reject this application AND the reason is theirs — one they stated, or one "
         "you suggested and they confirmed. If they said \"reject it\" without a reason, do not "
         "choose one yourself: suggest the reason that fits, with the evidence, and ask them to "
-        "confirm first. reason must be one of: \"bank account not in applicant's name\", "
-        "\"duplicate of an earlier beneficiary record\", \"age proof document illegible\", "
-        "\"age proof does not match stated date of birth\", or \"other\" with the explanation "
-        "in note. Pass application_id and application_no; they must match. The reason is sent "
-        "to the applicant by SMS. "
+        "confirm first. reason: map the officer's stated reason to one of \"bank account not in "
+        "applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
+        "document illegible\", \"age proof does not match stated date of birth\"; use "
+        "\"other\" (with the officer's explanation in note) only when none fits. "
+        "officer_reason_quote (required): the officer's own words giving or confirming the "
+        "reason, copied verbatim — never your own observation or a paraphrase. It is recorded "
+        "in the audit trail. Pass application_id and application_no; they must match. The "
+        "reason is sent to the applicant by SMS. "
         'Example: {"application_id":100021,"application_no":"SSP26540132",'
-        '"reason":"age proof document illegible"}'),
+        '"reason":"bank account not in applicant\'s name",'
+        '"officer_reason_quote":"reject it, the account isn\'t in her name"}'),
     annotations=ToolAnnotations(title="Reject (final)", readOnlyHint=False,
                                 destructiveHint=True, idempotentHint=False))
 async def reject_application(application_id: int, application_no: str,
-                             reason: str | None = None, note: str | None = None) -> dict:
+                             reason: str | None = None, officer_reason_quote: str | None = None,
+                             note: str | None = None) -> dict:
     p = current_principal()
     given = (reason or "").strip().strip("'\"").lower()
     note = (note or "").strip()
+    quote = " ".join((officer_reason_quote or "").split()).strip("'\"")
     canonical = {x.lower(): x for x in services.REJECTION_REASONS}
     if not given:
         return {"rejected": False, "status": "reason_required",
                 "message": _decision_error({"status": "reason_required"}, application_id,
                                            application_no)}
+    if not quote:
+        return {"rejected": False, "status": "quote_required",
+                "message": "officer_reason_quote is required: the officer's own words giving or "
+                           "confirming the reason, verbatim. If the officer has not said why, ask "
+                           "them. Nothing was changed."}
     if given not in canonical:
         return {"rejected": False, "status": "bad_reason",
                 "message": "reason must be one of: %s. For anything else use \"other\" and put "
@@ -370,6 +386,8 @@ async def reject_application(application_id: int, application_no: str,
         reason_text, note_text = note, ""
     else:
         reason_text, note_text = canonical[given], note
+    # audit note: <reason> — Officer: "<quote>"[ — <note>]
+    note_text = " — ".join(x for x in ('Officer: "%s"' % quote, note_text) if x)
     r = await _run(services.decide, application_id=application_id, decision="REJECTED",
                    reason=reason_text, note=note_text, officer=p.officer, channel="mcp",
                    expect_application_no=application_no)

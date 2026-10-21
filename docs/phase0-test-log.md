@@ -68,8 +68,41 @@ officer's. Fix: officer server instructions gain a "Decisions belong to the offi
 (approve only on an explicit instruction for that application; a rejection reason must be
 stated or confirmed by the officer — suggest one with the evidence, then ask; keep surfacing
 mismatches), and the approve/reject descriptions and the reason-required message say the
-same. `SSP26896862` is used up, so S11's "reject without a reason" check is re-tested on a
-fresh fixture, `SSP26306140` (Test Reason Applicant, document matches the record).
+same (`7110034`). `SSP26896862` is used up, so S11's "reject without a reason" check is
+re-tested on a fresh fixture, `SSP26306140` (Test Reason Applicant, document matches the record).
+
+**S11 re-test on `SSP26306140` — FAILED (2026-10-21, 22:01 IST).** On "Reject it." the
+assistant did ask for the reason, and the officer answered "bank account not in her name". But
+the rejection it recorded (and sent to the citizen by SMS) was its own observation, not the
+officer's reason:
+
+```
+SSP26306140 | REJECTED | admin | officer:admin via assistant |
+Age proof image is marked "TEST DOCUMENT - NOT REAL" and is titled "Birth certificate (fixture)".
+It is not a genuine birth certificate.
+```
+
+Fix (Option B): `reject_application` takes a required `officer_reason_quote` — the officer's
+own words giving or confirming the reason, verbatim — and stores it in the audit note as
+`<reason> — Officer: "<quote>"`. Instructions and description: map the officer's stated reason
+to the matching canonical reason, use "other" only when none fits, never substitute your own
+observation. Checked over JSON-RPC: no quote → refused, nothing written; with a quote →
+`bank account not in applicant's name — Officer: "reject it, the bank account isn't in her name"`,
+SMS carries only the canonical reason. Re-test fixture: `SSP26288550`.
+
+**S12 and S13 with Haiku — PASS.** `SSP26558440` (age 59, no document) blocked; id 99325 with
+number `SSP26361385` refused. Both still PENDING with no decision rows.
+
+**S10 approval of `SSP26779717` (Sewali Gogoi) — done in the officer session (21:57 IST),**
+audit `APPROVED | officer:admin via assistant`. `citizen_notified` **was not captured**: the
+session is gone and the SMS gateway's in-memory inbox was wiped by a rebuild that restarted
+it as a dependency. Rebuilds now use `--no-deps`; re-checked with a fresh approval in step 16.
+
+**Step 11 clean re-authentication — VERIFIED (22:06–22:07 IST)**, after removing and
+re-adding both servers in Claude Code. An earlier "re-auth" at 21:59 had only refreshed the
+existing tokens (two `POST /oauth/token`, no authorize/consent). The proxy log now shows a full
+`authorize → login → consent → token` for each server, and `oauth_refresh_tokens` has new rows
+with full sessions: citizen 1:59:59.96, officer 7:59:59.99.
 
 ## Step 7 — OAuth with Claude Code
 
