@@ -1087,39 +1087,50 @@ def application_document(application_id):
     return data, DOC_MIMETYPES.get(ext, "application/octet-stream"), name
 
 
-def document_for_view(application_id):
-    """Everything view_age_proof needs, with each failure told apart: no document, file
-    missing on disk, path refused, too large. On success the bytes are hashed again so a
-    file changed since upload is caught."""
+def document_url(application_id):
+    """The officer's link to an application's age proof (admin login required)."""
+    return "%s/admin/application/%d/document" % (PUBLIC_BASE_URL, application_id)
+
+
+def age_proof_record(application_id=None, application_no=None):
+    """What is recorded about an application's age proof, for the officer's assistant:
+    the officer's link, the provenance, and whether the file on disk still matches it.
+    Never returns the document itself — the officer opens the link. Each failure is told
+    apart: no document, file missing on disk, path refused, too large."""
+    if (application_id is None) == (not application_no):
+        raise ServiceError("bad_field", "give exactly one of application_id or application_no")
     with db() as cur:
-        cur.execute("SELECT application_no, doc_path, dob FROM applications WHERE id = %s",
-                    (application_id,))
+        if application_id is not None:
+            cur.execute("SELECT id, application_no, doc_path FROM applications WHERE id = %s",
+                        (application_id,))
+        else:
+            cur.execute("SELECT id, application_no, doc_path FROM applications "
+                        "WHERE application_no = %s", (application_no.strip().upper(),))
         r = cur.fetchone()
     if not r:
         return {"status": "not_found"}
-    app_no, doc_path, dob = r
-    base = {"application_no": app_no, "doc_path": doc_path,
-            "date_of_birth": dob.strftime("%d/%m/%Y") if dob else None}
+    app_id, app_no, doc_path = r
+    base = {"application_id": app_id, "application_no": app_no}
     if not (doc_path or "").strip():
         return dict(base, status="no_document")
+    base["url"] = document_url(app_id)
     real = _safe_doc_path(doc_path)
     if not real:
         return dict(base, status="refused")
     if not os.path.isfile(real):
         return dict(base, status="missing_file")
+    size = os.path.getsize(real)
+    if size > DOC_READ_CAP:
+        return dict(base, status="too_large", byte_size=size)
     with open(real, "rb") as fh:
-        data = fh.read(DOC_READ_CAP + 1)
-    if len(data) > DOC_READ_CAP:
-        return dict(base, status="too_large")
+        digest = hashlib.sha256(fh.read()).hexdigest()
     name = os.path.basename(real)
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-    prov = document_provenance(application_id=application_id)
+    prov = document_provenance(application_id=app_id)
     if not prov["recorded"]:
         prov = document_provenance(doc_path=doc_path)
-    return dict(base, status="ok", data=data, ext=ext,
-                mimetype=DOC_MIMETYPES.get(ext, "application/octet-stream"),
-                sha256=hashlib.sha256(data).hexdigest(), byte_size=len(data),
-                provenance=prov)
+    return dict(base, status="ok", mimetype=DOC_MIMETYPES.get(ext, "application/octet-stream"),
+                sha256=digest, byte_size=size, provenance=prov)
 
 
 APPROVE_SMS = ("Sewa Setu: your pension application %s has been approved. Rs 250 per "

@@ -577,6 +577,15 @@ def reset_password():
 # Admin
 # ---------------------------------------------------------------------------
 
+def _admin_next():
+    """Where to go after the departmental login: ?next= when it is a path inside /admin/
+    on this site (never another host), else None."""
+    nxt = request.args.get("next", "")
+    if nxt.startswith("/admin/") and not nxt.startswith("//") and "\\" not in nxt:
+        return nxt
+    return None
+
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -585,7 +594,7 @@ def admin_login():
             session["logged_in"] = True
             session["admin"] = True
             session["admin_user"] = ADMIN_USERNAME
-            return redirect(url_for("admin_dashboard"))
+            return redirect(_admin_next() or url_for("admin_dashboard"))
         flash("Invalid credentials.")
     return render_template("admin_login.html")
 
@@ -657,11 +666,17 @@ def admin_view(app_id):
 @app.route("/admin/application/<int:app_id>/document")
 def admin_document(app_id):
     if not session.get("admin"):
-        return redirect(url_for("admin_login"))
+        return redirect(url_for("admin_login", next=request.path))
     doc = services.application_document(app_id)        # (bytes, mimetype, filename) or None
     if not doc:
         abort(404)
-    return send_file(io.BytesIO(doc[0]), mimetype=doc[1], download_name=doc[2])
+    # inline: the officer reads the image or PDF in the browser tab the link opened
+    resp = send_file(io.BytesIO(doc[0]), mimetype=doc[1], as_attachment=False,
+                     download_name=doc[2])
+    resp.headers["Content-Disposition"] = 'inline; filename="%s"' % doc[2]
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Cache-Control"] = "private, no-store"
+    return resp
 
 
 def _admin_decide(app_id, new_status, note):

@@ -217,3 +217,23 @@ None changes a locked decision; each was reported when it came up.
 - Start from the pristine seed: the local database holds test, fixture (`Test …`) and demo
   (`Demo …`) rows; `seed_demo_queue.py` refuses non-localhost and must not be run there.
 - Upgrading to `mcp` 2.x is a separate migration.
+
+## 6. Changes after Phase 0 (2026-10-22)
+
+Recorded here so the scenario results above are read against the right build.
+
+- **Officer approval with a raised concern** (`d2396ce`): restate it and get confirmation
+  before `approve_application`. Narrowed by the change below to tool warnings only.
+- **Citizen document flow** (`441395c`): the person uploads through a phone-first
+  `/upload/<token>` page (applicant name, masked mobile, `image/*`/PDF picker, plain-language
+  errors, "Uploaded. Go back to your chat and say done."). The citizen assistant never
+  verifies, judges or comments on the document; `curl_example` is gone, and a local file is
+  uploaded only when the person gives its path and asks. `scripts/check_document_flow.py`:
+  31/31 on the deployment.
+- **The officer assistant never sees documents** (amendment 10): `view_age_proof` →
+  `get_age_proof_link` (the officer's link to `/admin/application/<id>/document` plus the
+  recorded provenance; no image content). `get_application` carries the same link.
+  `pypdfium2` and the render code are removed. The document route opens inline and a signed-out
+  officer returns to it after login. `scripts/check_officer_documents.py`: 23/23 locally
+  (with a demo document). S10's "`view_age_proof` returns text + image" and the step-13 check
+  no longer apply.

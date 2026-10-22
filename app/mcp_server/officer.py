@@ -6,10 +6,8 @@ Identity rule: a tool that records anything reads the signed-in principal in its
 body and passes the officer's username into services explicitly.
 """
 
-import io
-
 import anyio
-from mcp.server.fastmcp import FastMCP, Image
+from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 import services
@@ -19,8 +17,8 @@ from mcp_server.common import transport_security
 INSTRUCTIONS = """\
 Sewa Setu is the Government of Purvanchal's portal for the Old Age Pension: Rs 250 a month \
 for residents aged 60 or above. These tools help a block officer work the application queue: \
-see what is waiting, open a case, look at the age proof, and record a decision. The portal is \
-the system of record; every decision appears in its audit trail.
+see what is waiting, open a case, get the link to its age-proof document, and record a \
+decision. The portal is the system of record; every decision appears in its audit trail.
 
 How the office works today:
 - There is a single departmental officer account. Every decision is recorded under the \
@@ -30,31 +28,33 @@ approval, by a nightly job). Overdue cases are the urgent ones.
 - Decisions are final. An approved or rejected application cannot be reopened or changed; a \
 rejected applicant has to apply again.
 
+Age-proof documents:
+- You never see documents. get_age_proof_link and get_application give a link that the \
+officer opens in their own browser (portal login required). Never describe, guess or comment \
+on what a document shows, and never say or imply that you have seen, read or checked one.
+- Before approving or rejecting, if the officer has not said they have opened the document, \
+remind them to open the link first. If no document is attached, say so.
+
 Decisions belong to the officer:
 - Call approve_application only when the officer has explicitly said to approve that specific \
 application. Never approve on your own judgement or as a follow-on step.
-- If you have raised any concern about that application or its document in this conversation \
-(a mismatch, an illegible scan, a missing date of birth, a tool warning), then before calling \
-approve_application restate the concern in one or two sentences and ask the officer to \
-confirm they still want to approve. Call it only after they confirm.
+- If a tool returned warnings for that application, then before calling approve_application \
+restate the warnings in one or two sentences and ask the officer to confirm they still want \
+to approve. Call it only after they confirm.
 - The reason for a rejection must be the officer's: one they stated, or one you suggested and \
 they confirmed. If the officer says "reject it" without a reason, do not pick one and reject. \
-Suggest the canonical reason that fits, with the evidence you saw, and ask them to confirm or \
-choose another; call reject_application only after they answer.
+You may suggest the canonical reason that fits what the officer said or the tool warnings, \
+then ask them to confirm or choose another; call reject_application only after they answer.
 - When they answer, map the officer's stated reason to the matching canonical reason (for \
 example "the account isn't in her name" is "bank account not in applicant's name"). Use \
 "other" only when none of the four fits. Pass the officer's own words, verbatim, as \
 officer_reason_quote. Never substitute your own observation for the officer's reason, in the \
 reason, the quote or the note.
-- Reviewing is your job; deciding is theirs. Do point out what you notice — a name or date of \
-birth on the document that differs from the record, an illegible scan, a warning from the \
-tools — and then let the officer decide.
+- Your part is to bring up the record, the tool warnings and the document link; judging the \
+document and deciding are the officer's.
 - One application at a time.
 
 Honesty:
-- Never say or imply that a document was looked at, read or verified unless view_age_proof \
-was called for that application in this conversation and returned the image. If there is no \
-document, say so.
 - Never say the citizen was notified unless the decision tool returned sms_sent: true. If it \
 is false, say plainly that the citizen has NOT been told.
 - Report eligibility warnings exactly as the tools give them; never invent a reason for or \
@@ -137,9 +137,10 @@ async def list_applications(status: str | None = None, block: str | None = None,
 @officer.tool(
     description=(
         "The full record of one application, its history, the recorded facts about its age "
-        "proof, and any eligibility problems the officer should see before deciding. Identify "
-        "it by application_id (the id the other tools return) or application_no (e.g. "
-        'SSP26540132) — exactly one. Example: {"application_no":"SSP26540132"}'),
+        "proof with the link the officer opens to see it, and the eligibility warnings computed "
+        "from the record. Identify it by application_id (the id the other tools return) or "
+        "application_no (e.g. SSP26540132) — exactly one. "
+        'Example: {"application_no":"SSP26540132"}'),
     annotations=ToolAnnotations(title="Open a case", readOnlyHint=True))
 async def get_application(application_id: int | None = None,
                           application_no: str | None = None) -> dict:
@@ -153,16 +154,9 @@ async def get_application(application_id: int | None = None,
     a = r["application"]
     if not a["doc_attached"]:
         document = {"attached": False, "note": "No age-proof document is attached."}
-    elif r["document"]["recorded"]:
-        d = r["document"]
-        document = {"attached": True, "recorded": True, "original_name": d["original_name"],
-                    "sha256": d["sha256"], "byte_size": d["byte_size"],
-                    "content_type": d["content_type"], "uploaded": d["uploaded_at_ist"],
-                    "source": d["source"],
-                    "note": "Recorded when the file arrived. Call view_age_proof to see it."}
     else:
-        document = {"attached": True, "recorded": False, "reason": r["document"]["reason"],
-                    "note": "Call view_age_proof to see it."}
+        document = {"attached": True, "link": services.document_url(a["id"]),
+                    **_provenance(r["document"]), "note": LINK_NOTE}
     return {
         "id": a["id"], "application_no": a["application_no"], "name": a["applicant_name"],
         "mobile": a["mobile"], "date_of_birth": a["date_of_birth"], "age_today": a["age_today"],
@@ -178,96 +172,67 @@ async def get_application(application_id: int | None = None,
     }
 
 
-MAX_SIDE = 1600
-PDF_DPI = 150
+LINK_NOTE = ("Give this link to the officer to open in their browser (portal login "
+             "required). You cannot see the document.")
 SOURCE_TEXT = {
-    "upload_token": "via the upload link issued to the application's mobile number",
-    "demo_seed": "generated by seed_demo_queue.py — DEMO DATA, not a real document",
+    "upload_token": "the upload link issued to the application's mobile number",
+    "demo_seed": "seed_demo_queue.py — DEMO DATA, not a real document",
 }
 
 
-def _render(data, ext):
-    """(jpeg_bytes, note) for an image or the first page of a PDF, longest side at most
-    1600 px. Raises on anything that cannot be rendered."""
-    from PIL import Image as PILImage
-    note = None
-    if ext == "pdf":
-        import pypdfium2 as pdfium
-        pdf = pdfium.PdfDocument(data)
-        try:
-            pages = len(pdf)
-            img = pdf[0].render(scale=PDF_DPI / 72).to_pil()
-        finally:
-            pdf.close()
-        note = "page 1 of %d rendered at %d dpi" % (pages, PDF_DPI)
-    else:
-        img = PILImage.open(io.BytesIO(data))
-        img.load()
-    if img.mode not in ("RGB", "L"):
-        bg = PILImage.new("RGB", img.size, "white")
-        bg.paste(img, mask=img.convert("RGBA").split()[-1])
-        img = bg
-    img.thumbnail((MAX_SIDE, MAX_SIDE))
-    out = io.BytesIO()
-    img.convert("RGB").save(out, "JPEG", quality=85)
-    return out.getvalue(), note, img.size
-
-
-def _size_text(n):
-    return "%.1f KB (%s bytes)" % (n / 1024.0, format(n, ","))
+def _provenance(p):
+    """The recorded facts about how a document arrived, or why there are none."""
+    if not p["recorded"]:
+        return {"provenance": "not recorded (%s)" % p["reason"]}
+    return {"provenance": {"original_filename": p["original_name"], "type": p["content_type"],
+                           "byte_size": p["byte_size"], "sha256": p["sha256"],
+                           "uploaded": p["uploaded_at_ist"],
+                           "source": SOURCE_TEXT.get(p["source"], p["source"])}}
 
 
 @officer.tool(
     description=(
-        "Returns the uploaded age-proof document as an image so you can actually read it. PDFs "
-        "are rendered as an image of the first page. Call this before approving or rejecting "
-        "on document grounds, and before saying anything about what the document shows. "
-        "Input: application_id."),
-    annotations=ToolAnnotations(title="View the age proof", readOnlyHint=True),
-    structured_output=False)
-async def view_age_proof(application_id: int):
-    d = await _run(services.document_for_view, application_id)
+        "Gives the link to an application's age-proof document, for the officer to open in "
+        "their own browser (portal login required), with what was recorded when the file "
+        "arrived: original filename, type, size, SHA-256, upload time and source. Give this "
+        "link to the officer to open in their browser; you cannot see the document and must "
+        "never describe, guess or comment on its contents. Identify the application by "
+        'application_id or application_no — exactly one. Example: {"application_id":100021}'),
+    annotations=ToolAnnotations(title="Age-proof link", readOnlyHint=True))
+async def get_age_proof_link(application_id: int | None = None,
+                             application_no: str | None = None) -> dict:
+    if (application_id is None) == (not application_no):
+        return {"error": "Give exactly one of application_id or application_no."}
+    d = await _run(services.age_proof_record, application_id=application_id,
+                   application_no=application_no)
     s = d["status"]
     if s == "not_found":
-        return "No application with id %s. Check it with list_applications." % application_id
-    no = d["application_no"]
+        return {"error": "No application with that id or number. Check it with "
+                         "list_applications(search=...)."}
+    out = {"application_id": d["application_id"], "application_no": d["application_no"]}
     if s == "no_document":
-        return ("No age-proof document is attached to application %s. Almost every application "
-                "in the historical data has none, so this is common. Do not record a judgement "
-                "about a document you cannot see." % no)
+        return dict(out, attached=False, note="No document attached.")
+    out.update(attached=True, link=d["url"])
     if s == "missing_file":
-        return ("Application %s records an age-proof file at %s, but the file is missing on the "
-                "server. Nothing can be shown; do not record a judgement about it."
-                % (no, d["doc_path"]))
+        return dict(out, problem="The record names a file that is missing on the server, so the "
+                                 "link will not open. Tell the officer.")
     if s == "refused":
-        return ("Application %s records a document path outside the upload store (%s); it is "
-                "not shown." % (no, d["doc_path"]))
+        return dict(out, problem="The recorded file path is outside the upload store, so the "
+                                 "portal will not serve it. Tell the officer.")
     if s == "too_large":
-        return ("The age proof for %s is larger than 10 MB and is not shown here. Open it in the "
-                "portal at /admin/application/%s/document." % (no, application_id))
-
+        return dict(out, problem="The file is larger than 10 MB, so the portal will not serve "
+                                 "it. Tell the officer.")
     p = d["provenance"]
-    if p["recorded"]:
-        line = ("Age proof for %s — original filename %s, %s, SHA-256 %s, uploaded %s %s."
-                % (no, p["original_name"], _size_text(p["byte_size"]), p["sha256"],
-                   p["uploaded_at_ist"], SOURCE_TEXT.get(p["source"], "(source %s)" % p["source"])))
-        if p["sha256"] != d["sha256"] or p["byte_size"] != d["byte_size"]:
-            line += (" WARNING: the file on the server no longer matches what was recorded at "
-                     "upload (now %s, SHA-256 %s)." % (_size_text(d["byte_size"]), d["sha256"]))
-    else:
-        line = ("Age proof for %s — provenance not recorded (%s); file on the server is %s, "
-                "SHA-256 %s." % (no, p["reason"], _size_text(d["byte_size"]), d["sha256"]))
-    line += " The date of birth on record is %s." % (d["date_of_birth"] or "not recorded")
-    try:
-        jpeg, note, size = await anyio.to_thread.run_sync(_render, d["data"], d["ext"])
-    except Exception:
-        what = "a PDF" if d["ext"] == "pdf" else "a file"
-        return line + (" This is %s I could not render. Open it in the portal at "
-                       "/admin/application/%s/document." % (what, application_id))
-    if note:
-        line += " Shown: %s (hash is of the original file, not the render)." % note
-    line += " What the image shows is for you to judge."
-    return [line, Image(data=jpeg, format="jpeg")]
+    out.update(_provenance(p))
+    if not p["recorded"]:
+        out["file_on_server"] = {"type": d["mimetype"], "byte_size": d["byte_size"],
+                                 "sha256": d["sha256"]}
+    elif p["sha256"] != d["sha256"] or p["byte_size"] != d["byte_size"]:
+        out["integrity_warning"] = ("The file on the server no longer matches what was recorded "
+                                    "at upload (now %s bytes, SHA-256 %s)."
+                                    % (format(d["byte_size"], ","), d["sha256"]))
+    out["note"] = LINK_NOTE
+    return out
 
 
 def _decision_error(r, application_id, application_no):
@@ -283,16 +248,17 @@ def _decision_error(r, application_id, application_no):
                 % (r["application_no"], r.get("current", "already decided")))
     if s == "reason_required":
         return ("A reason is required to reject, and it must be the officer's. Ask the officer "
-                "which applies (you may suggest one, with your evidence): %s ('other' needs the "
+                "which applies (you may suggest one that fits what they said or the tool "
+                "warnings): %s ('other' needs the "
                 "explanation in note). Nothing was changed."
                 % "; ".join('"%s"' % x for x in services.REJECTION_REASONS))
     if s == "blocked":
         msg = ("Not approved. %s The counter would refuse this application, so it cannot be "
                "approved through the assistant." % " ".join(r["warnings"]))
         if any(w.startswith("Age today") for w in r["warnings"]):
-            msg += (" If the date of birth on the document differs from the record, reject with "
-                    "'age proof does not match stated date of birth' and ask the applicant to "
-                    "apply again with the correct date.")
+            msg += (" If the officer finds that the date of birth on the document differs from "
+                    "the record, they may reject with 'age proof does not match stated date of "
+                    "birth' so the applicant can apply again with the correct date.")
         if any("No age-proof document" in w for w in r["warnings"]):
             msg += " Without an age proof there is nothing to verify the age against."
         return msg
@@ -346,8 +312,8 @@ async def approve_application(application_id: int, application_no: str,
         "is final: the applicant would have to apply again. Only call when the officer has "
         "asked to reject this application AND the reason is theirs — one they stated, or one "
         "you suggested and they confirmed. If they said \"reject it\" without a reason, do not "
-        "choose one yourself: suggest the reason that fits, with the evidence, and ask them to "
-        "confirm first. reason: map the officer's stated reason to one of \"bank account not in "
+        "choose one yourself: suggest the reason that fits what they said or the tool "
+        "warnings, and ask them to confirm first. reason: map the officer's stated reason to one of \"bank account not in "
         "applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
         "document illegible\", \"age proof does not match stated date of birth\"; use "
         "\"other\" (with the officer's explanation in note) only when none fits. "

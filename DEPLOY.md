@@ -175,7 +175,13 @@ git rev-parse HEAD                           # note the current commit for rollb
 sudo git pull --ff-only
 dc up -d --build                             # rebuilds app/mcp/scheduler, recreates changed services
 dc ps && dc logs --tail=50 mcp app
+# self-checks (read-only, or self-cleaning on a reserved test mobile)
+dc exec -T app python /app/scripts/check_document_flow.py
+dc exec -T app python /app/scripts/check_officer_documents.py
 ```
+
+For a change to `app/` only, rebuild and restart just those two services so the SMS
+gateway's in-memory inbox survives: `dc build app mcp && dc up -d --no-deps app mcp`.
 
 The `mcp` container applies new migrations (`app/migrations/*.sql`, idempotent) before it
 starts. Never `dc down -v` on the VM: `-v` deletes the database and the uploads.

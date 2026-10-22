@@ -23,6 +23,8 @@ folded into the sections they affect:
 | 6 | demo-seeded age proofs are watermarked `SAMPLE – DEMO DATA`; local use only, documented and enforced | §6.5, step 15 |
 | 7 | MCP tool annotations: `readOnlyHint` on reads, `destructiveHint` on approve/reject/withdraw | §5.3 |
 | 8 | R1–R10 defaults accepted | §9 |
+| 9 | **after Phase 0 (2026-10-22):** citizen document flow — the person uploads through a phone-friendly `/upload/<token>` page; the citizen assistant never verifies, judges or comments on the document; `curl_example` removed (local-file upload only on explicit request); one-line document rule | §5.1 (superseded in part) |
+| 10 | **after Phase 0 (2026-10-22):** the officer assistant never sees documents. `view_age_proof` is replaced by `get_age_proof_link` (link + recorded provenance, no image); `get_application` carries the same link; `pypdfium2` removed; the portal's document route opens inline and login returns to it | §5.2 `view_age_proof`, §5.3, R3 (superseded) |
 
 ---
 
@@ -945,7 +947,7 @@ anyone's description of them. For a web-form or historical application there is 
 Errors: not found → `"No application with that id or number."`; both or neither argument →
 `"Give exactly one of application_id or application_no."`
 
-**`view_age_proof`**
+**`view_age_proof`** — *superseded by amendment 10: replaced by `get_age_proof_link`, which returns the officer's link to `/admin/application/<id>/document` and the recorded provenance, never the document.*
 > Returns the uploaded age-proof document as an image so you can actually read it. PDFs are
 > rendered as an image of the first page. Call this before approving or rejecting on document
 > grounds. Input: application_id.
@@ -1018,7 +1020,7 @@ implied.
 | `get_queue_summary` | **true** | — | — | Queue summary |
 | `list_applications` | **true** | — | — | List applications |
 | `get_application` | **true** | — | — | Open a case |
-| `view_age_proof` | **true** | — | — | View the age proof |
+| `get_age_proof_link` (was `view_age_proof`, amendment 10) | **true** | — | — | Age-proof link |
 | `approve_application` | false | **true** | false | Approve (final) |
 | `reject_application` | false | **true** | false | Reject (final) |
 
@@ -1459,7 +1461,7 @@ slash; handled by comparing `aud.rstrip("/")`. A different host spelling (`127.0
 `localhost`) is correctly rejected; the test script uses `localhost` throughout, and
 `PUBLIC_BASE_URL` is the single source of the canonical strings.
 
-**R3 — `pypdfium2` in the image.** A pure wheel with a bundled binary; expected to install on
+**R3 — `pypdfium2` in the image.** *(Moot since amendment 10: removed.)* A pure wheel with a bundled binary; expected to install on
 `python:3.11-slim` with no apt packages. If it does not, `view_age_proof` falls back to text
 for PDFs and still returns images. Not a blocker.
 
