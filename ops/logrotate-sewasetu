@@ -1,0 +1,21 @@
+# /etc/logrotate.d/sewasetu — the portal's own logs in the applogs volume
+# (sewasetu-app.log from gunicorn, cron.log from the deemed-approval job).
+# copytruncate: the app holds the file open and cron appends to it.
+/var/lib/docker/volumes/sewasetu_applogs/_data/*.log {
+    daily
+    rotate 14
+    maxsize 50M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+
+/var/log/sewasetu-backup.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}

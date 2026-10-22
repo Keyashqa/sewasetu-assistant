@@ -1,0 +1,50 @@
+# Production override. Use with the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# See DEPLOY.md. Needs Docker Compose >= 2.24 (for !override).
+
+name: sewasetu
+
+x-prod: &prod
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  db:
+    <<: *prod
+
+  app:
+    <<: *prod
+
+  mcp:
+    <<: *prod
+
+  proxy:
+    <<: *prod
+    # the only service with host ports: Caddy terminates TLS for SITE_HOST
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_HOST: ${SITE_HOST:?set SITE_HOST in .env}
+    volumes: !override
+      - ./proxy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+
+  # deemed approval is the law: the scheduler runs in production. At first boot it sweeps
+  # the seed's overdue PENDING rows, then cron runs the job nightly at 02:00 UTC.
+  scheduler:
+    <<: *prod
+    depends_on:
+      - db
+      - smsgw
+
+  smsgw:
+    <<: *prod
+
+volumes:
+  caddyconfig:
