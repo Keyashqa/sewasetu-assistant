@@ -12,8 +12,8 @@ One VM, the same compose stack as local, plus `docker-compose.prod.yml`:
   refuses a non-localhost `PUBLIC_BASE_URL` anyway).
 
 Current deployment: GCP project `build4b`, zone `asia-south1-a`, VM `sewasetu`
-(e2-medium, Ubuntu 24.04 LTS, 30 GB), static IP `sewasetu-ip`, hostname
-`<ip-with-dashes>.sslip.io`. Repo on the VM: `/opt/sewasetu-assistant`.
+(e2-medium, Ubuntu 24.04 LTS, 30 GB) on network `sewasetu-net`, static IP `sewasetu-ip`
+(34.93.36.84), hostname `34-93-36-84.sslip.io`. Repo on the VM: `/opt/sewasetu-assistant`.
 
 Shorthand used below, on the VM, in `/opt/sewasetu-assistant`:
 
@@ -27,6 +27,17 @@ alias dc='docker compose -f docker-compose.yml -f docker-compose.prod.yml'
 
 ```bash
 gcloud config set project build4b
+
+# dedicated network: the project's `default` network allows RDP/ICMP to every VM on it
+gcloud compute networks create sewasetu-net --subnet-mode=custom
+gcloud compute networks subnets create sewasetu-subnet \
+  --network=sewasetu-net --region=asia-south1 --range=10.10.0.0/24
+
+# the only ingress rule on sewasetu-net: 22, 80, 443
+gcloud compute firewall-rules create sewasetu-allow-web \
+  --network=sewasetu-net --direction=INGRESS --action=allow \
+  --rules=tcp:22,tcp:80,tcp:443 --source-ranges=0.0.0.0/0 --target-tags=sewasetu-web
+
 gcloud compute addresses create sewasetu-ip --region=asia-south1
 gcloud compute addresses describe sewasetu-ip --region=asia-south1 --format='value(address)'
 
@@ -34,16 +45,12 @@ gcloud compute instances create sewasetu \
   --zone=asia-south1-a --machine-type=e2-medium \
   --image-family=ubuntu-2404-lts-amd64 --image-project=ubuntu-os-cloud \
   --boot-disk-size=30GB --boot-disk-type=pd-balanced \
-  --address=sewasetu-ip --tags=sewasetu-web
-
-gcloud compute firewall-rules create sewasetu-allow-web \
-  --network=default --direction=INGRESS --action=allow \
-  --rules=tcp:22,tcp:80,tcp:443 --target-tags=sewasetu-web --source-ranges=0.0.0.0/0
+  --subnet=sewasetu-subnet --address=sewasetu-ip --tags=sewasetu-web
 ```
 
-The VM gets only the `sewasetu-web` tag, so with the `default-allow-*` rules removed or
-not matching, 22/80/443 are the only ports open to it. Check with
-`gcloud compute firewall-rules list --filter="network=default"`.
+`sewasetu-net` has no rule other than `sewasetu-allow-web`, so 22/80/443 are the only ports
+open to the VM. Check with
+`gcloud compute firewall-rules list --filter="network=sewasetu-net"`.
 
 ### 1.2 VM setup (`gcloud compute ssh sewasetu --zone=asia-south1-a`)
 
