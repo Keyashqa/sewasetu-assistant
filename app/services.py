@@ -47,8 +47,9 @@ def _pool():
         with _POOL_LOCK:
             if _POOL is None:
                 c = portal.config
+                # one pool per process; DB_POOL_MAX is lowered on the small production VM
                 _POOL = pool.ThreadedConnectionPool(
-                    1, 10,
+                    1, int(os.environ.get("DB_POOL_MAX", "10")),
                     host=c.get("database", "host"),
                     port=c.get("database", "port"),
                     dbname=c.get("database", "name"),

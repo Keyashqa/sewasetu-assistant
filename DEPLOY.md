@@ -10,10 +10,19 @@ One VM, the same compose stack as local, plus `docker-compose.prod.yml`:
   approved the seed's 700 overdue PENDING rows; that is correct.
 - Only the proxy publishes ports. No demo data: `seed_demo_queue.py` is never run here (it
   refuses a non-localhost `PUBLIC_BASE_URL` anyway).
+- **Sized for the GCP Always Free tier** (e2-micro, 1 GB RAM): a 2 GB swapfile, per-service
+  `mem_limit` summing to 880 MB, gunicorn 2 workers, uvicorn 1 worker, at most 5 pooled
+  connections per process (`DB_POOL_MAX`), and Postgres tuned down (§1.6).
 
-Current deployment: GCP project `build4b`, zone `asia-south1-a`, VM `sewasetu`
-(e2-medium, Ubuntu 24.04 LTS, 30 GB) on network `sewasetu-net`, static IP `sewasetu-ip`
-(34.93.36.84), hostname `34-93-36-84.sslip.io`. Repo on the VM: `/opt/sewasetu-assistant`.
+Current deployment: GCP project `build4b`, zone `us-central1-a`, VM `sewasetu`
+(e2-micro, Ubuntu 24.04 LTS, 30 GB pd-standard) on network `sewasetu-net` / subnet
+`sewasetu-subnet-usc1`, static IP `sewasetu-ip` (136.116.6.93), hostname
+`136-116-6-93.sslip.io`. Repo on the VM: `/opt/sewasetu-assistant`.
+
+Free-tier limits that matter (check the current GCP Free Tier terms): one e2-micro in
+us-west1, us-central1 or us-east1; 30 GB-months of **standard** persistent disk (pd-balanced
+and SSD are billed); 1 GB/month of egress from North America. A reserved static IP that is
+**not attached** to a running VM is billed: release it if the VM is deleted or stopped for long.
 
 Shorthand used below, on the VM, in `/opt/sewasetu-assistant`:
 
@@ -30,29 +39,40 @@ gcloud config set project build4b
 
 # dedicated network: the project's `default` network allows RDP/ICMP to every VM on it
 gcloud compute networks create sewasetu-net --subnet-mode=custom
-gcloud compute networks subnets create sewasetu-subnet \
-  --network=sewasetu-net --region=asia-south1 --range=10.10.0.0/24
+gcloud compute networks subnets create sewasetu-subnet-usc1 \
+  --network=sewasetu-net --region=us-central1 --range=10.10.1.0/24
 
 # the only ingress rule on sewasetu-net: 22, 80, 443
 gcloud compute firewall-rules create sewasetu-allow-web \
   --network=sewasetu-net --direction=INGRESS --action=allow \
   --rules=tcp:22,tcp:80,tcp:443 --source-ranges=0.0.0.0/0 --target-tags=sewasetu-web
 
-gcloud compute addresses create sewasetu-ip --region=asia-south1
-gcloud compute addresses describe sewasetu-ip --region=asia-south1 --format='value(address)'
+gcloud compute addresses create sewasetu-ip --region=us-central1
+gcloud compute addresses describe sewasetu-ip --region=us-central1 --format='value(address)'
 
+# Always Free: e2-micro, us-central1, pd-standard (NOT pd-balanced), 30 GB
 gcloud compute instances create sewasetu \
-  --zone=asia-south1-a --machine-type=e2-medium \
+  --zone=us-central1-a --machine-type=e2-micro \
   --image-family=ubuntu-2404-lts-amd64 --image-project=ubuntu-os-cloud \
-  --boot-disk-size=30GB --boot-disk-type=pd-balanced \
-  --subnet=sewasetu-subnet --address=sewasetu-ip --tags=sewasetu-web
+  --boot-disk-size=30GB --boot-disk-type=pd-standard \
+  --subnet=sewasetu-subnet-usc1 --address=sewasetu-ip --tags=sewasetu-web
 ```
 
 `sewasetu-net` has no rule other than `sewasetu-allow-web`, so 22/80/443 are the only ports
 open to the VM. Check with
 `gcloud compute firewall-rules list --filter="network=sewasetu-net"`.
 
-### 1.2 VM setup (`gcloud compute ssh sewasetu --zone=asia-south1-a`)
+### 1.2 VM setup (`gcloud compute ssh sewasetu --zone=us-central1-a`)
+
+A persistent 2 GB swapfile first (1 GB of RAM is not enough to build the images or to load
+the seed without it):
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf && sudo sysctl --system
+```
 
 Docker Engine and the compose plugin from Docker's apt repository
 (https://docs.docker.com/engine/install/ubuntu/), then:
@@ -120,6 +140,32 @@ curl -s $H/.well-known/oauth-authorization-server
 Every 401 must carry `scope` and `resource_metadata`; no 307/308; every URL in the PRM and AS
 documents must start with `$H`, and the AS `issuer` must equal `$H`.
 
+### 1.6 Memory budget (e2-micro, 1 GB RAM + 2 GB swap)
+
+| service | `mem_limit` | tuning |
+|---|---|---|
+| db | 320 MB | `shared_buffers=64MB`, `work_mem=2MB`, `max_connections=30`, `effective_cache_size=256MB` |
+| app | 200 MB | gunicorn `--workers 2`, `DB_POOL_MAX=5` |
+| mcp | 200 MB | uvicorn `--workers 1`, `DB_POOL_MAX=5` |
+| scheduler | 60 MB | cron + the nightly job |
+| proxy | 50 MB | Caddy |
+| smsgw | 50 MB | in-memory inbox |
+| **total** | **880 MB** | |
+
+Connections at peak: 2 × 5 (gunicorn) + 5 (mcp) + the portal's per-request connections + the
+scheduler + `pg_dump`, well under 30. Watch with `free -m` and `docker stats --no-stream`;
+a service that hits its limit is OOM-killed and restarted (`dc ps` shows the restarts).
+
+Building on the VM (`dc build`) relies on the swapfile and is slow. If it is too slow, build
+on a workstation and ship the images:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+docker save sewasetu-app sewasetu-mcp sewasetu-scheduler sewasetu-smsgw | gzip \
+  | gcloud compute ssh sewasetu --zone=us-central1-a --command='gunzip | sudo docker load'
+# then on the VM: dc up -d   (no --build)
+```
+
 ## 2. Update
 
 ```bash
@@ -144,7 +190,7 @@ ls -lh /var/backups/sewasetu/
 sudo tar -C /var/lib/docker/volumes/sewasetu_uploads/_data -czf /var/backups/sewasetu/uploads-$(date -u +%F).tgz .
 
 # copy off the VM
-gcloud compute scp sewasetu:/var/backups/sewasetu/<file> . --zone=asia-south1-a
+gcloud compute scp sewasetu:/var/backups/sewasetu/<file> . --zone=us-central1-a
 
 # restore a dump (stops writers first)
 dc stop app mcp scheduler
@@ -166,7 +212,7 @@ If the bad release changed data, restore the dump taken before the update (§3) 
 code rollback. Migrations are additive, so older code runs against a newer schema.
 
 Infrastructure: everything is named `sewasetu*` in project `build4b`; the VM can be stopped
-(`gcloud compute instances stop sewasetu --zone=asia-south1-a`) without losing the disk or
+(`gcloud compute instances stop sewasetu --zone=us-central1-a`) without losing the disk or
 the static IP.
 
 ## 5. Known risks (accepted for the test window)

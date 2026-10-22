@@ -1,6 +1,10 @@
 # Production override. Use with the base file:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 # See DEPLOY.md. Needs Docker Compose >= 2.24 (for !override).
+#
+# Sized for a GCP Always Free e2-micro (1 GB RAM + a 2 GB swapfile): memory limits sum to
+# 880 MB, Postgres is tuned down, gunicorn runs 2 workers, each process pools at most 5
+# connections.
 
 name: sewasetu
 
@@ -15,15 +19,34 @@ x-prod: &prod
 services:
   db:
     <<: *prod
+    mem_limit: 320m
+    command:
+      - postgres
+      - -c
+      - shared_buffers=64MB
+      - -c
+      - work_mem=2MB
+      - -c
+      - max_connections=30
+      - -c
+      - effective_cache_size=256MB
 
   app:
     <<: *prod
+    mem_limit: 200m
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "30", "app:app"]
+    environment:
+      DB_POOL_MAX: "5"
 
   mcp:
     <<: *prod
+    mem_limit: 200m
+    environment:
+      DB_POOL_MAX: "5"
 
   proxy:
     <<: *prod
+    mem_limit: 50m
     # the only service with host ports: Caddy terminates TLS for SITE_HOST
     ports: !override
       - "80:80"
@@ -39,12 +62,14 @@ services:
   # the seed's overdue PENDING rows, then cron runs the job nightly at 02:00 UTC.
   scheduler:
     <<: *prod
+    mem_limit: 60m
     depends_on:
       - db
       - smsgw
 
   smsgw:
     <<: *prod
+    mem_limit: 50m
 
 volumes:
   caddyconfig:
