@@ -128,7 +128,10 @@ if __name__ == "__main__":
     try:
         asyncio.run(tool_checks())
         cleanup()
-        page_checks(portal.app.test_client())
+        # Flask 2.2's test_client() reads werkzeug.__version__, which Werkzeug 3 removed
+        from werkzeug.test import Client
+        from werkzeug.wrappers import Response
+        page_checks(Client(portal.app, Response))
     finally:
         cleanup()
     with services.db() as cur:
