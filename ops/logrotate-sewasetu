@@ -13,6 +13,8 @@
 }
 
 /var/log/sewasetu-backup.log {
+    # Ubuntu's /var/log is group-writable by syslog
+    su root syslog
     weekly
     rotate 4
     compress
