@@ -32,9 +32,17 @@ consents. Do not refuse because the mobile, or the person typing, is not the app
 - The only rule about mobile numbers: one active application per mobile number. A second \
 applicant needs a different mobile number (any family member's will do) or the block office.
 
+The age proof:
+- The person uploads it themselves: give them the link from get_document_upload_link and \
+wait until they say it is done.
+- Never verify, judge or comment on the document, and never ask about its authenticity or \
+contents. Checking it is the block officer's job.
+
 Honesty:
-- File only details and documents given by the applicant or their helper. Never invent, \
-guess or fill in a detail, and never create, generate, edit or substitute a document.
+- Never invent or guess applicant details: file only what the applicant or their helper \
+tells you.
+- Never create, generate or alter a document yourself; the person uploads their own \
+document through the link.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
 - State only scheme facts these tools return. Never speculate about future application \
 windows, rule changes or anything no tool told you."""
@@ -248,34 +256,36 @@ async def save_application_details(full_name: str | None = None,
 
 @citizen.tool(
     description=(
-        "Gives a link for uploading the applicant's age proof (birth certificate, school "
-        "leaving certificate or Voter ID). The applicant, or the person helping them, opens it "
-        "on a phone or uploads the file with curl. A document is required before the "
-        "application can be submitted. No input.\n\n"
-        "Only a real document given by the applicant or their helper may be uploaded — a photo "
-        "or scan of the applicant's actual certificate. You must never create, generate, draw, "
-        "edit, fill in, convert or substitute a document, and never upload a file that did not "
-        "come from the applicant or their helper. If the age proof is not to hand, give the "
-        "link and stop: the application waits until it is uploaded. An invented document is a "
-        "false government record."),
+        "Gives a link where the person uploads the applicant's age proof (birth certificate, "
+        "school leaving certificate or Voter ID) from their phone. Send them the link and the "
+        "instructions, then wait until they say it is done. Call this tool again to check "
+        "document_attached is true before submit_application; a document is required. "
+        "Calling it again gives the same link. No input.\n\n"
+        "Never create, generate or alter a document yourself; the person uploads their own "
+        "document through the link. Do not ask about, verify or comment on the document: the "
+        "block officer checks it.\n\n"
+        "Only if the person explicitly gives a local file path and asks you to upload it, you "
+        "may upload that exact file to the link (multipart form field \"document\")."),
     annotations=ToolAnnotations(title="Get an upload link", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
 async def get_document_upload_link() -> dict:
     p = current_principal()
     t = await _run(services.issue_upload_token, p.mobile)
     out = {"upload_url": t["url"], "expires": t["expires_at_ist"],
-           "document_attached": t["doc_attached"],
-           "curl_example": "curl -F document=@age-proof.jpg %s" % t["url"],
-           "instructions": "Open the link on the phone, choose the photo of the birth "
-                           "certificate or Voter ID, and press Upload. JPG, PNG or PDF, "
-                           "up to 5 MB.",
-           "recorded": "Every upload is recorded with its SHA-256 hash, size, original "
-                       "filename and time, and the block officer sees all four."}
-    prov = t.get("provenance") or {}
+           "document_attached": t["doc_attached"]}
     if t["doc_attached"]:
-        out.update(document_name=t["doc_name"], sha256=prov.get("sha256"),
-                   byte_size=prov.get("byte_size"), uploaded=prov.get("uploaded_at_ist"),
-                   note="A document is already attached. Uploading again replaces it.")
+        out["next_step"] = ("The age proof is uploaded. Do not comment on it. Read the details "
+                            "and the declaration back, then submit_application after they "
+                            "confirm. Uploading again through the same link replaces it.")
+    else:
+        out["instructions"] = ("Open this link on your phone: %s . Tap \"Take a photo or "
+                               "choose a file\", take a clear photo of the birth certificate, "
+                               "school leaving certificate or Voter ID (or choose a PDF), then "
+                               "tap Upload. When the page says Uploaded, come back here and "
+                               "say done." % t["url"])
+        out["next_step"] = ("Send the person the link and these instructions, then wait. When "
+                            "they say done, call get_document_upload_link again and check "
+                            "document_attached.")
     return out
 
 
@@ -288,12 +298,9 @@ async def get_document_upload_link() -> dict:
         "consent — has confirmed the information is correct and consents to the department "
         "verifying it. Filing on the applicant's behalf from someone else's mobile is normal; "
         "that mobile becomes the application's contact number.\n\n"
-        "File only details and documents given by the applicant or their helper. Never invent, "
-        "guess or fill in a detail they did not give you — not a name, not a date of birth, not "
-        "a village, not a bank account, and above all not the age-proof document, which must "
-        "be a file the applicant or their helper uploaded and which you must never create, "
-        "generate or substitute. If something is missing, ask for it. A guessed field becomes "
-        "a sworn declaration on a government record."),
+        "Never invent or guess applicant details; if something is missing, ask for it. Never "
+        "create, generate or alter a document yourself; the person uploads their own document "
+        "through the link."),
     annotations=ToolAnnotations(title="File the application", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=False))
 async def submit_application(confirm_declaration: bool) -> dict:
@@ -322,7 +329,8 @@ async def submit_application(confirm_declaration: bool) -> dict:
         msg = ("These are still missing: %s. Ask the applicant and call "
                "save_application_details." % ", ".join(r["missing"]))
     elif s == "no_document":
-        msg = "The age proof is not uploaded yet. Use get_document_upload_link."
+        msg = ("The age proof is not uploaded yet. Give the person the link from "
+               "get_document_upload_link and wait until they say it is done.")
     elif s == "invalid":
         msg = ("The portal refused the application: %s. Correct these with "
                "save_application_details, then try again." % "; ".join(r["errors"]))

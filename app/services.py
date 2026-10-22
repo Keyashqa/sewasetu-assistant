@@ -562,14 +562,15 @@ def draft_for_upload_token(token):
         return None
     now = datetime.now()
     with db() as cur:
-        cur.execute("SELECT mobile, doc_name, token_expires FROM agent_drafts "
+        cur.execute("SELECT mobile, doc_name, token_expires, data FROM agent_drafts "
                     "WHERE upload_token = %s AND token_expires > %s AND expires_at > %s",
                     (token, now, now))
         r = cur.fetchone()
     if not r:
         return None
     return {"mobile_masked": "******" + r[0][-4:], "doc_attached": bool(r[1]),
-            "doc_name": r[1], "token_expires_ist": fmt_ist(r[2])}
+            "doc_name": r[1], "token_expires_ist": fmt_ist(r[2]),
+            "applicant_name": (r[3] or {}).get("full_name")}
 
 
 def attach_draft_document(token, filename, stream, source="upload_token"):

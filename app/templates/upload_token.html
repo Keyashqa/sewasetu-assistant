@@ -1,36 +1,94 @@
-{% extends "base.html" %}
-{% block content %}
-{% if expired %}
-<h2>Upload link expired</h2>
-<p>This upload link is no longer valid. Ask the assistant helping with the application
-for a new link.</p>
-{% else %}
-<h2>Upload Age Proof Document</h2>
-<p class="note">For the pension application being prepared for mobile number
-<b>{{ d.mobile_masked }}</b>. Link valid until {{ d.token_expires_ist }}.</p>
-
-{% if result and result.status == 'ok' %}
-<div style="background:#e8f5e9;border:1px solid #66bb6a;color:#1b5e20;padding:10px 14px;margin:14px 0">
-  <b>Uploaded.</b> {{ result.doc_name }} ({{ '{:,}'.format(result.byte_size) }} bytes) received at
-  {{ result.uploaded_at_ist }}. You can go back to the assistant now.
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upload age proof - Sewa Setu</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f0f2f5;color:#222;font-size:18px;line-height:1.45}
+.header{background:#0b3d6e;color:#fff;padding:14px 16px}
+.header h1{margin:0;font-size:20px}
+.header .sub{font-size:13px;color:#cfe0f3}
+.band{background:#f7931e;height:5px}
+.box{max-width:560px;margin:16px auto;background:#fff;padding:20px 16px;border:1px solid #d7dbe0}
+h2{margin:0 0 12px;font-size:22px}
+.who{background:#f5f8fc;border:1px solid #d7e2ef;padding:12px 14px;margin:0 0 16px}
+.who div{margin:2px 0}
+.pick{display:block;text-align:center;background:#fff;color:#0b3d6e;border:3px dashed #0b3d6e;
+  padding:28px 12px;font-size:20px;font-weight:bold;cursor:pointer;border-radius:10px}
+.pick small{display:block;font-weight:normal;font-size:15px;color:#555;margin-top:6px}
+.pick input{position:absolute;width:1px;height:1px;opacity:0}
+#chosen{margin:10px 0 0;font-size:16px;color:#1b5e20;min-height:1.4em;word-break:break-all}
+.btn{display:block;width:100%;margin-top:14px;background:#0b3d6e;color:#fff;border:none;
+  padding:16px;font-size:20px;font-weight:bold;border-radius:10px;cursor:pointer}
+.btn:disabled{background:#8aa3bd}
+.hint{font-size:15px;color:#555;margin:12px 0 0}
+.ok{background:#e8f5e9;border:2px solid #66bb6a;color:#1b5e20;padding:18px 14px;font-size:22px;
+  font-weight:bold;text-align:center;border-radius:10px;margin:0 0 16px}
+.err{background:#fdecea;border:2px solid #e57373;color:#a33;padding:14px;margin:0 0 16px;border-radius:10px}
+.note{font-size:15px;color:#555}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Sewa Setu &mdash; Old Age Pension</h1>
+  <div class="sub">Department of Social Welfare &middot; Government of Purvanchal</div>
 </div>
-{% elif result %}
-<div class="flash">{{ result.message }}</div>
-{% endif %}
+<div class="band"></div>
+<div class="box">
+{% if expired %}
+  <h2>This link has expired</h2>
+  <p>This upload link no longer works. Go back to your chat and ask for a new link.</p>
+{% else %}
+  {% set errors = {
+    'no_file': 'No file was received. Tap the box above, take a photo of the document or choose a file, then tap Upload.',
+    'bad_type': 'This kind of file cannot be used. Please take a photo, or choose a JPG, PNG or PDF file.',
+    'too_large': 'This file is too big. It must be 5 MB or less. Please take the photo again, or choose a smaller file.',
+    'expired': 'This upload link has expired. Go back to your chat and ask for a new link.',
+  } %}
+  {% if result and result.status == 'ok' %}
+  <div class="ok">Uploaded. Go back to your chat and say done.</div>
+  {% elif result %}
+  <div class="err">{{ errors.get(result.status, 'Something went wrong with the upload. Please try again.') }}</div>
+  {% endif %}
 
-{% if d.doc_attached and not (result and result.status == 'ok') %}
-<p class="note">A document is already attached ({{ d.doc_name }}). Uploading again replaces it.</p>
-{% endif %}
+  <h2>Upload age proof</h2>
+  <div class="who">
+    <div>Applicant: <b>{{ d.applicant_name or 'name not given yet' }}</b></div>
+    <div>Mobile: <b>{{ d.mobile_masked }}</b></div>
+    <div class="note">This link works until {{ d.token_expires_ist }}.</div>
+  </div>
 
-<p class="note">Accepted documents: Birth certificate, School leaving certificate,
-Voter ID. Accepted formats: <b>JPG, PNG or PDF, maximum size 5 MB</b>. Upload a photo or
-scan of the applicant's own certificate.</p>
-<form method="post" enctype="multipart/form-data">
-  <label>Select Document</label>
-  <input type="file" name="document" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf">
-  <p><button class="btn" type="submit">Upload</button></p>
-</form>
-<p class="note">Every upload is recorded with its SHA-256 hash, size, original filename and
-time, and the block officer sees all four.</p>
+  {% if d.doc_attached and not (result and result.status == 'ok') %}
+  <p class="note">A document is already uploaded. Uploading again replaces it.</p>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    <label class="pick">
+      Take a photo or choose a file
+      <small>Birth certificate, school leaving certificate or Voter ID</small>
+      <input type="file" name="document" id="document" accept="image/*,application/pdf">
+    </label>
+    <div id="chosen" aria-live="polite"></div>
+    <button class="btn" id="go" type="submit">Upload</button>
+  </form>
+  <p class="hint">Photo (JPG or PNG) or PDF, up to 5 MB. Make sure the whole document is in the
+  photo and the writing is clear.</p>
 {% endif %}
-{% endblock %}
+</div>
+<script>
+(function () {
+  var f = document.getElementById('document'), c = document.getElementById('chosen'),
+      b = document.getElementById('go');
+  if (!f) return;
+  b.disabled = true;
+  f.addEventListener('change', function () {
+    var x = f.files && f.files[0];
+    c.textContent = x ? 'Selected: ' + x.name : '';
+    b.disabled = !x;
+  });
+  f.form.addEventListener('submit', function () { b.disabled = true; b.textContent = 'Uploading…'; });
+})();
+</script>
+</body>
+</html>
