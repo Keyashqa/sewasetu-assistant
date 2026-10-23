@@ -1,2 +1,3 @@
--- The officer's same-document warning looks documents up by hash.
-CREATE INDEX IF NOT EXISTS idx_docup_sha ON document_uploads(sha256);
+-- The same-document warning was removed (officer warnings are the portal's rules only),
+-- so the hash index it needed goes too.
+DROP INDEX IF EXISTS idx_docup_sha;

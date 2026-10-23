@@ -1,5 +1,5 @@
 """Checks that the officer assistant reports rather than investigates: the instructions and
-decision-tool texts, the same-document warning, and that audit notes hold only the
+decision-tool texts, that warnings are the portal's rules only, and that audit notes hold only the
 officer's words. Run inside the app container:
 
     docker compose exec -T app python /app/scripts/check_officer_reporting.py
@@ -77,7 +77,10 @@ async def text_checks():
     ins = officer_mod.INSTRUCTIONS
     tools = {t.name: t for t in await officer_mod.officer.list_tools()}
     check("instructions: do what the officer asks; relay warnings one line each, no commentary",
-          "Do what the officer asks." in ins and "one short line each, without commentary" in ins)
+          "Do what the officer asks." in ins and "one short line each" in ins
+          and "without commentary" in ins)
+    check("instructions: warnings are the portal's rule-based ones",
+          "the portal's rule-based warnings" in ins and "sha256" not in ins)
     check("instructions: no cross-referencing, patterns, fraud, conflicts, second-guessing",
           all(x in ins for x in ("Never cross-reference other applications", "relatives",
                                  "speculate about fraud or conflicts of interest",
@@ -106,23 +109,14 @@ async def text_checks():
 
 
 async def decision_checks():
-    a = file(A, "Test Same Doc One", PNG)
-    b = file(B, "Test Same Doc Two", PNG)
+    # A and B share the same age-proof file and the same bank account: no pattern warnings
+    a = file(A, "Test Shared One", PNG)
+    b = file(B, "Test Shared Two", PNG)
     c = file(C, "Test Clean Record", PNG + b"different file")
-
-    ga = await officer_mod.get_application(application_id=a[0])
-    gb = await officer_mod.get_application(application_no=b[1])
-    gc = await officer_mod.get_application(application_id=c[0])
-    want_a = ("The same age-proof file (sha256) is also attached to application %s "
-              "(Test Same Doc Two)." % b[1])
-    want_b = ("The same age-proof file (sha256) is also attached to application %s "
-              "(Test Same Doc One)." % a[1])
-    check("same document: warning on the first application", want_a in ga["warnings"],
-          ga["warnings"])
-    check("same document: warning on the second application", want_b in gb["warnings"],
-          gb["warnings"])
-    check("different document: no warnings", gc["warnings"] == ["No eligibility problems found."],
-          gc["warnings"])
+    for label, g in (("first", await officer_mod.get_application(application_id=a[0])),
+                     ("second", await officer_mod.get_application(application_no=b[1]))):
+        check("shared file and account (%s): no pattern warning, only the portal's rules"
+              % label, g["warnings"] == ["No eligibility problems found."], g["warnings"])
 
     # approve with no warnings: one call, no confirmation argument; audit note = officer's words
     r = await officer_mod.approve_application(application_id=c[0], application_no=c[1],
@@ -134,10 +128,9 @@ async def decision_checks():
 
     # approve without a note: nothing added
     r = await officer_mod.approve_application(application_id=b[0], application_no=b[1])
-    check("same-document warning does not block approval; reported on the record",
-          r.get("status") == "approved" and want_b in r.get("warnings_on_record", []), r)
-    check("approve without a note: audit note empty", audit_note(b[0], "APPROVED") == [""],
-          audit_note(b[0], "APPROVED"))
+    check("approve without a note: one call, audit note empty",
+          r.get("status") == "approved" and audit_note(b[0], "APPROVED") == [""],
+          (r, audit_note(b[0], "APPROVED")))
 
     # reject: canonical reason + the officer's words verbatim, nothing else
     r = await officer_mod.reject_application(
@@ -150,6 +143,15 @@ async def decision_checks():
 
     # hard blocks: the portal's rules, same as the counter (fixture row edited locally)
     d = file(D, "Test Hard Block", PNG + b"another file")
+    with services.db(commit=True) as cur:
+        cur.execute("UPDATE applications SET ifsc = 'UTBI0PUR2819', block = 'Sonari' "
+                    "WHERE id = %s", (d[0],))
+    g = await officer_mod.get_application(application_id=d[0])
+    check("rule-based warnings exactly: invalid IFSC, village/block",
+          g["warnings"] == ["IFSC 'UTBI0PUR2819' is not the 11-character form the portal "
+                            "requires (e.g. SBIN0003077).",
+                            "Village Kathoni is in Dhemaji Pathar block, but the application "
+                            "says Sonari."], g["warnings"])
     with services.db(commit=True) as cur:
         cur.execute("UPDATE applications SET doc_path = '' WHERE id = %s", (d[0],))
     r = await officer_mod.approve_application(application_id=d[0], application_no=d[1])

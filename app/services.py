@@ -1060,44 +1060,11 @@ def _row_dict(row):
     return dict(zip(APPLICATION_COLUMNS, row))
 
 
-def _document_sha(cur, row):
-    """SHA-256 of an application's age proof: as recorded at upload, else of the file on
-    disk (web-form uploads have no provenance row). None when there is no readable file."""
-    if not (row.get("doc_path") or "").strip():
-        return None
-    cur.execute("SELECT sha256 FROM document_uploads WHERE application_id = %s "
-                "AND doc_path = %s ORDER BY id DESC LIMIT 1", (row["id"], row["doc_path"]))
-    r = cur.fetchone()
-    if r:
-        return r[0]
-    real = _safe_doc_path(row["doc_path"])
-    if not real or not os.path.isfile(real) or os.path.getsize(real) > DOC_READ_CAP:
-        return None
-    h = hashlib.sha256()
-    with open(real, "rb") as fh:
-        for chunk in iter(lambda: fh.read(64 * 1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def _same_document_warnings(cur, row):
-    """Other applications whose recorded age-proof file has the same SHA-256. A fact
-    about the files, nothing inferred from it."""
-    sha = _document_sha(cur, row)
-    if not sha:
-        return []
-    cur.execute("SELECT DISTINCT a.id, a.application_no, a.applicant_name "
-                "FROM document_uploads d JOIN applications a ON a.id = d.application_id "
-                "WHERE d.sha256 = %s AND d.doc_path = a.doc_path AND a.id <> %s "
-                "ORDER BY a.id LIMIT 5", (sha, row["id"]))
-    return ["The same age-proof file (sha256) is also attached to application %s (%s)."
-            % (no, name) for _, no, name in cur.fetchall()]
-
-
-def _warnings(row, cur=None):
-    """[(hard, text)] for an application row dict. Hard problems are the ones the
-    portal's own validator refuses today: age under the minimum, no document. With a
-    cursor, also the same-document check (soft)."""
+def _warnings(row):
+    """[(hard, text)] for an application row dict: the portal's rule-based checks only
+    (age, document, IFSC, village/block), never patterns across applications. Hard
+    problems are the ones the portal's own validator refuses today: age under the
+    minimum, no document."""
     out = []
     dob = row.get("dob")
     if dob is None:
@@ -1120,16 +1087,11 @@ def _warnings(row, cur=None):
     elif known and block and known != block:
         out.append((False, "Village %s is in %s block, but the application says %s."
                     % (village, known, block)))
-    if row.get("decided_at") and row.get("submitted_at") \
-            and row["decided_at"] < row["submitted_at"]:
-        out.append((False, "The record shows a decision before the submission date."))
-    if cur is not None:
-        out += [(False, w) for w in _same_document_warnings(cur, row)]
     return out
 
 
-def eligibility_warnings(row, cur=None):
-    return [text for _, text in _warnings(row, cur)]
+def eligibility_warnings(row):
+    return [text for _, text in _warnings(row)]
 
 
 STATUSES = ("PENDING", "APPROVED", "DEEMED_APPROVED", "REJECTED", "WITHDRAWN")
@@ -1267,7 +1229,7 @@ def get_application(application_id=None, application_no=None):
         cur.execute("SELECT at, action, actor, note FROM audit_log WHERE application_id = %s "
                     "ORDER BY at ASC, id ASC", (row["id"],))
         audit = cur.fetchall()
-        warnings = eligibility_warnings(row, cur)
+        warnings = eligibility_warnings(row)
     dob = row["dob"]
     pending = row["status"] == "PENDING"
     ttd = None
@@ -1416,7 +1378,7 @@ def decide(application_id, decision, reason, note, officer, channel,
         if decision == "REJECTED" and not reason:
             return {"status": "reason_required", "application_no": row["application_no"],
                     "reasons": REJECTION_REASONS}
-        warns = _warnings(row, cur)
+        warns = _warnings(row)
         if decision == "APPROVED" and channel == "mcp" and any(h for h, _ in warns):
             return {"status": "blocked", "application_no": row["application_no"],
                     "warnings": [t for h, t in warns if h]}

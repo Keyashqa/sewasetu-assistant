@@ -264,3 +264,6 @@ Recorded here so the scenario results above are read against the right build.
   opened by them"), so the page stays on the success message with the close-tab hint. Checked in
   headless Chrome at 390x844 (mobile UA, touch): no horizontal scroll, picker unchanged, button
   and hint only on success. `check_document_flow` 35/35, `check_helper_numbers` 75/75.
+- **Officer warnings are the portal's rules only** (amendment 15): same-document and
+  decision-date warnings removed. `check_officer_reporting` 23/23: two applications sharing a
+  file and a bank account get no warning; IFSC and village/block warnings come through exactly.
