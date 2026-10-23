@@ -64,7 +64,7 @@ async def tool_checks(doc, nodoc):
     check("instructions: remind to open the link before deciding",
           "remind them to open the link first" in ins)
     check("instructions: restate rule is for tool warnings only",
-          "If a tool returned warnings for that application" in ins
+          "If the tools returned warnings for that application" in ins
           and "illegible scan" not in ins)
     check("instructions: officer_reason_quote unchanged", "officer_reason_quote" in ins
           and "officer_reason_quote" in tools["reject_application"].description)

@@ -247,3 +247,11 @@ Recorded here so the scenario results above are read against the right build.
   flow unchanged. Over the real transport: 8 citizen tools; the link lasts 15 min and the
   verification until the sign-in ends. Regressions: `check_document_flow` 31/31 (now counts 8
   tools), `check_officer_documents` 23/23, the web form files as `applicant:<mobile>`.
+- **Officer assistant reports, does not investigate** (amendment 12): instructions and decision
+  tools rewritten; audit notes are the officer's words only; one new warning when the same
+  age-proof file (sha256) is attached to another application. `scripts/check_officer_reporting.py`
+  (local only, self-cleaning): 19/19 — warning on both applications sharing a file and none on a
+  different file; approve with no warnings in one call; audit note equals the officer's note
+  exactly (empty when none given); reject records `<reason> — Officer: "<quote>"` only; the
+  same-document warning does not block. Regressions: officer documents 23/23, helper numbers
+  73/73, document flow 31/31. Not yet re-tested with a live model.

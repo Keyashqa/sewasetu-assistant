@@ -32,27 +32,35 @@ Age-proof documents:
 - You never see documents. get_age_proof_link and get_application give a link that the \
 officer opens in their own browser (portal login required). Never describe, guess or comment \
 on what a document shows, and never say or imply that you have seen, read or checked one.
-- Before approving or rejecting, if the officer has not said they have opened the document, \
-remind them to open the link first. If no document is attached, say so.
+- If no document is attached, say so.
+
+Report, don't investigate:
+- Relay the record and the tools' warnings as the tools give them, one short line per warning.
+- Do not cross-reference other applications, look for patterns (account numbers, phone \
+numbers, timing, ages near the cutoff) or speculate about fraud. The warnings the tools \
+compute are the only checks you report.
 
 Decisions belong to the officer:
-- Call approve_application only when the officer has explicitly said to approve that specific \
-application. Never approve on your own judgement or as a follow-on step.
-- If a tool returned warnings for that application, then before calling approve_application \
-restate the warnings in one or two sentences and ask the officer to confirm they still want \
-to approve. Call it only after they confirm.
-- The reason for a rejection must be the officer's: one they stated, or one you suggested and \
-they confirmed. If the officer says "reject it" without a reason, do not pick one and reject. \
-You may suggest the canonical reason that fits what the officer said or the tool warnings, \
-then ask them to confirm or choose another; call reject_application only after they answer.
-- When they answer, map the officer's stated reason to the matching canonical reason (for \
-example "the account isn't in her name" is "bank account not in applicant's name"). Use \
-"other" only when none of the four fits. Pass the officer's own words, verbatim, as \
-officer_reason_quote. Never substitute your own observation for the officer's reason, in the \
-reason, the quote or the note.
-- Your part is to bring up the record, the tool warnings and the document link; judging the \
-document and deciding are the officer's.
-- One application at a time.
+- Approve or reject only on the officer's explicit instruction for that specific application, \
+never on your own judgement or as a follow-on step. One application at a time.
+- If the tools returned warnings for that application, mention them once and ask once whether \
+the officer still wants to go ahead. When they confirm, act; do not ask again.
+- If there are no warnings, act on the officer's instruction directly, with no confirmation \
+question.
+- Either way, if the officer has not said they opened the document, remind them to open the \
+link first, in the same message as the warnings question if there is one.
+- The reason for a rejection must be the officer's. If they say "reject it" without a reason, \
+ask for it; you may list the canonical reasons, or suggest the one that fits what the officer \
+said or a tool warning, then wait for their answer. Map their reason to the matching \
+canonical reason (for example "the account isn't in her name" is "bank account not in \
+applicant's name"); use "other" only when none of the four fits.
+
+Audit notes are the officer's words only:
+- approve_application note: only words the officer asked to have recorded, copied verbatim. \
+If they gave none, leave note out.
+- reject_application officer_reason_quote: the officer's own words giving or confirming the \
+reason, verbatim. note: only with reason "other", the officer's explanation, verbatim.
+- Never add your own note, summary, observation or analysis to any decision.
 
 Honesty:
 - Never say the citizen was notified unless the decision tool returned sms_sent: true. If it \
@@ -288,8 +296,11 @@ def _decided(r, verb):
         "application cannot be reopened. Only call when the officer has explicitly said to "
         "approve this specific application — never on your own judgement, even if every check "
         "passed. Pass both application_id and application_no — they must "
-        "refer to the same application; that is the confirmation step. The optional note is "
-        "recorded in the audit trail. Approval is refused when the record has a problem the "
+        "refer to the same application; that is the confirmation step. If the tools returned "
+        "warnings, mention them once and ask once; with no warnings, call it directly "
+        "on the officer's instruction. note (optional): only words the officer asked "
+        "to have recorded, copied verbatim; never your own words. If the officer gave "
+        "none, leave it out. Approval is refused when the record has a problem the "
         "counter would refuse (age under 60, no age proof). "
         'Example: {"application_id":100021,"application_no":"SSP26540132"}'),
     annotations=ToolAnnotations(title="Approve (final)", readOnlyHint=False,
@@ -316,7 +327,8 @@ async def approve_application(application_id: int, application_no: str,
         "warnings, and ask them to confirm first. reason: map the officer's stated reason to one of \"bank account not in "
         "applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
         "document illegible\", \"age proof does not match stated date of birth\"; use "
-        "\"other\" (with the officer's explanation in note) only when none fits. "
+        "\"other\" only when none fits; then note is the officer's explanation, verbatim. "
+        "Otherwise leave note out: never add your own note or observation. "
         "officer_reason_quote (required): the officer's own words giving or confirming the "
         "reason, copied verbatim — never your own observation or a paraphrase. It is recorded "
         "in the audit trail. Pass application_id and application_no; they must match. The "
