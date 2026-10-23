@@ -51,7 +51,9 @@ def main():
             with conn:                       # one transaction per file
                 with conn.cursor() as cur:
                     cur.execute(sql)
-            present = sum(1 for n in conn.notices if "already exists" in n)
+            # CREATE ... IF NOT EXISTS notices only (ADD COLUMN IF NOT EXISTS says "column ...")
+            present = sum(1 for n in conn.notices if "already exists" in n
+                          and not n.split(":", 1)[-1].strip().startswith("column"))
             print("applied %s: %d created, %d already present" % (
                 os.path.basename(path), _count_creates(sql) - present, present), flush=True)
             del conn.notices[:]

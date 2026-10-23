@@ -237,3 +237,13 @@ Recorded here so the scenario results above are read against the right build.
   officer returns to it after login. `scripts/check_officer_documents.py`: 23/23 locally
   (with a demo document). S10's "`view_age_proof` returns text + image" and the step-13 check
   no longer apply.
+- **A helper files for several applicants in one sign-in** (amendment 11): the helper verifies
+  another mobile on `/verify-number/<token>` (the OTP goes to that phone and is typed on the
+  page, never in the chat), then passes it as `applicant_mobile`; filed on that mobile through
+  the same locked path, audit `helper:<helper> for <applicant>`. `scripts/check_helper_numbers.py`
+  (local only, self-cleaning): 73/73 — two verified numbers filed; unverified refused with
+  nothing written; one active per mobile (and 3 concurrent submits → 1 row); the helper cannot
+  withdraw a helper-filed application; no OTP in any of 38 tool outputs; the single-applicant
+  flow unchanged. Over the real transport: 8 citizen tools; the link lasts 15 min and the
+  verification until the sign-in ends. Regressions: `check_document_flow` 31/31 (now counts 8
+  tools), `check_officer_documents` 23/23, the web form files as `applicant:<mobile>`.

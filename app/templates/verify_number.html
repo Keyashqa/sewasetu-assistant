@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify a mobile number - Sewa Setu</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f0f2f5;color:#222;font-size:18px;line-height:1.45}
+.header{background:#0b3d6e;color:#fff;padding:14px 16px}
+.header h1{margin:0;font-size:20px}
+.header .sub{font-size:13px;color:#cfe0f3}
+.band{background:#f7931e;height:5px}
+.box{max-width:560px;margin:16px auto;background:#fff;padding:20px 16px;border:1px solid #d7dbe0}
+h2{margin:0 0 12px;font-size:22px}
+label{display:block;font-weight:bold;margin:0 0 6px}
+input[type=tel],input[type=text]{display:block;width:100%;box-sizing:border-box;font-size:26px;
+  padding:12px;border:2px solid #0b3d6e;border-radius:10px;letter-spacing:2px}
+.btn{display:block;width:100%;margin-top:14px;background:#0b3d6e;color:#fff;border:none;
+  padding:16px;font-size:20px;font-weight:bold;border-radius:10px;cursor:pointer}
+.btn.light{background:#fff;color:#0b3d6e;border:2px solid #0b3d6e;font-size:17px;padding:12px}
+.btn:disabled{background:#8aa3bd;color:#fff;border-color:#8aa3bd}
+.hint{font-size:15px;color:#555;margin:12px 0 0}
+.ok{background:#e8f5e9;border:2px solid #66bb6a;color:#1b5e20;padding:18px 14px;font-size:22px;
+  font-weight:bold;text-align:center;border-radius:10px;margin:0 0 16px}
+.err{background:#fdecea;border:2px solid #e57373;color:#a33;padding:14px;margin:0 0 16px;border-radius:10px}
+.info{background:#f5f8fc;border:1px solid #d7e2ef;padding:12px 14px;margin:0 0 16px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Sewa Setu &mdash; Old Age Pension</h1>
+  <div class="sub">Department of Social Welfare &middot; Government of Purvanchal</div>
+</div>
+<div class="band"></div>
+<div class="box">
+{% set messages = {
+  'bad_number': 'Please enter a 10-digit mobile number.',
+  'own_number': 'This is the number you are already signed in with. It does not need verifying. Enter the other person\'s number.',
+  'wait': 'An OTP was sent a moment ago. Please wait a minute before asking for another.',
+  'too_many_sends': 'Too many OTPs have been sent from this link. Go back to your chat and ask for a new link.',
+  'sms_failed': 'The OTP could not be sent just now. Wait a minute and tap Send OTP again.',
+  'code_expired': 'This OTP has expired (it is valid for 5 minutes). Tap Send a new OTP.',
+  'wrong_code': 'That OTP is not right. Check the SMS and type it again.',
+} %}
+{% if v.state == 'expired' %}
+  <h2>This link has expired</h2>
+  <p>This link no longer works. Go back to your chat and ask for a new link.</p>
+{% elif v.state == 'used' %}
+  {% if status == 'verified' %}
+  <div class="ok">Number verified. Go back to your chat and say done.</div>
+  <p>The number ending {{ v.mobile[-4:] }} can now be used for an application in your chat.</p>
+  {% else %}
+  <h2>This link has been used</h2>
+  <p>The number ending {{ v.mobile[-4:] }} is already verified. To verify another number, go
+  back to your chat and ask for a new link.</p>
+  {% endif %}
+{% elif v.state == 'locked' %}
+  <h2>Too many wrong OTPs</h2>
+  <p>This link is locked. Go back to your chat and ask for a new link.</p>
+{% else %}
+  {% if status in messages %}<div class="err">{{ messages[status] }}</div>{% endif %}
+  <h2>Verify the applicant's mobile number</h2>
+  {% if v.state == 'enter_mobile' %}
+  <div class="info">Enter the mobile number of the person you are applying for. An OTP will
+  be sent to that phone by SMS.</div>
+  <form method="post">
+    <input type="hidden" name="action" value="send">
+    <label for="mobile">Their mobile number</label>
+    <input type="tel" id="mobile" name="mobile" inputmode="numeric" autocomplete="off"
+           maxlength="16" placeholder="10 digits" required>
+    <button class="btn" type="submit">Send OTP</button>
+  </form>
+  {% else %}
+  <div class="info">{% if status == 'sent' %}An OTP has been sent{% else %}An OTP was sent{% endif %}
+  by SMS to the number ending <b>{{ v.mobile[-4:] }}</b>. Type it here. Do not share it with
+  anyone, and do not type it into the chat.</div>
+  <form method="post">
+    <input type="hidden" name="action" value="check">
+    <label for="otp">OTP</label>
+    <input type="text" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code"
+           maxlength="6" placeholder="6 digits" required>
+    <button class="btn" type="submit">Verify</button>
+  </form>
+  <p class="hint">{{ v.attempts_left }} tries left. The OTP is valid for 5 minutes.</p>
+  <form method="post">
+    <input type="hidden" name="action" value="send">
+    <input type="hidden" name="mobile" value="{{ v.mobile }}">
+    <button class="btn light" id="resend" type="submit"
+            {% if v.resend_in > 0 or v.sends_left <= 0 %}disabled{% endif %}
+            data-wait="{{ v.resend_in }}">Send a new OTP</button>
+  </form>
+  <form method="post">
+    <input type="hidden" name="action" value="change">
+    <button class="btn light" type="submit">Use a different number</button>
+  </form>
+  {% endif %}
+  <p class="hint">This link works until {{ v.expires_ist }}.</p>
+{% endif %}
+</div>
+<script>
+(function () {
+  var b = document.getElementById('resend');
+  if (!b) return;
+  var n = parseInt(b.getAttribute('data-wait'), 10) || 0, label = b.textContent;
+  if (n <= 0) return;
+  var t = setInterval(function () {
+    n -= 1;
+    if (n <= 0) { clearInterval(t); b.disabled = false; b.textContent = label; }
+    else { b.textContent = label + ' (' + n + ' s)'; }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

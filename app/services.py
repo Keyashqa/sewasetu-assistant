@@ -28,7 +28,7 @@ import hashlib
 import secrets
 import threading
 from contextlib import contextmanager
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 from psycopg2 import pool
 from psycopg2.extras import Json
@@ -391,7 +391,7 @@ REQUIRED_FIELDS = ("full_name", "date_of_birth", "village", "block", "bank_accou
 DOC_MISSING = "age proof document"
 UPLOAD_MAX_BYTES = 5 * 1024 * 1024
 UPLOAD_EXTENSIONS = ("pdf", "jpg", "jpeg", "png")
-DRAFT_COLUMNS = ("mobile", "data", "doc_path", "doc_name", "upload_token", "token_expires",
+DRAFT_COLUMNS = ("owner", "mobile", "data", "doc_path", "doc_name", "upload_token", "token_expires",
                  "created_at", "updated_at", "expires_at")
 
 
@@ -409,10 +409,13 @@ def _villages_text(block=None):
         for b in BLOCKS) + "."
 
 
-def _load_draft(cur, mobile, lock=False):
-    cur.execute("SELECT %s FROM agent_drafts WHERE mobile = %%s AND expires_at > %%s%s"
+def _load_draft(cur, owner, mobile, lock=False):
+    """The draft the signed-in `owner` is preparing for applicant `mobile` (the same
+    number in the ordinary single-applicant case)."""
+    cur.execute("SELECT %s FROM agent_drafts WHERE owner = %%s AND mobile = %%s "
+                "AND expires_at > %%s%s"
                 % (", ".join(DRAFT_COLUMNS), " FOR UPDATE" if lock else ""),
-                (mobile, datetime.now()))
+                (owner, mobile, datetime.now()))
     r = cur.fetchone()
     return dict(zip(DRAFT_COLUMNS, r)) if r else None
 
@@ -430,9 +433,9 @@ def _assess(fields, doc_path):
     return missing, problems, not missing and not problems
 
 
-def get_draft(mobile):
+def get_draft(owner, applicant=None):
     with db() as cur:
-        d = _load_draft(cur, mobile)
+        d = _load_draft(cur, owner, applicant or owner)
     if not d:
         return None
     missing, problems, ready = _assess(d["data"], d["doc_path"])
@@ -441,8 +444,10 @@ def get_draft(mobile):
             "ready_to_submit": ready, "expires_at": fmt_ist(d["expires_at"])}
 
 
-def save_draft(mobile, fields):
-    """Merge any subset of fields into the draft. Never refuses a half-filled draft.
+def save_draft(owner, fields, applicant=None):
+    """Merge any subset of fields into the draft `owner` keeps for `applicant` (default:
+    the owner's own number; the caller has checked the applicant is allowed). Never
+    refuses a half-filled draft.
 
     A value that cannot be read (a date that is not a date, a block that does not
     exist, a gender outside the form's choices) is not stored: it is reported in
@@ -468,9 +473,10 @@ def save_draft(mobile, fields):
         problems.append("I do not know the block '%s'. The blocks are %s."
                         % (clean.pop("block"), ", ".join(BLOCKS)))
 
+    mobile = applicant or owner
     now = datetime.now()
     with db(commit=True) as cur:
-        d = _load_draft(cur, mobile, lock=True)
+        d = _load_draft(cur, owner, mobile, lock=True)
         merged = dict(d["data"]) if d else {}
         warnings = []
         # The portal accepts any village, so the assistant does too: an unknown village
@@ -502,16 +508,16 @@ def save_draft(mobile, fields):
         doc_path = d["doc_path"] if d else None
         if d:
             cur.execute("UPDATE agent_drafts SET data = %s, updated_at = %s, expires_at = %s "
-                        "WHERE mobile = %s",
-                        (Json(merged), now, now + DRAFT_TTL, mobile))
+                        "WHERE owner = %s AND mobile = %s",
+                        (Json(merged), now, now + DRAFT_TTL, owner, mobile))
         else:
-            cur.execute("INSERT INTO agent_drafts (mobile, data, created_at, updated_at, "
-                        "expires_at) VALUES (%s, %s, %s, %s, %s) "
-                        "ON CONFLICT (mobile) DO UPDATE SET data = EXCLUDED.data, "
+            cur.execute("INSERT INTO agent_drafts (owner, mobile, data, created_at, updated_at, "
+                        "expires_at) VALUES (%s, %s, %s, %s, %s, %s) "
+                        "ON CONFLICT (owner, mobile) DO UPDATE SET data = EXCLUDED.data, "
                         "doc_path = NULL, doc_name = NULL, upload_token = NULL, "
                         "token_expires = NULL, created_at = EXCLUDED.created_at, "
                         "updated_at = EXCLUDED.updated_at, expires_at = EXCLUDED.expires_at",
-                        (mobile, Json(merged), now, now,
+                        (owner, mobile, Json(merged), now, now,
                          now + DRAFT_TTL))
 
     missing, validator_problems, _ = _assess(merged, doc_path)
@@ -522,32 +528,35 @@ def save_draft(mobile, fields):
             "ready_to_submit": not missing and not problems}
 
 
-def _ensure_draft(cur, mobile):
-    d = _load_draft(cur, mobile, lock=True)
+def _ensure_draft(cur, owner, mobile):
+    d = _load_draft(cur, owner, mobile, lock=True)
     if d:
         return d
     now = datetime.now()
-    cur.execute("INSERT INTO agent_drafts (mobile, data, created_at, updated_at, expires_at) "
-                "VALUES (%s, '{}'::jsonb, %s, %s, %s) "
-                "ON CONFLICT (mobile) DO UPDATE SET data = '{}'::jsonb, doc_path = NULL, "
+    cur.execute("INSERT INTO agent_drafts (owner, mobile, data, created_at, updated_at, "
+                "expires_at) VALUES (%s, %s, '{}'::jsonb, %s, %s, %s) "
+                "ON CONFLICT (owner, mobile) DO UPDATE SET data = '{}'::jsonb, doc_path = NULL, "
                 "doc_name = NULL, upload_token = NULL, token_expires = NULL, "
                 "created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, "
-                "expires_at = EXCLUDED.expires_at", (mobile, now, now, now + DRAFT_TTL))
-    return _load_draft(cur, mobile, lock=True)
+                "expires_at = EXCLUDED.expires_at", (owner, mobile, now, now, now + DRAFT_TTL))
+    return _load_draft(cur, owner, mobile, lock=True)
 
 
-def issue_upload_token(mobile):
-    """A link for uploading this mobile's age proof. Reuses a live token, so asking
-    twice gives the same link. The token is bound to the mobile and nothing else."""
+def issue_upload_token(owner, applicant=None):
+    """A link for uploading the age proof of the draft `owner` keeps for `applicant`.
+    Reuses a live token, so asking twice gives the same link. The token is bound to
+    that draft and nothing else."""
+    mobile = applicant or owner
     now = datetime.now()
     with db(commit=True) as cur:
-        d = _ensure_draft(cur, mobile)
+        d = _ensure_draft(cur, owner, mobile)
         if d["upload_token"] and d["token_expires"] and d["token_expires"] > now:
             token, expires = d["upload_token"], d["token_expires"]
         else:
             token, expires = secrets.token_urlsafe(24), now + UPLOAD_TOKEN_TTL
             cur.execute("UPDATE agent_drafts SET upload_token = %s, token_expires = %s, "
-                        "updated_at = %s WHERE mobile = %s", (token, expires, now, mobile))
+                        "updated_at = %s WHERE owner = %s AND mobile = %s",
+                        (token, expires, now, owner, mobile))
     out = {"url": "%s/upload/%s" % (PUBLIC_BASE_URL, token), "token": token,
            "expires_at_ist": fmt_ist(expires), "doc_attached": bool(d["doc_path"]),
            "doc_name": d["doc_name"]}
@@ -631,7 +640,7 @@ def attach_draft_document(token, filename, stream, source="upload_token"):
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                     (mobile, path, original[:200], digest, size, content_type, source, now))
         cur.execute("UPDATE agent_drafts SET doc_path = %s, doc_name = %s, updated_at = %s "
-                    "WHERE mobile = %s", (path, original[:120], now, mobile))
+                    "WHERE upload_token = %s", (path, original[:120], now, token))
     return {"status": "ok", "doc_name": original, "sha256": digest, "byte_size": size,
             "uploaded_at_ist": fmt_ist(now)}
 
@@ -687,17 +696,20 @@ SUBMIT_SMS = ("Sewa Setu: application %s received. Track at the status portal "
               "with mobile no. and password (DOB as DDMMYYYY).")
 
 
-def clear_draft(mobile):
+def clear_draft(owner, applicant=None):
     with db(commit=True) as cur:
-        cur.execute("DELETE FROM agent_drafts WHERE mobile = %s", (mobile,))
+        cur.execute("DELETE FROM agent_drafts WHERE owner = %s AND mobile = %s",
+                    (owner, applicant or owner))
     return {"status": "ok"}
 
 
-def _submit_locked(cur, mobile, cleaned):
+def _submit_locked(cur, mobile, cleaned, helper=None):
     """Lock the mobile, re-check the one-active-application rule, insert. Caller commits.
 
     The advisory lock is transaction-scoped and held until commit, so two concurrent
-    submissions for one mobile serialise and the second sees the first's row.
+    submissions for one mobile serialise and the second sees the first's row. `helper`
+    is the signed-in mobile when it files on another (verified) mobile: the audit actor
+    names both, and helper_filings records it for the helper's status view.
     """
     cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (mobile,))
     existing = portal.active_application(cur, mobile)
@@ -705,7 +717,11 @@ def _submit_locked(cur, mobile, cleaned):
         return {"status": "duplicate",
                 "existing": {"id": existing[0], "application_no": existing[1],
                              "status": existing[2]}}
-    new_id, app_no = portal.create_application(cur, mobile, cleaned)   # + SUBMIT audit row
+    actor = ("helper:%s for %s" % (helper, mobile))[:50] if helper else None
+    new_id, app_no = portal.create_application(cur, mobile, cleaned, actor=actor)  # + SUBMIT
+    if helper:
+        cur.execute("INSERT INTO helper_filings (application_id, helper, mobile, filed_at) "
+                    "VALUES (%s, %s, %s, %s)", (new_id, helper, mobile, datetime.now()))
     if cleaned.get("doc_path"):
         cur.execute("UPDATE document_uploads SET application_id = %s "
                     "WHERE doc_path = %s AND application_id IS NULL",
@@ -713,17 +729,20 @@ def _submit_locked(cur, mobile, cleaned):
     return {"status": "ok", "id": new_id, "application_no": app_no}
 
 
-def _after_submit(mobile, res):
-    """After the commit: tell the applicant, and drop the agent draft."""
+def _after_submit(mobile, res, owner=None):
+    """After the commit: tell the applicant's mobile, and drop the agent draft."""
     if res["status"] == "ok":
         res["sms_sent"] = _send_sms_checked(mobile, SUBMIT_SMS % res["application_no"])
-        clear_draft(mobile)
+        clear_draft(owner or mobile, mobile)
     return res
 
 
-def submit(mobile, confirm_declaration):
-    """The agent path: file this mobile's draft. Same validator, same locked write as
-    the web form; the SUBMIT audit row is written by portal.create_application."""
+def submit(owner, confirm_declaration, applicant=None):
+    """The agent path: file the draft `owner` keeps for `applicant` (default: the owner's
+    own number), on the applicant's mobile. Same validator, same locked write as the web
+    form; the SUBMIT audit row is written by portal.create_application. The caller has
+    checked that the applicant mobile is the owner's or verified by the owner."""
+    mobile = applicant or owner
     if confirm_declaration is not True:
         return {"status": "declaration_required"}
     win = window_status()
@@ -732,7 +751,7 @@ def submit(mobile, confirm_declaration):
                 "window": win}
     with db() as cur:
         existing = portal.active_application(cur, mobile)
-        d = _load_draft(cur, mobile)
+        d = _load_draft(cur, owner, mobile)
     if existing:                     # checked again under the lock in _submit_locked
         return {"status": "duplicate",
                 "existing": {"id": existing[0], "application_no": existing[1],
@@ -749,14 +768,15 @@ def submit(mobile, confirm_declaration):
     if errors:
         return {"status": "invalid", "errors": errors}
     with db(commit=True) as cur:
-        res = _submit_locked(cur, mobile, cleaned)
+        res = _submit_locked(cur, mobile, cleaned,
+                             helper=owner if mobile != owner else None)
         if res["status"] == "ok":
             cur.execute("SELECT submitted_at FROM applications WHERE id = %s", (res["id"],))
             submitted_at = cur.fetchone()[0]
             res.update(submitted_at_ist=fmt_ist(submitted_at),
                        deemed_date_ist=_fmt(deemed_date(submitted_at)),
-                       date_of_birth=cleaned["dob"].strftime("%d/%m/%Y"))
-    return _after_submit(mobile, res)
+                       date_of_birth=cleaned["dob"].strftime("%d/%m/%Y"), mobile=mobile)
+    return _after_submit(mobile, res, owner)
 
 
 def submit_web(mobile, form_data, doc_path):
@@ -790,10 +810,23 @@ def my_application(mobile):
                             "AND action = 'REJECTED' ORDER BY at DESC LIMIT 1", (row["id"],))
                 n = cur.fetchone()
                 reason = (n[0] or "").strip() if n else None
+        # applications this mobile filed as a helper, on other (verified) mobiles
+        cur.execute("SELECT a.mobile, a.application_no, a.applicant_name, a.status "
+                    "FROM helper_filings h JOIN applications a ON a.id = h.application_id "
+                    "WHERE h.helper = %s ORDER BY h.filed_at DESC LIMIT 20", (mobile,))
+        others = [{"mobile": o[0], "application_no": o[1], "name": o[2], "status": o[3]}
+                  for o in cur.fetchall()]
+        cur.execute("SELECT mobile, data FROM agent_drafts WHERE owner = %s AND mobile <> %s "
+                    "AND expires_at > %s ORDER BY updated_at DESC LIMIT 20",
+                    (mobile, mobile, datetime.now()))
+        other_drafts = [{"mobile": o[0], "name": (o[1] or {}).get("full_name")}
+                        for o in cur.fetchall()]
     draft = get_draft(mobile)
     if not r:
-        return {"found": False, "draft": draft}
+        return {"found": False, "draft": draft, "filed_for_others": others,
+                "drafts_for_others": other_drafts}
     return {
+        "filed_for_others": others, "drafts_for_others": other_drafts,
         "found": True, "application_no": row["application_no"], "status": row["status"],
         "submitted_at_ist": fmt_ist(row["submitted_at"]),
         "decided_at_ist": fmt_ist(row["decided_at"]), "decided_by": row["decided_by"],
@@ -834,6 +867,181 @@ def withdraw(mobile, application_no=None, app_id=None, actor=None):
                     (datetime.now(), row[0]))
         portal.write_audit(cur, row[0], "WITHDRAW", actor or "applicant:%s" % mobile)
     return {"status": "ok", "id": row[0], "application_no": row[1]}
+
+
+# ---------------------------------------------------------------------------
+# Helpers filing for other people: numbers verified by OTP on the portal
+#
+# The signed-in mobile (the helper) gets a short-lived, single-use link to
+# /verify-number/<token>. On that page the helper enters the applicant's mobile, the
+# portal sends an OTP to it, and the helper types the OTP on the page. The OTP never
+# passes through an assistant: no function here returns it, and only a hash is stored.
+# A verified number stays verified for that helper until the helper's sign-in ends.
+# ---------------------------------------------------------------------------
+
+VERIFY_LINK_TTL = timedelta(minutes=15)
+VERIFY_MAX_ATTEMPTS = 5                    # wrong codes per link, across resends
+VERIFY_MAX_SENDS = 5                       # OTPs per link
+VERIFY_RESEND_SECONDS = 60
+VERIFY_FALLBACK_SESSION = timedelta(hours=2)   # citizen sign-in length, if none is known
+VERIFY_SMS = ("Your Sewa Setu OTP is %s, to verify this number for an old age pension "
+              "application. Valid for 5 minutes.")
+MOBILE_RE = re.compile(r"[0-9]{10}")
+
+
+def normalise_mobile(raw):
+    """A 10-digit mobile from what a person typed (+91, spaces, dashes), or None."""
+    digits = re.sub(r"[\s\-()]", "", str(raw or ""))
+    if digits.startswith("+91"):
+        digits = digits[3:]
+    elif len(digits) == 12 and digits.startswith("91"):
+        digits = digits[2:]
+    elif len(digits) == 11 and digits.startswith("0"):
+        digits = digits[1:]
+    return digits if MOBILE_RE.fullmatch(digits) else None
+
+
+def _code_hash(token, code):
+    return hashlib.sha256(("%s:%s" % (token, code)).encode()).hexdigest()
+
+
+def verified_numbers(helper):
+    """Numbers this helper has verified and may still file for, newest first."""
+    with db() as cur:
+        cur.execute("SELECT mobile, expires_at FROM verified_numbers WHERE helper = %s "
+                    "AND expires_at > %s ORDER BY verified_at DESC", (helper, datetime.now()))
+        return [{"mobile": r[0], "valid_until_ist": fmt_ist(r[1])} for r in cur.fetchall()]
+
+
+def applicant_for(helper, raw):
+    """Which mobile an agent action is for: the helper's own (raw empty or equal), or a
+    number this helper verified by OTP in this sign-in. Anything else is refused."""
+    if raw is None or str(raw).strip() == "":
+        return {"status": "ok", "mobile": helper}
+    mobile = normalise_mobile(raw)
+    if mobile is None:
+        return {"status": "bad_number"}
+    if mobile == helper:
+        return {"status": "ok", "mobile": helper}
+    with db() as cur:
+        cur.execute("SELECT 1 FROM verified_numbers WHERE helper = %s AND mobile = %s "
+                    "AND expires_at > %s", (helper, mobile, datetime.now()))
+        ok = cur.fetchone() is not None
+    return {"status": "ok", "mobile": mobile} if ok else {"status": "not_verified",
+                                                         "mobile": mobile}
+
+
+def issue_verify_link(helper, session_ends=None):
+    """A /verify-number link for this helper. A live, unused, unlocked link is reused,
+    so asking twice gives the same link. session_ends is the sign-in's absolute end
+    (epoch seconds); a number verified through the link stays verified until then."""
+    now = datetime.now()
+    ends = (datetime.fromtimestamp(session_ends, timezone.utc).replace(tzinfo=None)
+            if session_ends
+            else now + VERIFY_FALLBACK_SESSION)
+    with db(commit=True) as cur:
+        cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", ("verify:" + helper,))
+        cur.execute("SELECT token, token_expires FROM number_verifications WHERE helper = %s "
+                    "AND used_at IS NULL AND attempts < %s AND token_expires > %s "
+                    "ORDER BY id DESC LIMIT 1", (helper, VERIFY_MAX_ATTEMPTS, now))
+        r = cur.fetchone()
+        if r:
+            token, expires = r
+        else:
+            token, expires = secrets.token_urlsafe(24), min(now + VERIFY_LINK_TTL, ends)
+            cur.execute("INSERT INTO number_verifications (helper, token, token_expires, "
+                        "session_ends, created_at) VALUES (%s, %s, %s, %s, %s)",
+                        (helper, token, expires, ends, now))
+    return {"url": "%s/verify-number/%s" % (PUBLIC_BASE_URL, token),
+            "expires_at_ist": fmt_ist(expires)}
+
+
+VERIFY_COLUMNS = ("id", "helper", "token_expires", "session_ends", "mobile", "code_hash",
+                  "code_sent_at", "sends", "attempts", "used_at")
+
+
+def _verify_row(cur, token, lock=False):
+    cur.execute("SELECT %s FROM number_verifications WHERE token = %%s%s"
+                % (", ".join(VERIFY_COLUMNS), " FOR UPDATE" if lock else ""), (token,))
+    r = cur.fetchone()
+    return dict(zip(VERIFY_COLUMNS, r)) if r else None
+
+
+def _verify_view(v, now):
+    """What the page may show about a link. Never the code."""
+    if v is None or (v["used_at"] is None and v["token_expires"] <= now):
+        return {"state": "expired"}
+    if v["used_at"]:
+        return {"state": "used", "mobile": v["mobile"]}
+    if v["attempts"] >= VERIFY_MAX_ATTEMPTS:
+        return {"state": "locked"}
+    out = {"state": "enter_mobile", "helper_masked": "******" + v["helper"][-4:],
+           "expires_ist": fmt_ist(v["token_expires"]),
+           "attempts_left": VERIFY_MAX_ATTEMPTS - v["attempts"]}
+    if v["mobile"] and v["code_sent_at"]:
+        wait = VERIFY_RESEND_SECONDS - int((now - v["code_sent_at"]).total_seconds())
+        out.update(state="enter_code", mobile=v["mobile"], resend_in=max(0, wait),
+                   sends_left=VERIFY_MAX_SENDS - v["sends"])
+    return out
+
+
+def verify_link_state(token):
+    with db() as cur:
+        return _verify_view(_verify_row(cur, token or ""), datetime.now())
+
+
+def verify_send_code(token, raw_mobile):
+    """Send an OTP to the number typed on the page. Cooldown and a cap per link."""
+    now = datetime.now()
+    with db(commit=True) as cur:
+        v = _verify_row(cur, token or "", lock=True)
+        view = _verify_view(v, now)
+        if view["state"] not in ("enter_mobile", "enter_code"):
+            return dict(view, status=view["state"])
+        mobile = normalise_mobile(raw_mobile)
+        if mobile is None:
+            return dict(view, status="bad_number")
+        if mobile == v["helper"]:
+            return dict(view, status="own_number")
+        if v["code_sent_at"] and (now - v["code_sent_at"]).total_seconds() \
+                < VERIFY_RESEND_SECONDS:
+            return dict(view, status="wait")
+        if v["sends"] >= VERIFY_MAX_SENDS:
+            return dict(view, status="too_many_sends")
+        code = "%06d" % secrets.randbelow(1000000)
+        cur.execute("UPDATE number_verifications SET mobile = %s, code_hash = %s, "
+                    "code_sent_at = %s, sends = sends + 1 WHERE id = %s",
+                    (mobile, _code_hash(token, code), now, v["id"]))
+    sent = _send_sms_checked(mobile, VERIFY_SMS % code)
+    state = verify_link_state(token)
+    return dict(state, status="sent" if sent else "sms_failed")
+
+
+def verify_check_code(token, raw_code):
+    """Check the OTP typed on the page. Same validity as /apply (OTP_VALIDITY_SECONDS);
+    VERIFY_MAX_ATTEMPTS wrong codes lock the link. On success the number is verified for
+    the helper until their sign-in ends, and the link is used up."""
+    now = datetime.now()
+    code = re.sub(r"\s", "", str(raw_code or ""))
+    with db(commit=True) as cur:
+        v = _verify_row(cur, token or "", lock=True)
+        view = _verify_view(v, now)
+        if view["state"] != "enter_code":
+            return dict(view, status=view["state"])
+        if (now - v["code_sent_at"]).total_seconds() > portal.OTP_VALIDITY_SECONDS:
+            return dict(view, status="code_expired")
+        if not secrets.compare_digest(_code_hash(token, code), v["code_hash"]):
+            cur.execute("UPDATE number_verifications SET attempts = attempts + 1 "
+                        "WHERE id = %s", (v["id"],))
+            v["attempts"] += 1
+            return dict(_verify_view(v, now), status="wrong_code")
+        cur.execute("UPDATE number_verifications SET used_at = %s, code_hash = NULL "
+                    "WHERE id = %s", (now, v["id"]))
+        cur.execute("INSERT INTO verified_numbers (helper, mobile, verified_at, expires_at) "
+                    "VALUES (%s, %s, %s, %s) ON CONFLICT (helper, mobile) DO UPDATE SET "
+                    "verified_at = EXCLUDED.verified_at, expires_at = EXCLUDED.expires_at",
+                    (v["helper"], v["mobile"], now, v["session_ends"]))
+    return {"status": "verified", "state": "used", "mobile": v["mobile"]}
 
 
 # ---------------------------------------------------------------------------

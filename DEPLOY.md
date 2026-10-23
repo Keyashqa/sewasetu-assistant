@@ -180,6 +180,8 @@ dc exec -T app python /app/scripts/check_document_flow.py
 dc exec -T app python /app/scripts/check_officer_documents.py
 ```
 
+`scripts/check_helper_numbers.py` files real applications, so it is local only and refuses to run on the VM.
+
 For a change to `app/` only, rebuild and restart just those two services so the SMS
 gateway's in-memory inbox survives: `dc build app mcp && dc up -d --no-deps app mcp`.
 
@@ -215,7 +217,14 @@ dc up -d --build
 ```
 
 If the bad release changed data, restore the dump taken before the update (§3) after the
-code rollback. Migrations are additive, so older code runs against a newer schema.
+code rollback. Migrations are additive, so older code runs against a newer schema, with one
+exception: `003_helper_numbers.sql` changes `agent_drafts`' primary key to `(owner, mobile)`.
+Rolling back to a commit before it, also run (drafts kept by a helper for another number are
+dropped; filed applications are untouched):
+
+```bash
+dc exec -T db psql -U sewasetu -d sewasetu -c "DELETE FROM agent_drafts WHERE owner <> mobile; ALTER TABLE agent_drafts DROP CONSTRAINT agent_drafts_pkey; ALTER TABLE agent_drafts ADD PRIMARY KEY (mobile); ALTER TABLE agent_drafts DROP COLUMN owner;"
+```
 
 Infrastructure: everything is named `sewasetu*` in project `build4b`; the VM can be stopped
 (`gcloud compute instances stop sewasetu --zone=us-central1-a`) without losing the disk or

@@ -88,7 +88,7 @@ def page_checks(client):
 
 async def tool_checks():
     tools = {t.name: t for t in await citizen_mod.citizen.list_tools()}
-    check("citizen server lists 7 tools", len(tools) == 7, sorted(tools))
+    check("citizen server lists 8 tools", len(tools) == 8, sorted(tools))
     up = tools["get_document_upload_link"].description
     sub = tools["submit_application"].description
     ins = citizen_mod.INSTRUCTIONS

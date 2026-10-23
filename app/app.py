@@ -197,10 +197,11 @@ def active_application(cur, mobile):
     return cur.fetchone()
 
 
-def create_application(cur, mobile, cleaned):
+def create_application(cur, mobile, cleaned, actor=None):
     """Insert a validated application; ensure the status-portal account exists.
 
-    The caller commits. Returns (id, application_no).
+    The caller commits. Returns (id, application_no). `actor` overrides the SUBMIT
+    audit actor (default applicant:<mobile>).
     """
     app_no = new_application_no(cur)
     cur.execute(
@@ -222,7 +223,7 @@ def create_application(cur, mobile, cleaned):
     if cur.fetchone()[0] == 0:
         cur.execute("INSERT INTO portal_users (mobile, password_hash) VALUES (%s,%s)",
                     (mobile, hash_password(portal_pass)))
-    write_audit(cur, new_id, "SUBMIT", "applicant:%s" % mobile)
+    write_audit(cur, new_id, "SUBMIT", actor or "applicant:%s" % mobile)
     return new_id, app_no
 
 
@@ -387,6 +388,26 @@ def draft_upload(token):
         return render_template("upload_token.html", d=services.draft_for_upload_token(token) or d,
                                result=res)
     return render_template("upload_token.html", d=d)
+
+
+@app.route("/verify-number/<token>", methods=["GET", "POST"])
+def verify_number(token):
+    """A helper signed in to an assistant verifies another person's mobile here, so they
+    can file that person's application on it. The OTP goes to that mobile and is typed
+    on this page; it never passes through the assistant."""
+    res = None
+    if request.method == "POST":
+        if request.form.get("action") == "send":
+            res = services.verify_send_code(token, request.form.get("mobile", ""))
+        elif request.form.get("action") == "check":
+            res = services.verify_check_code(token, request.form.get("otp", ""))
+        elif request.form.get("action") == "change":
+            res = dict(services.verify_link_state(token), status="change")
+            if res["state"] == "enter_code":
+                res["state"] = "enter_mobile"
+    v = res or services.verify_link_state(token)
+    return (render_template("verify_number.html", v=v, status=(res or {}).get("status")),
+            404 if v["state"] == "expired" else 200)
 
 
 @app.route("/declaration", methods=["GET", "POST"])

@@ -30,7 +30,21 @@ details (name, date of birth, village, bank account) are what go on the applicat
 - A helper may confirm the declaration on the applicant's behalf when they say the applicant \
 consents. Do not refuse because the mobile, or the person typing, is not the applicant.
 - The only rule about mobile numbers: one active application per mobile number. A second \
-applicant needs a different mobile number (any family member's will do) or the block office.
+applicant needs a different mobile number (their own or any family member's), verified as \
+below, or the block office.
+
+Applying for more than one person (helpers, CSC operators):
+- By default everything is filed on the signed-in number. For one applicant nothing extra is \
+needed: leave applicant_mobile out.
+- Use get_number_verification_link only when the person wants to file for someone else on \
+another mobile number, or the signed-in number already has an active application. The person \
+opens the link, enters that mobile number and types the OTP sent to that phone on the page.
+- Never ask for, accept or repeat an OTP in the chat. If someone types one here, tell them it \
+is not needed in the chat and to enter it on the page.
+- When they say done, pass that number as applicant_mobile to check_eligibility, \
+save_application_details, get_document_upload_link and submit_application for that \
+applicant, every time. Keep each applicant's details separate.
+- withdraw_application only withdraws the signed-in number's own application.
 
 The age proof:
 - The person uploads it themselves: give them the link from get_document_upload_link and \
@@ -57,6 +71,32 @@ citizen = FastMCP(
 
 def _run(fn, *args, **kwargs):
     return anyio.to_thread.run_sync(lambda: fn(*args, **kwargs))
+
+
+APPLICANT_MOBILE_DOC = (
+    "applicant_mobile (optional): leave it out to use the signed-in number. Otherwise a "
+    "10-digit number verified with get_number_verification_link in this sign-in.")
+
+
+async def _applicant(p, applicant_mobile):
+    """(mobile, None) when the signed-in number may act for applicant_mobile, else
+    (None, error result). Only the signed-in number or one it verified by OTP."""
+    r = await _run(services.applicant_for, p.mobile, applicant_mobile)
+    if r["status"] == "ok":
+        return r["mobile"], None
+    if r["status"] == "bad_number":
+        return None, {"error": "applicant_mobile must be a 10-digit mobile number. Leave it "
+                               "out to use the signed-in number."}
+    return None, {"error": "The number %s has not been verified in this sign-in, so nothing "
+                           "can be done for it yet. Call get_number_verification_link and "
+                           "send the person the link: they enter that number there and type "
+                           "the OTP from that phone on the page (never in this chat). Try "
+                           "again when they say done." % r["mobile"]}
+
+
+def _for(mobile, p):
+    """Names the applicant mobile in a result when it is not the signed-in number."""
+    return {} if mobile == p.mobile else {"applicant_mobile": mobile}
 
 
 @citizen.tool(
@@ -89,11 +129,14 @@ async def get_scheme_info() -> dict:
         "application. The person asking may be the applicant or someone helping them; use the "
         "applicant's date of birth. Call before collecting details. Input: date_of_birth as "
         "DD/MM/YYYY (Indian order, day first), for example 10/04/1957. Other formats are "
-        "accepted and corrected."),
+        "accepted and corrected. " + APPLICANT_MOBILE_DOC),
     annotations=ToolAnnotations(title="Check eligibility", readOnlyHint=True))
-async def check_eligibility(date_of_birth: str) -> dict:
+async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = None) -> dict:
     p = current_principal()
-    e = await _run(services.eligibility, p.mobile, date_of_birth)
+    mobile, err = await _applicant(p, applicant_mobile)
+    if err:
+        return dict(err, eligible=False)
+    e = await _run(services.eligibility, mobile, date_of_birth)
     if e["status"] == "bad_date":
         return {"eligible": False,
                 "error": "I could not read that date. Give it as DD/MM/YYYY, for example "
@@ -103,7 +146,7 @@ async def check_eligibility(date_of_birth: str) -> dict:
                 "error": "That date is in the future. Please check the year."}
     out = {"date_of_birth": e["date_of_birth"], "age": e["age"], "age_ok": e["age_ok"],
            "turns_60_on": e["turns_60_on"], "window_open": e["window"]["open"],
-           "existing_application": e["existing"], "eligible": e["eligible"]}
+           "existing_application": e["existing"], "eligible": e["eligible"], **_for(mobile, p)}
     messages = []
     if "under_age" in e["reasons"]:
         messages.append("Age is %d. The pension is for people %d and above. They become "
@@ -116,6 +159,11 @@ async def check_eligibility(date_of_birth: str) -> dict:
     if e["eligible"]:
         out["next_step"] = ("Collect the details and call save_application_details. The age "
                             "proof is uploaded later with get_document_upload_link.")
+    elif e["reasons"] == ["active_application"]:
+        out["message"] = " ".join(messages)
+        out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
+                            "applicant, file on another mobile number: "
+                            "get_number_verification_link, then applicant_mobile.")
     else:
         out["message"] = " ".join(messages)
         out["next_step"] = "Nothing can be filed now. Explain this to the person."
@@ -124,14 +172,30 @@ async def check_eligibility(date_of_birth: str) -> dict:
 
 @citizen.tool(
     description=(
-        "The status of this mobile number's application, in plain words. Use it whenever the "
-        "person asks whether it has been approved or what is happening, and after submitting. "
-        "No input — it only ever reads the application belonging to the signed-in mobile "
-        "number."),
+        "The status of this mobile number's application, in plain words, plus the "
+        "applications this signed-in number filed for other people on their verified numbers "
+        "(filed_for_others: number, name, status). Use it whenever the person asks whether "
+        "an application has been approved or what is happening, and after submitting. No "
+        "input."),
     annotations=ToolAnnotations(title="My application status", readOnlyHint=True))
 async def get_my_application() -> dict:
     p = current_principal()
     a = await _run(services.my_application, p.mobile)
+    out = _own_application(a)
+    if a["filed_for_others"]:
+        out["filed_for_others"] = [
+            {"mobile": o["mobile"], "application_number": o["application_no"],
+             "name": o["name"], "status": o["status"],
+             "means": fmt.STATUS_MEANING.get(o["status"], o["status"])}
+            for o in a["filed_for_others"]]
+    if a["drafts_for_others"]:
+        out["drafts_for_others"] = [
+            {"applicant_mobile": o["mobile"], "name": o["name"] or "not given yet"}
+            for o in a["drafts_for_others"]]
+    return out
+
+
+def _own_application(a):
     draft = a.get("draft")
     draft_note = None
     if draft:
@@ -165,10 +229,10 @@ async def get_my_application() -> dict:
 
 @citizen.tool(
     description=(
-        "Withdraws a pending application so it can be filed again. Only an application filed "
-        "on this mobile number, only while it is still pending. Input: application_no (e.g. "
-        "SSP26540132) and confirm must be true. Ask the person out loud before calling this; "
-        "it cannot be undone."),
+        "Withdraws a pending application so it can be filed again. Only the signed-in mobile "
+        "number's own application, only while it is still pending; not one filed for someone "
+        "else on their number. Input: application_no (e.g. SSP26540132) and confirm must be "
+        "true. Ask the person out loud before calling this; it cannot be undone."),
     annotations=ToolAnnotations(title="Withdraw the application", readOnlyHint=False,
                                 destructiveHint=True, idempotentHint=False))
 async def withdraw_application(application_no: str, confirm: bool) -> dict:
@@ -189,8 +253,11 @@ async def withdraw_application(application_no: str, confirm: bool) -> dict:
                 "next": "You may submit a new application for this mobile number now."}
     if r["status"] == "not_found":
         return {"withdrawn": False,
-                "message": "That application number does not belong to this mobile number. "
-                           "Check it with get_my_application."}
+                "message": "That application number does not belong to this mobile number, "
+                           "so it cannot be withdrawn here. An application filed on someone "
+                           "else's number can be withdrawn by them from the status portal "
+                           "(their mobile number and date-of-birth password) or at the block "
+                           "office. Check numbers with get_my_application."}
     return {"withdrawn": False,
             "message": "Only a pending application can be withdrawn. This one is %s."
                        % r["current"]}
@@ -212,7 +279,7 @@ def _ifsc_problem(ifsc):
         "automatically for known villages), bank_account (9-18 digits). Optional: gender "
         "(Male/Female/Other), marital_status (Married/Unmarried/Widowed), husband_name (only "
         "if widowed), ifsc (11 characters, e.g. SBIN0003077). Send only details the applicant "
-        "or their helper actually gave; never guess a value. "
+        "or their helper actually gave; never guess a value. " + APPLICANT_MOBILE_DOC + " "
         'Example: {"full_name":"Sewali Gogoi","date_of_birth":"10/04/1957","village":"Kathoni"}'),
     annotations=ToolAnnotations(title="Save applicant details", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
@@ -224,8 +291,12 @@ async def save_application_details(full_name: str | None = None,
                                    village: str | None = None,
                                    block: str | None = None,
                                    bank_account: str | None = None,
-                                   ifsc: str | None = None) -> dict:
+                                   ifsc: str | None = None,
+                                   applicant_mobile: str | None = None) -> dict:
     p = current_principal()
+    mobile, err = await _applicant(p, applicant_mobile)
+    if err:
+        return err
     given = {k: v for k, v in (("full_name", full_name), ("date_of_birth", date_of_birth),
                                ("gender", gender), ("marital_status", marital_status),
                                ("husband_name", husband_name), ("village", village),
@@ -233,12 +304,12 @@ async def save_application_details(full_name: str | None = None,
                                ("ifsc", ifsc)) if v is not None}
     if not given:
         return {"error": "No fields were given. Send at least one field the applicant told you."}
-    r = await _run(services.save_draft, p.mobile, given)
+    r = await _run(services.save_draft, p.mobile, given, applicant=mobile)
     saved_ifsc = r["saved"].get("ifsc") or ""
     problems = [_ifsc_problem(saved_ifsc) if pr.startswith("IFSC must be") else pr
                 for pr in r["problems"]]
-    out = {"saved": r["saved"], "missing": r["missing"], "problems": problems,
-           "corrections": r["corrections"], "warnings": r["warnings"],
+    out = {**_for(mobile, p), "saved": r["saved"], "missing": r["missing"],
+           "problems": problems, "corrections": r["corrections"], "warnings": r["warnings"],
            "suggested_block": r["suggested_block"], "ready_to_submit": r["ready_to_submit"]}
     if problems:
         out["next_step"] = "Ask about each problem, then save again."
@@ -260,7 +331,7 @@ async def save_application_details(full_name: str | None = None,
         "school leaving certificate or Voter ID) from their phone. Send them the link and the "
         "instructions, then wait until they say it is done. Call this tool again to check "
         "document_attached is true before submit_application; a document is required. "
-        "Calling it again gives the same link. No input.\n\n"
+        "Calling it again gives the same link. " + APPLICANT_MOBILE_DOC + "\n\n"
         "Never create, generate or alter a document yourself; the person uploads their own "
         "document through the link. Do not ask about, verify or comment on the document: the "
         "block officer checks it.\n\n"
@@ -268,10 +339,13 @@ async def save_application_details(full_name: str | None = None,
         "may upload that exact file to the link (multipart form field \"document\")."),
     annotations=ToolAnnotations(title="Get an upload link", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
-async def get_document_upload_link() -> dict:
+async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
     p = current_principal()
-    t = await _run(services.issue_upload_token, p.mobile)
-    out = {"upload_url": t["url"], "expires": t["expires_at_ist"],
+    mobile, err = await _applicant(p, applicant_mobile)
+    if err:
+        return err
+    t = await _run(services.issue_upload_token, p.mobile, mobile)
+    out = {**_for(mobile, p), "upload_url": t["url"], "expires": t["expires_at_ist"],
            "document_attached": t["doc_attached"]}
     if t["doc_attached"]:
         out["next_step"] = ("The age proof is uploaded. Do not comment on it. Read the details "
@@ -297,18 +371,38 @@ async def get_document_upload_link() -> dict:
         "be true, meaning the applicant — or the person helping them, with the applicant's "
         "consent — has confirmed the information is correct and consents to the department "
         "verifying it. Filing on the applicant's behalf from someone else's mobile is normal; "
-        "that mobile becomes the application's contact number.\n\n"
+        "the application is filed on applicant_mobile, which becomes its contact number. "
+        + APPLICANT_MOBILE_DOC + "\n\n"
         "Never invent or guess applicant details; if something is missing, ask for it. Never "
         "create, generate or alter a document yourself; the person uploads their own document "
         "through the link."),
     annotations=ToolAnnotations(title="File the application", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=False))
-async def submit_application(confirm_declaration: bool) -> dict:
+async def submit_application(confirm_declaration: bool,
+                             applicant_mobile: str | None = None) -> dict:
     p = current_principal()
-    r = await _run(services.submit, p.mobile, confirm_declaration)
+    mobile, err = await _applicant(p, applicant_mobile)
+    if err:
+        return dict(err, submitted=False)
+    r = await _run(services.submit, p.mobile, confirm_declaration, applicant=mobile)
     s = r["status"]
     if s == "ok":
         dob = r["date_of_birth"]
+        if mobile != p.mobile:
+            return {
+                "application_number": r["application_no"], "status": "PENDING",
+                "filed_on_mobile": mobile, "submitted": r["submitted_at_ist"],
+                "what_happens_next": "A block officer decides within 15 days. If nobody "
+                                     "decides, it stands approved automatically on %s."
+                                     % r["deemed_date_ist"],
+                "how_to_check": "Ask me any time in this chat: get_my_application lists it. "
+                                "On the portal: mobile number %s plus password, and the "
+                                "password is the date of birth written as DDMMYYYY — for %s "
+                                "that is %s." % (mobile, dob, dob.replace("/", "")),
+                "sms": ("A confirmation SMS has been sent to %s." % mobile if r.get("sms_sent")
+                        else "The confirmation SMS could not be sent; the application is "
+                             "filed all the same."),
+            }
         return {
             "application_number": r["application_no"], "status": "PENDING",
             "submitted": r["submitted_at_ist"],
@@ -336,14 +430,50 @@ async def submit_application(confirm_declaration: bool) -> dict:
                "save_application_details, then try again." % "; ".join(r["errors"]))
         if r["errors"] == ["the application window has closed"]:
             msg = fmt.window_closed_message(r["window"])
+    elif s == "duplicate" and mobile != p.mobile:
+        msg = fmt.existing_application_message(r["existing"]) + (
+            " Only that number's owner can withdraw it, from the status portal or at the "
+            "block office.")
     elif s == "duplicate":
         msg = fmt.existing_application_message(r["existing"]) + (
             " A pending application can be withdrawn with withdraw_application if the "
             "applicant wants to apply afresh.")
     else:
         msg = "Unexpected result: %s." % s
-    return {"submitted": False, "reason": s, "message": msg,
+    return {"submitted": False, "reason": s, "message": msg, **_for(mobile, p),
             **({"missing": r["missing"]} if s == "incomplete" else {}),
             **({"errors": r["errors"]} if s == "invalid" else {}),
             **({"existing_application": {k: r["existing"][k] for k in ("application_no", "status")}}
                if s == "duplicate" else {})}
+
+
+@citizen.tool(
+    description=(
+        "Gives a link where the person verifies another mobile number by OTP, so an "
+        "application can be filed on that number in this chat without signing in again. Use "
+        "it only when the person wants to file for someone else on another mobile number, or "
+        "the signed-in number already has an active application. For a single applicant on "
+        "the signed-in number it is not needed.\n\n"
+        "Send the person the link and the instructions, then wait. On the page they enter the "
+        "applicant's mobile number and type the OTP sent to that phone. You never ask for, "
+        "see or relay the OTP; if someone types an OTP in the chat, tell them to enter it on "
+        "the page instead. When they say done, call this tool again: the number appears in "
+        "verified_numbers. Then pass it as applicant_mobile to check_eligibility, "
+        "save_application_details, get_document_upload_link and submit_application. No input."),
+    annotations=ToolAnnotations(title="Verify another mobile number", readOnlyHint=False,
+                                destructiveHint=False, idempotentHint=True))
+async def get_number_verification_link() -> dict:
+    p = current_principal()
+    link = await _run(services.issue_verify_link, p.mobile, p.session_ends)
+    verified = await _run(services.verified_numbers, p.mobile)
+    return {
+        "verify_url": link["url"], "expires": link["expires_at_ist"],
+        "instructions": ("Open this link: %s . Enter the mobile number of the person you are "
+                         "applying for and tap Send OTP. An OTP comes by SMS to that phone; "
+                         "type it on the page, not here. When the page says Number verified, "
+                         "come back here and say done." % link["url"]),
+        "verified_numbers": [v["mobile"] for v in verified],
+        "next_step": ("Send the person the link and instructions, then wait for done. A number "
+                      "in verified_numbers can be used as applicant_mobile until this sign-in "
+                      "ends; it does not need verifying again."),
+    }

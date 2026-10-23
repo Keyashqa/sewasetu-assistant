@@ -25,6 +25,7 @@ folded into the sections they affect:
 | 8 | R1–R10 defaults accepted | §9 |
 | 9 | **after Phase 0 (2026-10-22):** citizen document flow — the person uploads through a phone-friendly `/upload/<token>` page; the citizen assistant never verifies, judges or comments on the document; `curl_example` removed (local-file upload only on explicit request); one-line document rule | §5.1 (superseded in part) |
 | 10 | **after Phase 0 (2026-10-22):** the officer assistant never sees documents. `view_age_proof` is replaced by `get_age_proof_link` (link + recorded provenance, no image); `get_application` carries the same link; `pypdfium2` removed; the portal's document route opens inline and login returns to it | §5.2 `view_age_proof`, §5.3, R3 (superseded) |
+| 11 | **after Phase 0 (2026-10-23):** a helper files for several applicants in one sign-in. `/verify-number/<token>` (bound to the signed-in helper, 15 min, single-use): the helper enters the applicant's mobile, the portal sends the OTP to it, the helper types it on the page; 5-min OTP, 5 wrong tries lock the link, 60 s resend cooldown, 5 sends per link. The number stays verified for that helper until their sign-in ends. New tool `get_number_verification_link`; `check_eligibility`, `save_application_details`, `get_document_upload_link`, `submit_application` take an optional `applicant_mobile` (the signed-in number or one it verified; default the signed-in number). Drafts keyed by (owner, mobile); the application is filed on the applicant's mobile through the same locked path, audit actor `helper:<helper> for <applicant>`, recorded in `helper_filings`. `get_my_application` adds `filed_for_others`; `withdraw_application` stays own-number only. The assistant never asks for, sees or relays an OTP | §5.1, §5.3, `migrations/003_helper_numbers.sql` |
 
 ---
 
@@ -900,6 +901,8 @@ Errors: `confirm` false → `"Not withdrawn. Ask the applicant to confirm first.
 → `"That application number does not belong to this mobile number."` (nothing about whose it
 is); not pending → `"Only a pending application can be withdrawn. This one is APPROVED."`
 
+**`get_number_verification_link`** and `applicant_mobile` — *added by amendment 11; the descriptions in `app/mcp_server/citizen.py` are the reference.*
+
 ### 5.2 Officer server — `/mcp/officer`, scope `officer`
 
 **`get_queue_summary`**
@@ -1014,6 +1017,7 @@ implied.
 | `check_eligibility` | **true** | — | — | Check eligibility |
 | `get_my_application` | **true** | — | — | My application status |
 | `get_document_upload_link` | false | false | true | Get an upload link |
+| `get_number_verification_link` (amendment 11) | false | false | true | Verify another mobile number |
 | `save_application_details` | false | false | true | Save applicant details |
 | `submit_application` | false | false | false | File the application |
 | `withdraw_application` | false | **true** | false | Withdraw the application |
