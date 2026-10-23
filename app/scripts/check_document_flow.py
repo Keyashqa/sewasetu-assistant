@@ -64,6 +64,7 @@ def page_checks(client):
     check("file picker accepts image/* and PDF", 'accept="image/*,application/pdf"' in html)
     check("phone viewport", 'name="viewport"' in html)
     check("size/format hint", "up to 5 MB" in html and "JPG or PNG" in html)
+    check("no return-to-chat button before success", "Done &ndash; return to chat" not in html)
 
     html = post(client, token, "notes.txt", b"hello").get_data(as_text=True)
     check("wrong type: plain message", "This kind of file cannot be used" in html, html[-400:])
@@ -75,6 +76,11 @@ def page_checks(client):
 
     html = post(client, token, "age-proof.png", PNG).get_data(as_text=True)
     check("success message", "Uploaded. Go back to your chat and say done." in html)
+    check("success: return-to-chat button, close only (no going back), close-tab hint",
+          "Done &ndash; return to chat" in html and "window.close()" in html and "history.back()" not in html
+          and "You can close this tab and return to your chat, then say done." in html)
+    check("success: picker still there (image/*, PDF)",
+          'accept="image/*,application/pdf"' in html)
     check("document_attached after upload", services.issue_upload_token(MOBILE)["doc_attached"])
 
     r = post(client, token, "age-proof.png", PNG, fmt="?format=json")
@@ -97,6 +103,9 @@ async def tool_checks():
           "Only if the person explicitly gives a local file path" in up)
     check("upload description: no curl", "curl" not in up.lower())
     check("upload description: does not judge the document", "Do not ask about, verify or comment" in up)
+    check("upload description: on any reply, check document_attached before asking again",
+          "replies after that (with anything), call this tool again and check document_attached "
+          "before asking them to upload again" in up)
     check("submit description: document rule", RULE in sub)
     check("submit description: keeps 'never invent or guess applicant details'",
           "Never invent or guess applicant details" in sub)

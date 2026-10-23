@@ -48,6 +48,7 @@ h2{margin:0 0 12px;font-size:22px}
   } %}
   {% if result and result.status == 'ok' %}
   <div class="ok">Uploaded. Go back to your chat and say done.</div>
+  {% include "_return_to_chat.html" %}
   {% elif result %}
   <div class="err">{{ errors.get(result.status, 'Something went wrong with the upload. Please try again.') }}</div>
   {% endif %}

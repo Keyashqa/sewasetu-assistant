@@ -41,14 +41,17 @@ another mobile number, or the signed-in number already has an active application
 opens the link, enters that mobile number and types the OTP sent to that phone on the page.
 - Never ask for, accept or repeat an OTP in the chat. If someone types one here, tell them it \
 is not needed in the chat and to enter it on the page.
-- When they say done, pass that number as applicant_mobile to check_eligibility, \
+- When the person replies after you gave the link (with anything), call \
+get_number_verification_link again and check verified_numbers before asking them to verify \
+again. Once the number is there, pass it as applicant_mobile to check_eligibility, \
 save_application_details, get_document_upload_link and submit_application for that \
 applicant, every time. Keep each applicant's details separate.
 - withdraw_application only withdraws the signed-in number's own application.
 
 The age proof:
-- The person uploads it themselves: give them the link from get_document_upload_link and \
-wait until they say it is done.
+- The person uploads it themselves: give them the link from get_document_upload_link. When \
+they reply after that (with anything), call it again and check document_attached before \
+asking them to upload again.
 - Never verify, judge or comment on the document, and never ask about its authenticity or \
 contents. Checking it is the block officer's job.
 
@@ -90,8 +93,8 @@ async def _applicant(p, applicant_mobile):
     return None, {"error": "The number %s has not been verified in this sign-in, so nothing "
                            "can be done for it yet. Call get_number_verification_link and "
                            "send the person the link: they enter that number there and type "
-                           "the OTP from that phone on the page (never in this chat). Try "
-                           "again when they say done." % r["mobile"]}
+                           "the OTP from that phone on the page (never in this chat). When "
+                           "they reply, check verified_numbers with that tool and try again." % r["mobile"]}
 
 
 def _for(mobile, p):
@@ -329,8 +332,9 @@ async def save_application_details(full_name: str | None = None,
     description=(
         "Gives a link where the person uploads the applicant's age proof (birth certificate, "
         "school leaving certificate or Voter ID) from their phone. Send them the link and the "
-        "instructions, then wait until they say it is done. Call this tool again to check "
-        "document_attached is true before submit_application; a document is required. "
+        "instructions. When the person replies after that (with anything), call this tool "
+        "again and check document_attached before asking them to upload again; a document "
+        "is required before submit_application. "
         "Calling it again gives the same link. " + APPLICANT_MOBILE_DOC + "\n\n"
         "Never create, generate or alter a document yourself; the person uploads their own "
         "document through the link. Do not ask about, verify or comment on the document: the "
@@ -357,9 +361,9 @@ async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
                                "school leaving certificate or Voter ID (or choose a PDF), then "
                                "tap Upload. When the page says Uploaded, come back here and "
                                "say done." % t["url"])
-        out["next_step"] = ("Send the person the link and these instructions, then wait. When "
-                            "they say done, call get_document_upload_link again and check "
-                            "document_attached.")
+        out["next_step"] = ("Send the person the link and these instructions. When they "
+                            "reply (with anything), call get_document_upload_link again and "
+                            "check document_attached before asking them to upload again.")
     return out
 
 
@@ -424,7 +428,8 @@ async def submit_application(confirm_declaration: bool,
                "save_application_details." % ", ".join(r["missing"]))
     elif s == "no_document":
         msg = ("The age proof is not uploaded yet. Give the person the link from "
-               "get_document_upload_link and wait until they say it is done.")
+               "get_document_upload_link. When they reply, check document_attached with that "
+               "tool before asking them to upload again.")
     elif s == "invalid":
         msg = ("The portal refused the application: %s. Correct these with "
                "save_application_details, then try again." % "; ".join(r["errors"]))
@@ -457,8 +462,9 @@ async def submit_application(confirm_declaration: bool,
         "Send the person the link and the instructions, then wait. On the page they enter the "
         "applicant's mobile number and type the OTP sent to that phone. You never ask for, "
         "see or relay the OTP; if someone types an OTP in the chat, tell them to enter it on "
-        "the page instead. When they say done, call this tool again: the number appears in "
-        "verified_numbers. Then pass it as applicant_mobile to check_eligibility, "
+        "the page instead. When the person replies after that (with anything), call this tool "
+        "again and check verified_numbers before asking them to verify again. Once the number "
+        "is there, pass it as applicant_mobile to check_eligibility, "
         "save_application_details, get_document_upload_link and submit_application. No input."),
     annotations=ToolAnnotations(title="Verify another mobile number", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
@@ -473,7 +479,9 @@ async def get_number_verification_link() -> dict:
                          "type it on the page, not here. When the page says Number verified, "
                          "come back here and say done." % link["url"]),
         "verified_numbers": [v["mobile"] for v in verified],
-        "next_step": ("Send the person the link and instructions, then wait for done. A number "
+        "next_step": ("Send the person the link and instructions. When they reply (with "
+                      "anything), call this tool again and check verified_numbers before asking "
+                      "them to verify again. A number "
                       "in verified_numbers can be used as applicant_mobile until this sign-in "
                       "ends; it does not need verifying again."),
     }

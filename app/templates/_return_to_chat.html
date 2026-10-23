@@ -1,0 +1,16 @@
+{# Shown under a success message: a way back to the chat the link came from.
+   Browsers only let a page close itself in some cases (e.g. a tab opened by script), so
+   when closing is refused the person stays on this success page and the hint shows. #}
+<button class="btn" id="done-return" type="button">Done &ndash; return to chat</button>
+<p class="hint" id="close-hint" hidden>You can close this tab and return to your chat, then say done.</p>
+<script>
+(function () {
+  var b = document.getElementById('done-return'), h = document.getElementById('close-hint');
+  function tryClose() {
+    try { window.close(); } catch (e) {}
+    setTimeout(function () { if (!window.closed) { h.hidden = false; } }, 300);
+  }
+  b.addEventListener('click', tryClose);
+  setTimeout(tryClose, 2000);
+})();
+</script>

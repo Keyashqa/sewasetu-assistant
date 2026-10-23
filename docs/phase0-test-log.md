@@ -259,3 +259,8 @@ Recorded here so the scenario results above are read against the right build.
   no reminder or restate rules, no commentary; hard blocks kept. `check_officer_reporting.py`:
   23/23 — adds a refused approval for no document and for age 59, each with the portal's reason
   and nothing changed. `check_officer_documents.py`: 23/23 (instruction checks updated).
+- **Return to chat after success** (amendment 14): button + one automatic `window.close()`
+  attempt; Chrome refuses it in an ordinary tab ("Scripts may close only the windows that were
+  opened by them"), so the page stays on the success message with the close-tab hint. Checked in
+  headless Chrome at 390x844 (mobile UA, touch): no horizontal scroll, picker unchanged, button
+  and hint only on success. `check_document_flow` 35/35, `check_helper_numbers` 75/75.

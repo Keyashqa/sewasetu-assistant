@@ -145,6 +145,9 @@ async def descriptions():
     check("get_number_verification_link exists", d is not None)
     check("verification tool: never asks for, sees or relays the OTP",
           d is not None and "never ask for, see or relay the OTP" in d.description)
+    check("verification tool: on any reply, check verified_numbers before asking again",
+          d is not None and "check verified_numbers before asking them to verify again"
+          in d.description)
     check("verification tool: only for another number / signed-in number already active",
           d is not None and "only when the person wants to file for someone else" in d.description
           and "already has an active application" in d.description)
@@ -233,6 +236,9 @@ async def verification_page(client):
     check("wrong OTP: message, 4 tries left", "not right" in html and "4 tries left" in html)
     _, html = page(client, token, action="check", otp=code or "")
     check("success message", "Number verified. Go back to your chat and say done." in html, html[-500:])
+    check("success: return-to-chat button, close only (no going back), close-tab hint",
+          "Done &ndash; return to chat" in html and "window.close()" in html and "history.back()" not in html
+          and "You can close this tab and return to your chat, then say done." in html)
     _, html = page(client, token, action="check", otp=code or "")
     check("link is single-use", "This link has been used" in html)
 

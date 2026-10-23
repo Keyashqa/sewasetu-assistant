@@ -49,6 +49,7 @@ input[type=tel],input[type=text]{display:block;width:100%;box-sizing:border-box;
   {% if status == 'verified' %}
   <div class="ok">Number verified. Go back to your chat and say done.</div>
   <p>The number ending {{ v.mobile[-4:] }} can now be used for an application in your chat.</p>
+  {% include "_return_to_chat.html" %}
   {% else %}
   <h2>This link has been used</h2>
   <p>The number ending {{ v.mobile[-4:] }} is already verified. To verify another number, go
