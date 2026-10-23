@@ -255,3 +255,7 @@ Recorded here so the scenario results above are read against the right build.
   exactly (empty when none given); reject records `<reason> — Officer: "<quote>"` only; the
   same-document warning does not block. Regressions: officer documents 23/23, helper numbers
   73/73, document flow 31/31. Not yet re-tested with a live model.
+- **Officer assistant assists, does not investigate** (amendment 13): no repeated confirmations,
+  no reminder or restate rules, no commentary; hard blocks kept. `check_officer_reporting.py`:
+  23/23 — adds a refused approval for no document and for age 59, each with the portal's reason
+  and nothing changed. `check_officer_documents.py`: 23/23 (instruction checks updated).

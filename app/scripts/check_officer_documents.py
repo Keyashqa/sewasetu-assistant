@@ -61,11 +61,11 @@ async def tool_checks(doc, nodoc):
     check("link tool is read-only", tools["get_age_proof_link"].annotations.readOnlyHint is True)
     ins = officer_mod.INSTRUCTIONS
     check("instructions: never sees documents", "You never see documents." in ins)
-    check("instructions: remind to open the link before deciding",
-          "remind them to open the link first" in ins)
-    check("instructions: restate rule is for tool warnings only",
-          "If the tools returned warnings for that application" in ins
-          and "illegible scan" not in ins)
+    check("instructions: give the link when opening a case or when asked",
+          "When you open a case, or when the officer asks for the document, give them the "
+          "link." in ins)
+    check("instructions: no remind-to-open or restate-and-confirm rules",
+          "remind them" not in ins and "ask once" not in ins and "restate" not in ins)
     check("instructions: officer_reason_quote unchanged", "officer_reason_quote" in ins
           and "officer_reason_quote" in tools["reject_application"].description)
     texts = " ".join([ins] + [t.description for t in tools.values()])

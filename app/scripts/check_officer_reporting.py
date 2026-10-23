@@ -5,7 +5,7 @@ officer's words. Run inside the app container:
     docker compose exec -T app python /app/scripts/check_officer_reporting.py
 
 LOCAL USE ONLY: it files and decides real applications, so it refuses unless
-PUBLIC_BASE_URL is localhost. It uses reserved test mobiles 90000999 51-53 and deletes
+PUBLIC_BASE_URL is localhost. It uses reserved test mobiles 90000999 51-54 and deletes
 everything it created on them before and after, even when a check fails. Exits 1 if any
 check fails.
 """
@@ -21,8 +21,8 @@ import services
 from mcp_server import officer as officer_mod
 from mcp_server.auth import Principal, set_principal, reset_principal
 
-A, B, C = "9000099951", "9000099952", "9000099953"
-MOBILES = (A, B, C)
+A, B, C, D = "9000099951", "9000099952", "9000099953", "9000099954"
+MOBILES = (A, B, C, D)
 PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00"
        b"\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N"
        b"\x00\x00\x00\x00IEND\xaeB`\x82")
@@ -76,29 +76,33 @@ def audit_note(app_id, action):
 async def text_checks():
     ins = officer_mod.INSTRUCTIONS
     tools = {t.name: t for t in await officer_mod.officer.list_tools()}
-    check("instructions: relay warnings, one short line each",
-          "Relay the record and the tools' warnings as the tools give them, one short line per "
-          "warning." in ins)
-    check("instructions: no cross-referencing, patterns or fraud speculation",
-          "Do not cross-reference other applications" in ins and "speculate about fraud" in ins
-          and "ages near the cutoff" in ins)
-    check("instructions: warnings mentioned once, asked once, then act",
-          "mention them once and ask once" in ins and "When they confirm, act; do not ask "
-          "again." in ins)
-    check("instructions: no warnings -> act directly, no confirmation question",
-          "If there are no warnings, act on the officer's instruction directly, with no "
-          "confirmation question." in ins)
-    check("instructions: document-link reminder kept", "remind them to open the link first" in ins)
+    check("instructions: do what the officer asks; relay warnings one line each, no commentary",
+          "Do what the officer asks." in ins and "one short line each, without commentary" in ins)
+    check("instructions: no cross-referencing, patterns, fraud, conflicts, second-guessing",
+          all(x in ins for x in ("Never cross-reference other applications", "relatives",
+                                 "speculate about fraud or conflicts of interest",
+                                 "second-guess the officer's decision")))
+    check("instructions: call the tool on the officer's word, no repeated confirmation",
+          "call the tool. Do not ask for confirmation again." in ins)
+    check("instructions: reminder and restate rules removed",
+          "remind them" not in ins and "ask once" not in ins and "restate" not in ins)
+    check("instructions: give the document link when opening a case or asked",
+          "When you open a case, or when the officer asks for the document, give them the "
+          "link." in ins)
+    check("instructions: hard blocks stated (under 60, no age proof)",
+          "refuses approval when the applicant is under 60 today or no age proof is attached"
+          in ins)
     check("instructions: audit notes are the officer's words only",
           "Never add your own note, summary, observation or analysis to any decision." in ins)
     ap, rj = tools["approve_application"].description, tools["reject_application"].description
+    check("approve description: no repeated confirmation",
+          "do not ask the officer to confirm again" in ap and "ask once" not in ap)
     check("approve description: note only the officer's words, verbatim",
           "only words the officer asked to have recorded, copied verbatim; never your own "
           "words" in ap)
-    check("approve description: no warnings -> call directly",
-          "with no warnings, call it directly" in ap)
-    check("reject description: never add your own note",
-          "never add your own note or observation" in rj and "officer_reason_quote" in rj)
+    check("reject description: ask for the reason, never choose one, no own note",
+          "ask them for it" in rj and "never choose one yourself" in rj
+          and "never add your own note or observation" in rj and "suggest" not in rj)
 
 
 async def decision_checks():
@@ -144,6 +148,31 @@ async def decision_checks():
           audit_note(a[0], "REJECTED") == ['bank account not in applicant\'s name — Officer: "%s"'
                                           % REJECT_QUOTE], audit_note(a[0], "REJECTED"))
 
+    # hard blocks: the portal's rules, same as the counter (fixture row edited locally)
+    d = file(D, "Test Hard Block", PNG + b"another file")
+    with services.db(commit=True) as cur:
+        cur.execute("UPDATE applications SET doc_path = '' WHERE id = %s", (d[0],))
+    r = await officer_mod.approve_application(application_id=d[0], application_no=d[1])
+    check("no document: approval refused with the portal's reason",
+          r.get("approved") is False and r.get("status") == "blocked"
+          and "No age-proof document is attached." in r["message"]
+          and "may reject" not in r["message"], r)
+    today = portal.now_ist().date()
+    young = today.replace(year=today.year - 59)
+    with services.db(commit=True) as cur:
+        cur.execute("UPDATE applications SET doc_path = %s, dob = %s WHERE id = %s",
+                    ("/app/uploads/x.png", young, d[0]))
+    r = await officer_mod.approve_application(application_id=d[0], application_no=d[1])
+    check("under 60: approval refused with the portal's reason",
+          r.get("approved") is False
+          and "Age today is 59 \u2014 below the 60-year minimum." in r.get("message", ""), r)
+    with services.db() as cur:
+        cur.execute("SELECT status FROM applications WHERE id = %s", (d[0],))
+        st = cur.fetchone()[0]
+    check("blocked approvals changed nothing",
+          st == "PENDING" and audit_note(d[0], "APPROVED") == [],
+          (st, audit_note(d[0], "APPROVED")))
+
 
 async def main():
     tok = set_principal(Principal(role="officer", subject="officer:admin", mobile=None,
@@ -160,7 +189,7 @@ if __name__ == "__main__":
     if host not in ("localhost", "127.0.0.1"):
         print("Refusing: PUBLIC_BASE_URL is not localhost; this check decides applications.")
         sys.exit(2)
-    print("check_officer_reporting: test mobiles %s %s %s" % MOBILES)
+    print("check_officer_reporting: test mobiles %s %s %s %s" % MOBILES)
     cleanup()
     try:
         asyncio.run(main())

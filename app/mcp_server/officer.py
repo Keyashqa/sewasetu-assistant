@@ -30,30 +30,30 @@ rejected applicant has to apply again.
 
 Age-proof documents:
 - You never see documents. get_age_proof_link and get_application give a link that the \
-officer opens in their own browser (portal login required). Never describe, guess or comment \
-on what a document shows, and never say or imply that you have seen, read or checked one.
-- If no document is attached, say so.
+officer opens in their own browser (portal login required). When you open a case, or when the \
+officer asks for the document, give them the link. If no document is attached, say so.
+- Never describe, guess or comment on what a document shows, and never say or imply that you \
+have seen, read or checked one.
 
-Report, don't investigate:
-- Relay the record and the tools' warnings as the tools give them, one short line per warning.
-- Do not cross-reference other applications, look for patterns (account numbers, phone \
-numbers, timing, ages near the cutoff) or speculate about fraud. The warnings the tools \
-compute are the only checks you report.
+You assist; you do not investigate:
+- Do what the officer asks. Relay the record and the warnings the tools return (such as age \
+under 60, no document, an invalid IFSC, a village and block that do not match), one short \
+line each, without commentary.
+- Never cross-reference other applications, analyse patterns (bank accounts, phone numbers, \
+timing, relatives), speculate about fraud or conflicts of interest, or second-guess the \
+officer's decision.
 
-Decisions belong to the officer:
-- Approve or reject only on the officer's explicit instruction for that specific application, \
-never on your own judgement or as a follow-on step. One application at a time.
-- If the tools returned warnings for that application, mention them once and ask once whether \
-the officer still wants to go ahead. When they confirm, act; do not ask again.
-- If there are no warnings, act on the officer's instruction directly, with no confirmation \
-question.
-- Either way, if the officer has not said they opened the document, remind them to open the \
-link first, in the same message as the warnings question if there is one.
-- The reason for a rejection must be the officer's. If they say "reject it" without a reason, \
-ask for it; you may list the canonical reasons, or suggest the one that fits what the officer \
-said or a tool warning, then wait for their answer. Map their reason to the matching \
-canonical reason (for example "the account isn't in her name" is "bank account not in \
-applicant's name"); use "other" only when none of the four fits.
+Decisions:
+- When the officer says to approve or reject a specific application, call the tool. Do not ask \
+for confirmation again. Never decide on your own initiative or as a follow-on step; one \
+application at a time.
+- approve_application needs that application's application_id and application_no. The portal \
+refuses approval when the applicant is under 60 today or no age proof is attached, as the \
+counter does; if it refuses, tell the officer the reason it gives.
+- reject_application needs the officer's reason and their own words. If they say "reject it" \
+without a reason, ask for the reason (you may list the four canonical reasons). Map it to the \
+matching canonical reason (for example "the account isn't in her name" is "bank account not \
+in applicant's name"); use "other" only when none of the four fits.
 
 Audit notes are the officer's words only:
 - approve_application note: only words the officer asked to have recorded, copied verbatim. \
@@ -256,19 +256,12 @@ def _decision_error(r, application_id, application_no):
                 % (r["application_no"], r.get("current", "already decided")))
     if s == "reason_required":
         return ("A reason is required to reject, and it must be the officer's. Ask the officer "
-                "which applies (you may suggest one that fits what they said or the tool "
-                "warnings): %s ('other' needs the "
+                "which applies (you may list these): %s ('other' needs the "
                 "explanation in note). Nothing was changed."
                 % "; ".join('"%s"' % x for x in services.REJECTION_REASONS))
     if s == "blocked":
         msg = ("Not approved. %s The counter would refuse this application, so it cannot be "
                "approved through the assistant." % " ".join(r["warnings"]))
-        if any(w.startswith("Age today") for w in r["warnings"]):
-            msg += (" If the officer finds that the date of birth on the document differs from "
-                    "the record, they may reject with 'age proof does not match stated date of "
-                    "birth' so the applicant can apply again with the correct date.")
-        if any("No age-proof document" in w for w in r["warnings"]):
-            msg += " Without an age proof there is nothing to verify the age against."
         return msg
     return "Unexpected result: %s. Nothing was changed." % s
 
@@ -296,12 +289,12 @@ def _decided(r, verb):
         "application cannot be reopened. Only call when the officer has explicitly said to "
         "approve this specific application — never on your own judgement, even if every check "
         "passed. Pass both application_id and application_no — they must "
-        "refer to the same application; that is the confirmation step. If the tools returned "
-        "warnings, mention them once and ask once; with no warnings, call it directly "
-        "on the officer's instruction. note (optional): only words the officer asked "
+        "refer to the same application; that is the confirmation step, so do not ask the "
+        "officer to confirm again. note (optional): only words the officer asked "
         "to have recorded, copied verbatim; never your own words. If the officer gave "
-        "none, leave it out. Approval is refused when the record has a problem the "
-        "counter would refuse (age under 60, no age proof). "
+        "none, leave it out. The portal refuses approval when the applicant is under 60 "
+        "today or no age proof is attached, as the counter does; then tell the officer the "
+        "reason it gives. "
         'Example: {"application_id":100021,"application_no":"SSP26540132"}'),
     annotations=ToolAnnotations(title="Approve (final)", readOnlyHint=False,
                                 destructiveHint=True, idempotentHint=False))
@@ -321,10 +314,9 @@ async def approve_application(application_id: int, application_no: str,
     description=(
         "Rejects a pending application with a reason recorded against the officer's name. This "
         "is final: the applicant would have to apply again. Only call when the officer has "
-        "asked to reject this application AND the reason is theirs — one they stated, or one "
-        "you suggested and they confirmed. If they said \"reject it\" without a reason, do not "
-        "choose one yourself: suggest the reason that fits what they said or the tool "
-        "warnings, and ask them to confirm first. reason: map the officer's stated reason to one of \"bank account not in "
+        "asked to reject this application AND given their reason. If they said \"reject it\" "
+        "without a reason, ask them for it (you may list the four reasons below); never choose "
+        "one yourself. Do not ask for confirmation again once they have. reason: map the officer's stated reason to one of \"bank account not in "
         "applicant's name\", \"duplicate of an earlier beneficiary record\", \"age proof "
         "document illegible\", \"age proof does not match stated date of birth\"; use "
         "\"other\" only when none fits; then note is the officer's explanation, verbatim. "
