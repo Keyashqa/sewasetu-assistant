@@ -46,7 +46,7 @@ services:
 
   proxy:
     <<: *prod
-    mem_limit: 50m
+    mem_limit: 80m
     # the only service with host ports: Caddy terminates TLS for SITE_HOST
     ports: !override
       - "80:80"
