@@ -11,7 +11,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 import services
-from mcp_server import fmt
+from mcp_server import fmt, replies
 from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
 
@@ -62,7 +62,9 @@ tells you.
 document through the link.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
 - State only scheme facts these tools return. Never speculate about future application \
-windows, rule changes or anything no tool told you."""
+windows, rule changes or anything no tool told you.
+
+""" + replies.STYLE
 
 citizen = FastMCP(
     "Sewa Setu — Old Age Pension (citizen)",
@@ -88,9 +90,11 @@ async def _applicant(p, applicant_mobile):
     if r["status"] == "ok":
         return r["mobile"], None
     if r["status"] == "bad_number":
-        return None, {"error": "applicant_mobile must be a 10-digit mobile number. Leave it "
+        return None, {"reply": "That mobile number is not 10 digits. Please check it.",
+                      "error": "applicant_mobile must be a 10-digit mobile number. Leave it "
                                "out to use the signed-in number."}
-    return None, {"error": "The number %s has not been verified in this sign-in, so nothing "
+    return None, {"reply": "The number %s is not verified yet." % r["mobile"],
+                  "error": "The number %s has not been verified in this sign-in, so nothing "
                            "can be done for it yet. Call get_number_verification_link and "
                            "send the person the link: they enter that number there and type "
                            "the OTP from that phone on the page (never in this chat). When "
@@ -111,7 +115,16 @@ def _for(mobile, p):
     annotations=ToolAnnotations(title="Scheme information", readOnlyHint=True))
 async def get_scheme_info() -> dict:
     s = await _run(services.scheme_info)
+    w = s["window"]
     return {
+        "reply": replies.lines(
+            "**Old Age Pension** — Rs %d a month for residents of Purvanchal aged %d or above."
+            % (s["amount_inr"], s["min_age"]),
+            "Age proof: %s." % replies.either([d if "ID" in d else d.lower()
+                                               for d in s["documents_accepted"]]),
+            "Decision within %d days; approved automatically if none." % s["sla_days"],
+            ("Applications close %s." if w["open"] else "Applications closed on %s.")
+            % w["deadline_ist"]),
         "amount": "Rs %d per month" % s["amount_inr"],
         "min_age": s["min_age"],
         "residency": s["residency"],
@@ -142,15 +155,28 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
     e = await _run(services.eligibility, mobile, date_of_birth)
     if e["status"] == "bad_date":
         return {"eligible": False,
+                "reply": "I could not read that date. Please give it as DD/MM/YYYY, for "
+                         "example 10/04/1957.",
                 "error": "I could not read that date. Give it as DD/MM/YYYY, for example "
                          "10/04/1957."}
     if e["status"] == "future_date":
         return {"eligible": False,
+                "reply": "That date is in the future. Please check the year.",
                 "error": "That date is in the future. Please check the year."}
     out = {"date_of_birth": e["date_of_birth"], "age": e["age"], "age_ok": e["age_ok"],
            "turns_60_on": e["turns_60_on"], "window_open": e["window"]["open"],
            "existing_application": e["existing"], "eligible": e["eligible"], **_for(mobile, p)}
-    messages = []
+    messages, said = [], []
+    if "under_age" in e["reasons"]:
+        said.append("Not eligible yet — age %d; the pension starts at %d.\nEligible from %s."
+                    % (e["age"], services.portal.MIN_AGE, e["turns_60_on"]))
+    if "window_closed" in e["reasons"]:
+        said.append("Applications are closed (closed %s)." % e["window"]["deadline_ist"])
+    if "active_application" in e["reasons"]:
+        said.append(replies.existing(e["existing"]) + "\nTo apply for someone else, "
+                    "**use their own mobile number**.")
+    out["reply"] = ("Eligible — age %d.\nPlease send the applicant's **full name, village and "
+                    "bank account number**." % e["age"]) if e["eligible"] else "\n".join(said)
     if "under_age" in e["reasons"]:
         messages.append("Age is %d. The pension is for people %d and above. They become "
                         "eligible on %s." % (e["age"], services.portal.MIN_AGE,
@@ -185,6 +211,18 @@ async def get_my_application() -> dict:
     p = current_principal()
     a = await _run(services.my_application, p.mobile)
     out = _own_application(a)
+    rows = []
+    if a["found"]:
+        rows.append(replies.status_line(a["application_no"], a["applicant_name"], a["status"],
+                                        a["deemed_date_ist"], a["reason"]))
+    rows += [replies.status_line(o["application_no"], o["name"], o["status"],
+                                 o["deemed_date_ist"]) for o in a["filed_for_others"]]
+    draft = a.get("draft")
+    if draft and (not a["found"] or a["status"] in ("WITHDRAWN", "REJECTED")):
+        rows.append("Draft saved — " + replies.still_needed(draft["missing"]).lower()
+                    if draft["missing"] else "Draft ready to submit.")
+    out = {"reply": "\n".join(replies.capped(rows)) or "No application on this number yet.",
+           **out}
     if a["filed_for_others"]:
         out["filed_for_others"] = [
             {"mobile": o["mobile"], "application_number": o["application_no"],
@@ -242,26 +280,34 @@ async def withdraw_application(application_no: str, confirm: bool) -> dict:
     p = current_principal()
     if confirm is not True:
         return {"withdrawn": False,
+                "reply": "Not withdrawn. **Please confirm** you want to withdraw it.",
                 "message": "Not withdrawn. Ask the applicant to confirm first."}
     number = (application_no or "").strip().upper()
     if not number:
         return {"withdrawn": False,
+                "reply": "**Which application number?** For example SSP26540132.",
                 "message": "Give the application number, for example SSP26540132. "
                            "get_my_application shows it."}
     r = await _run(services.withdraw, p.mobile, application_no=number,
                    actor="applicant:%s" % p.mobile)
     if r["status"] == "ok":
-        return {"withdrawn": True, "status": "WITHDRAWN",
+        return {"reply": "**Withdrawn — %s.** This number can apply again."
+                         % r["application_no"],
+                "withdrawn": True, "status": "WITHDRAWN",
                 "application_number": r["application_no"],
                 "next": "You may submit a new application for this mobile number now."}
     if r["status"] == "not_found":
         return {"withdrawn": False,
+                "reply": "%s is not this number's application, so it cannot be withdrawn "
+                         "here." % number,
                 "message": "That application number does not belong to this mobile number, "
                            "so it cannot be withdrawn here. An application filed on someone "
                            "else's number can be withdrawn by them from the status portal "
                            "(their mobile number and date-of-birth password) or at the block "
                            "office. Check numbers with get_my_application."}
     return {"withdrawn": False,
+            "reply": "Only a pending application can be withdrawn; %s is %s."
+                     % (r["application_no"], replies.STATUS.get(r["current"], r["current"])),
             "message": "Only a pending application can be withdrawn. This one is %s."
                        % r["current"]}
 
@@ -306,7 +352,8 @@ async def save_application_details(full_name: str | None = None,
                                ("block", block), ("bank_account", bank_account),
                                ("ifsc", ifsc)) if v is not None}
     if not given:
-        return {"error": "No fields were given. Send at least one field the applicant told you."}
+        return {"reply": "Nothing to save yet.",
+                "error": "No fields were given. Send at least one field the applicant told you."}
     r = await _run(services.save_draft, p.mobile, given, applicant=mobile)
     saved_ifsc = r["saved"].get("ifsc") or ""
     problems = [_ifsc_problem(saved_ifsc) if pr.startswith("IFSC must be") else pr
@@ -314,6 +361,18 @@ async def save_application_details(full_name: str | None = None,
     out = {**_for(mobile, p), "saved": r["saved"], "missing": r["missing"],
            "problems": problems, "corrections": r["corrections"], "warnings": r["warnings"],
            "suggested_block": r["suggested_block"], "ready_to_submit": r["ready_to_submit"]}
+    note = ("Village saved as given; it is not in the known list."
+            if r["warnings"] else None)
+    if problems:
+        out["reply"] = replies.lines("**Please check:**", *[
+            "IFSC %s has %d characters; it must be 11, like SBIN0003077. Please check the "
+            "passbook, or leave it out (IFSC is optional)." % (saved_ifsc, len(saved_ifsc))
+            if pr.startswith("IFSC must be") else pr for pr in r["problems"][:3]])
+    elif r["missing"]:
+        out["reply"] = replies.lines(replies.still_needed(r["missing"]), note)
+    else:
+        out["reply"] = replies.read_back(r["saved"], mobile)
+    out = {"reply": out.pop("reply"), **out}
     if problems:
         out["next_step"] = "Ask about each problem, then save again."
     elif [m for m in r["missing"] if m != services.DOC_MISSING]:
@@ -331,8 +390,8 @@ async def save_application_details(full_name: str | None = None,
 @citizen.tool(
     description=(
         "Gives a link where the person uploads the applicant's age proof (birth certificate, "
-        "school leaving certificate or Voter ID) from their phone. Send them the link and the "
-        "instructions. When the person replies after that (with anything), call this tool "
+        "school leaving certificate or Voter ID) from their phone. Show them the reply with "
+        "the link. When the person replies after that (with anything), call this tool "
         "again and check document_attached before asking them to upload again; a document "
         "is required before submit_application. "
         "Calling it again gives the same link. " + APPLICANT_MOBILE_DOC + "\n\n"
@@ -352,16 +411,18 @@ async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
     out = {**_for(mobile, p), "upload_url": t["url"], "expires": t["expires_at_ist"],
            "document_attached": t["doc_attached"]}
     if t["doc_attached"]:
+        d = await _run(services.get_draft, p.mobile, mobile)
+        out = {"reply": replies.read_back(d["fields"], mobile) if d["ready_to_submit"] else
+               replies.lines("Age proof uploaded.", replies.still_needed(d["missing"])
+                             if d["missing"] else None), **out}
+    else:
+        out = {"reply": replies.upload_link(t["url"], t["expires_at_ist"]), **out}
+    if t["doc_attached"]:
         out["next_step"] = ("The age proof is uploaded. Do not comment on it. Read the details "
                             "and the declaration back, then submit_application after they "
                             "confirm. Uploading again through the same link replaces it.")
     else:
-        out["instructions"] = ("Open this link on your phone: %s . Tap \"Take a photo or "
-                               "choose a file\", take a clear photo of the birth certificate, "
-                               "school leaving certificate or Voter ID (or choose a PDF), then "
-                               "tap Upload. When the page says Uploaded, come back here and "
-                               "say done." % t["url"])
-        out["next_step"] = ("Send the person the link and these instructions. When they "
+        out["next_step"] = ("Show the person the reply with the link. When they "
                             "reply (with anything), call get_document_upload_link again and "
                             "check document_attached before asking them to upload again.")
     return out
@@ -392,8 +453,11 @@ async def submit_application(confirm_declaration: bool,
     s = r["status"]
     if s == "ok":
         dob = r["date_of_birth"]
+        reply = replies.submitted(r["application_no"], r["deemed_date_ist"], mobile,
+                                  r.get("sms_sent"))
         if mobile != p.mobile:
             return {
+                "reply": reply,
                 "application_number": r["application_no"], "status": "PENDING",
                 "filed_on_mobile": mobile, "submitted": r["submitted_at_ist"],
                 "what_happens_next": "A block officer decides within 15 days. If nobody "
@@ -408,6 +472,7 @@ async def submit_application(confirm_declaration: bool,
                              "filed all the same."),
             }
         return {
+            "reply": reply,
             "application_number": r["application_no"], "status": "PENDING",
             "submitted": r["submitted_at_ist"],
             "what_happens_next": "A block officer decides within 15 days. If nobody decides, "
@@ -445,7 +510,22 @@ async def submit_application(confirm_declaration: bool,
             "applicant wants to apply afresh.")
     else:
         msg = "Unexpected result: %s." % s
-    return {"submitted": False, "reason": s, "message": msg, **_for(mobile, p),
+    if s == "declaration_required":
+        reply = "Not submitted. **Please confirm the details first.**"
+    elif s in ("incomplete", "no_document"):
+        reply = replies.still_needed(r.get("missing") or [services.DOC_MISSING])
+    elif s == "invalid" and r["errors"] == ["the application window has closed"]:
+        reply = "Applications are closed (closed %s)." % r["window"]["deadline_ist"]
+    elif s == "invalid":
+        reply = "The portal refused it: %s." % "; ".join(r["errors"])
+    elif s == "duplicate":
+        reply = replies.lines(replies.existing(r["existing"]),
+                              "Only that number's owner can withdraw it." if mobile != p.mobile
+                              else "A pending application can be withdrawn if you want to "
+                                   "apply afresh.")
+    else:
+        reply = msg
+    return {"reply": reply, "submitted": False, "reason": s, "message": msg, **_for(mobile, p),
             **({"missing": r["missing"]} if s == "incomplete" else {}),
             **({"errors": r["errors"]} if s == "invalid" else {}),
             **({"existing_application": {k: r["existing"][k] for k in ("application_no", "status")}}
@@ -459,7 +539,7 @@ async def submit_application(confirm_declaration: bool,
         "it only when the person wants to file for someone else on another mobile number, or "
         "the signed-in number already has an active application. For a single applicant on "
         "the signed-in number it is not needed.\n\n"
-        "Send the person the link and the instructions, then wait. On the page they enter the "
+        "Show the person the reply with the link, then wait. On the page they enter the "
         "applicant's mobile number and type the OTP sent to that phone. You never ask for, "
         "see or relay the OTP; if someone types an OTP in the chat, tell them to enter it on "
         "the page instead. When the person replies after that (with anything), call this tool "
@@ -472,14 +552,12 @@ async def get_number_verification_link() -> dict:
     p = current_principal()
     link = await _run(services.issue_verify_link, p.mobile, p.session_ends)
     verified = await _run(services.verified_numbers, p.mobile)
+    numbers = [v["mobile"] for v in verified]
     return {
+        "reply": replies.verify_link(link["url"], link["expires_at_ist"], numbers),
         "verify_url": link["url"], "expires": link["expires_at_ist"],
-        "instructions": ("Open this link: %s . Enter the mobile number of the person you are "
-                         "applying for and tap Send OTP. An OTP comes by SMS to that phone; "
-                         "type it on the page, not here. When the page says Number verified, "
-                         "come back here and say done." % link["url"]),
-        "verified_numbers": [v["mobile"] for v in verified],
-        "next_step": ("Send the person the link and instructions. When they reply (with "
+        "verified_numbers": numbers,
+        "next_step": ("Show the person the reply with the link. When they reply (with "
                       "anything), call this tool again and check verified_numbers before asking "
                       "them to verify again. A number "
                       "in verified_numbers can be used as applicant_mobile until this sign-in "

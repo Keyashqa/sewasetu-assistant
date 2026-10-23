@@ -267,3 +267,8 @@ Recorded here so the scenario results above are read against the right build.
 - **Officer warnings are the portal's rules only** (amendment 15): same-document and
   decision-date warnings removed. `check_officer_reporting` 23/23: two applications sharing a
   file and a bank account get no warning; IFSC and village/block warnings come through exactly.
+- **Short replies** (amendment 16): `scripts/check_replies.py` (local only, self-cleaning)
+  drives all 14 tools through 42 results including error paths: every result has a `reply`,
+  none exceeds 6 lines, no emojis, and the verify-link, upload, read-back, submitted and
+  officer approve/reject templates match. Flow checks unchanged: document flow 35/35, helper
+  numbers 75/75, officer documents 23/23, officer reporting 23/23.

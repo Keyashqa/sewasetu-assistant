@@ -123,8 +123,8 @@ async def tool_checks():
     try:
         out = await citizen_mod.get_document_upload_link()
         check("tool output: no curl_example", "curl_example" not in out, out)
-        check("tool output: link + instructions before upload",
-              out["upload_url"] in out.get("instructions", "") and not out["document_attached"])
+        check("tool output: reply with the link before upload",
+              out["upload_url"] in out.get("reply", "") and not out["document_attached"])
         check("tool output: no hash/size/filename", not {"sha256", "byte_size", "document_name",
                                                        "recorded"} & set(out))
     finally:

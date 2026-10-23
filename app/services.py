@@ -811,10 +811,12 @@ def my_application(mobile):
                 n = cur.fetchone()
                 reason = (n[0] or "").strip() if n else None
         # applications this mobile filed as a helper, on other (verified) mobiles
-        cur.execute("SELECT a.mobile, a.application_no, a.applicant_name, a.status "
-                    "FROM helper_filings h JOIN applications a ON a.id = h.application_id "
+        cur.execute("SELECT a.mobile, a.application_no, a.applicant_name, a.status, "
+                    "a.submitted_at FROM helper_filings h "
+                    "JOIN applications a ON a.id = h.application_id "
                     "WHERE h.helper = %s ORDER BY h.filed_at DESC LIMIT 20", (mobile,))
-        others = [{"mobile": o[0], "application_no": o[1], "name": o[2], "status": o[3]}
+        others = [{"mobile": o[0], "application_no": o[1], "name": o[2], "status": o[3],
+                   "deemed_date_ist": _fmt(deemed_date(o[4])) if o[3] == "PENDING" else None}
                   for o in cur.fetchall()]
         cur.execute("SELECT mobile, data FROM agent_drafts WHERE owner = %s AND mobile <> %s "
                     "AND expires_at > %s ORDER BY updated_at DESC LIMIT 20",
@@ -828,7 +830,7 @@ def my_application(mobile):
     return {
         "filed_for_others": others, "drafts_for_others": other_drafts,
         "found": True, "application_no": row["application_no"], "status": row["status"],
-        "submitted_at_ist": fmt_ist(row["submitted_at"]),
+        "applicant_name": row["applicant_name"], "submitted_at_ist": fmt_ist(row["submitted_at"]),
         "decided_at_ist": fmt_ist(row["decided_at"]), "decided_by": row["decided_by"],
         "reason": reason or None,
         "deemed_date_ist": (_fmt(deemed_date(row["submitted_at"]))
@@ -1401,5 +1403,6 @@ def decide(application_id, decision, reason, note, officer, channel,
     sms_sent = _send_sms_checked(row["mobile"], text)
     return {"status": "ok", "decision": decision, "id": application_id,
             "application_no": row["application_no"], "mobile": row["mobile"],
+            "applicant_name": row["applicant_name"],
             "decided_by": officer, "decided_at_ist": fmt_ist(now), "actor": actor,
             "note": note_text, "warnings": [t for _, t in warns], "sms_sent": sms_sent}

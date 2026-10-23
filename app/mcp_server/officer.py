@@ -11,6 +11,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 import services
+from mcp_server import replies
 from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
 
@@ -69,7 +70,9 @@ is false, say plainly that the citizen has NOT been told.
 against an application.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
 - State only facts these tools return. Never speculate about rules, policy or outcomes no \
-tool told you."""
+tool told you.
+
+""" + replies.STYLE
 
 officer = FastMCP(
     "Sewa Setu — Old Age Pension (block officer)",
@@ -83,6 +86,10 @@ def _run(fn, *args, **kwargs):
     return anyio.to_thread.run_sync(lambda: fn(*args, **kwargs))
 
 
+def _error(text):
+    return {"reply": text, "error": text}
+
+
 @officer.tool(
     description=(
         "What is waiting in the queue: pending counts per block, how many are past the 15-day "
@@ -92,7 +99,14 @@ def _run(fn, *args, **kwargs):
 async def get_queue_summary() -> dict:
     q = await _run(services.queue_summary)
     d = q["deemed_within_48h"]
+    blocks = " · ".join("%s %d" % (b["block"], b["pending"]) for b in q["by_block"] if b["pending"])
+    soon = ", ".join(x["application_no"] for x in d["first_20"][:3])
     return {
+        "reply": replies.lines(
+            "**Pending: %d** (%d past 15 days)" % (q["pending_total"], q["overdue_15d"]),
+            blocks or None,
+            "Auto-approval within 48 h: %d%s" % (d["count"], " (%s%s)" % (
+                soon, ", …" if d["count"] > 3 else "") if d["count"] else "")),
         "pending_total": q["pending_total"], "by_block": q["by_block"],
         "overdue_15d": q["overdue_15d"],
         "deemed_within_48h": {
@@ -122,17 +136,31 @@ async def list_applications(status: str | None = None, block: str | None = None,
     r = await _run(services.list_applications, status=status, block=block,
                    overdue_only=overdue_only, search=search, page=page)
     if r["status"] == "bad_status":
-        return {"error": "status must be one of %s. Call again with one of them, or with no "
-                         "status for the pending queue." % ", ".join(r["valid"])}
+        return _error("status must be one of %s. Call again with one of them, or with no "
+                      "status for the pending queue." % ", ".join(r["valid"]))
     if r["status"] == "bad_block":
-        return {"error": "block must be one of %s. Call again with one of them."
-                         % ", ".join(r["valid"])}
+        return _error("block must be one of %s. Call again with one of them."
+                      % ", ".join(r["valid"]))
     out = {"filter": r["filter"], "total": r["total"], "page": r["page"], "pages": r["pages"],
            "showing": len(r["rows"]),
            "rows": [{"id": x["id"], "application_no": x["application_no"],
                      "name": x["applicant_name"], "mobile": x["mobile"], "block": x["block"],
                      "status": x["status"], "submitted": x["submitted_at_ist"],
                      "days_pending": x["days_pending"]} for x in r["rows"]]}
+    rows = ["%s · %s · %s · %s" % (x["application_no"], x["applicant_name"], x["block"],
+                                   "Pending %s days" % x["days_pending"]
+                                   if x["status"] == "PENDING"
+                                   else replies.STATUS.get(x["status"], x["status"]))
+            for x in r["rows"]]
+    if not r["total"]:
+        reply = "No applications match."
+    elif not r["rows"]:
+        reply = "Page %d is past the end; there are %d pages." % (r["page"], r["pages"])
+    else:
+        reply = replies.lines("**%d application%s** (page %d of %d)" % (
+            r["total"], "" if r["total"] == 1 else "s", r["page"], r["pages"]),
+            *replies.capped(rows))
+    out = {"reply": reply, **out}
     if not r["rows"] and r["total"]:
         out["note"] = "Page %d is past the end; there are %d pages." % (r["page"], r["pages"])
     elif not r["total"]:
@@ -153,12 +181,12 @@ async def list_applications(status: str | None = None, block: str | None = None,
 async def get_application(application_id: int | None = None,
                           application_no: str | None = None) -> dict:
     if (application_id is None) == (not application_no):
-        return {"error": "Give exactly one of application_id or application_no."}
+        return _error("Give exactly one of application_id or application_no.")
     r = await _run(services.get_application, application_id=application_id,
                    application_no=application_no)
     if r["status"] == "not_found":
-        return {"error": "No application with that id or number. Check it with "
-                         "list_applications(search=...)."}
+        return _error("No application with that id or number. Check it with "
+                      "list_applications(search=...).")
     a = r["application"]
     if not a["doc_attached"]:
         document = {"attached": False, "note": "No age-proof document is attached."}
@@ -166,6 +194,7 @@ async def get_application(application_id: int | None = None,
         document = {"attached": True, "link": services.document_url(a["id"]),
                     **_provenance(r["document"]), "note": LINK_NOTE}
     return {
+        "reply": replies.case_view(a, r["warnings"], document.get("link")),
         "id": a["id"], "application_no": a["application_no"], "name": a["applicant_name"],
         "mobile": a["mobile"], "date_of_birth": a["date_of_birth"], "age_today": a["age_today"],
         "gender": a["gender"], "marital_status": a["marital_status"],
@@ -210,17 +239,24 @@ def _provenance(p):
 async def get_age_proof_link(application_id: int | None = None,
                              application_no: str | None = None) -> dict:
     if (application_id is None) == (not application_no):
-        return {"error": "Give exactly one of application_id or application_no."}
+        return _error("Give exactly one of application_id or application_no.")
     d = await _run(services.age_proof_record, application_id=application_id,
                    application_no=application_no)
     s = d["status"]
     if s == "not_found":
-        return {"error": "No application with that id or number. Check it with "
-                         "list_applications(search=...)."}
+        return _error("No application with that id or number. Check it with "
+                      "list_applications(search=...).")
     out = {"application_id": d["application_id"], "application_no": d["application_no"]}
     if s == "no_document":
-        return dict(out, attached=False, note="No document attached.")
+        return dict(out, reply="No age proof attached to %s." % d["application_no"],
+                    attached=False, note="No document attached.")
     out.update(attached=True, link=d["url"])
+    cannot = {"missing_file": "the file is missing on the server",
+              "refused": "the file path is outside the upload store",
+              "too_large": "the file is larger than 10 MB"}
+    if s in cannot:
+        out["reply"] = "The age proof for %s cannot be opened: %s." % (d["application_no"],
+                                                                       cannot[s])
     if s == "missing_file":
         return dict(out, problem="The record names a file that is missing on the server, so the "
                                  "link will not open. Tell the officer.")
@@ -231,6 +267,9 @@ async def get_age_proof_link(application_id: int | None = None,
         return dict(out, problem="The file is larger than 10 MB, so the portal will not serve "
                                  "it. Tell the officer.")
     p = d["provenance"]
+    out["reply"] = replies.lines("[Open age proof — %s](%s)" % (d["application_no"], d["url"]),
+                                 "Uploaded %s · %s" % (p["uploaded_at_ist"], p["original_name"])
+                                 if p["recorded"] else None)
     out.update(_provenance(p))
     if not p["recorded"]:
         out["file_on_server"] = {"type": d["mimetype"], "byte_size": d["byte_size"],
@@ -266,8 +305,28 @@ def _decision_error(r, application_id, application_no):
     return "Unexpected result: %s. Nothing was changed." % s
 
 
-def _decided(r, verb):
-    out = {"status": verb, "application_no": r["application_no"],
+def _decision_reply(r, verb, application_id, application_no):
+    """Short form of _decision_error for the reply."""
+    s, no = r["status"], r.get("application_no") or application_no
+    if s == "not_found":
+        return "Not %s: no application with id %s." % (verb, application_id)
+    if s == "no_match":
+        return "Not %s: id %s is %s, not %s." % (verb, application_id, r["application_no"],
+                                                 application_no)
+    if s == "not_pending":
+        return "Not %s: %s is already %s." % (verb, no, replies.STATUS.get(
+            r.get("current"), r.get("current") or "decided"))
+    if s == "reason_required":
+        return "**Which reason?** " + " · ".join(services.REJECTION_REASONS)
+    if s == "blocked":
+        return "**Not approved — %s.** %s" % (no, " ".join(r["warnings"]))
+    return _decision_error(r, application_id, application_no)
+
+
+def _decided(r, verb, reason=None):
+    out = {"reply": replies.decided(verb.capitalize(), r["application_no"], r["applicant_name"],
+                                    r["mobile"], r["sms_sent"], reason),
+           "status": verb, "application_no": r["application_no"],
            "decided_by": r["decided_by"], "decided_at": r["decided_at_ist"],
            "recorded_in_audit_as": r["actor"], "citizen_notified": r["sms_sent"]}
     if r["note"]:
@@ -305,7 +364,8 @@ async def approve_application(application_id: int, application_no: str,
                    reason=note or "", note="", officer=p.officer, channel="mcp",
                    expect_application_no=application_no)
     if r["status"] != "ok":
-        return {"approved": False, "status": r["status"],
+        return {"reply": _decision_reply(r, "approved", application_id, application_no),
+                "approved": False, "status": r["status"],
                 "message": _decision_error(r, application_id, application_no)}
     return _decided(r, "approved")
 
@@ -339,22 +399,26 @@ async def reject_application(application_id: int, application_no: str,
     quote = " ".join((officer_reason_quote or "").split()).strip("'\"")
     canonical = {x.lower(): x for x in services.REJECTION_REASONS}
     if not given:
-        return {"rejected": False, "status": "reason_required",
+        return {"reply": "**Which reason?** " + " · ".join(services.REJECTION_REASONS),
+                "rejected": False, "status": "reason_required",
                 "message": _decision_error({"status": "reason_required"}, application_id,
                                            application_no)}
     if not quote:
-        return {"rejected": False, "status": "quote_required",
+        return {"reply": "**What is your reason, in your own words?**",
+                "rejected": False, "status": "quote_required",
                 "message": "officer_reason_quote is required: the officer's own words giving or "
                            "confirming the reason, verbatim. If the officer has not said why, ask "
                            "them. Nothing was changed."}
     if given not in canonical:
-        return {"rejected": False, "status": "bad_reason",
+        return {"reply": "**Which reason?** " + " · ".join(services.REJECTION_REASONS),
+                "rejected": False, "status": "bad_reason",
                 "message": "reason must be one of: %s. For anything else use \"other\" and put "
                            "the explanation in note. Nothing was changed."
                            % "; ".join('"%s"' % x for x in services.REJECTION_REASONS)}
     if canonical[given] == "other":
         if not note:
-            return {"rejected": False, "status": "note_required",
+            return {"reply": "**Please give the reason in your own words.**",
+                    "rejected": False, "status": "note_required",
                     "message": "Give the reason in note when reason is 'other'. Nothing was "
                                "changed."}
         reason_text, note_text = note, ""
@@ -366,8 +430,9 @@ async def reject_application(application_id: int, application_no: str,
                    reason=reason_text, note=note_text, officer=p.officer, channel="mcp",
                    expect_application_no=application_no)
     if r["status"] != "ok":
-        return {"rejected": False, "status": r["status"],
+        return {"reply": _decision_reply(r, "rejected", application_id, application_no),
+                "rejected": False, "status": r["status"],
                 "message": _decision_error(r, application_id, application_no)}
-    out = _decided(r, "rejected")
+    out = _decided(r, "rejected", reason_text)
     out["reason"] = reason_text
     return out

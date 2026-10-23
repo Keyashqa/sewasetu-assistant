@@ -209,8 +209,8 @@ async def verification_page(client):
     link = await call(HELPER, "get_number_verification_link")
     again = await call(HELPER, "get_number_verification_link")
     check("link: same link while unused", link["verify_url"] == again["verify_url"])
-    check("link: instructions say type the OTP on the page, not here",
-          "type it on the page, not here" in link["instructions"])
+    check("link: reply says type the OTP on the page, not here",
+          "type the OTP on that page (not here)" in link["reply"])
     check("link: nothing verified yet", link["verified_numbers"] == [])
     token = token_of(link["verify_url"])
 
