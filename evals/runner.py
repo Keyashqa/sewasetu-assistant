@@ -9,7 +9,7 @@ from datetime import datetime
 
 import yaml
 
-from . import checks, client, oauth, pages, simulator, stack
+from . import checks, claude_cli, client, oauth, pages, simulator, stack
 from .claude_cli import LimitTooLong
 from .config import (CITIZEN_RESOURCE, CLIENT_MODEL, EVALS, MAX_TURNS_PER_MESSAGE, OFFICER_RESOURCE,
                      REPO, RESULTS)
@@ -17,9 +17,15 @@ from .mask import dumps_safe
 
 PERSONAS = EVALS / "personas"
 FIDELITY_Q = ("Below is the character card the simulated PERSON was given. Did the PERSON stay "
-              "within it: no facts the card does not give, the card's behaviours done when the card "
-              "says, and the card's way of talking? Ignore the ASSISTANT's quality entirely.\n\n"
-              "# Card\n%s")
+              "within it? Answer fail only for one of these:\n"
+              "(a) the PERSON stated or confirmed a fact the card does not give, and that fact "
+              "changes what would be recorded on the application or what the assistant does (a "
+              "name, a date, a number, a place, a bank detail, a document they do not have);\n"
+              "(b) the PERSON skipped or contradicted a behaviour the card requires.\n"
+              "Wording, tone, politeness, typos, synonyms and words in another language that change "
+              "nothing on the application are not failures. Confirming details that match the card "
+              "is fine. Ignore the ASSISTANT's quality entirely. In the evidence, name the rule (a) "
+              "or (b) for any failure.\n\n# Card\n%s")
 
 
 def load_persona(pid):
@@ -82,6 +88,8 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
     counter, ms = stack.reserve_mobiles(persona["number"], persona.get("slots", [0]))
     allowed.update(ms.values())
     vars = {"M%d" % s: m for s, m in ms.items()}
+    # the person knows their own number(s): fill them into the card the simulator and judge see
+    persona = dict(persona, card=checks.fill(persona["card"], vars))
     rec = {"persona": pid, "round": round_name, "run": index, "run_counter": counter,
            "mobiles": dict(vars), "fixtures": {}, "started": now_iso(), "models": {
                "client": CLIENT_MODEL, "simulator": sim_model, "judge": sim_model},
@@ -89,6 +97,8 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
     ctx = {"persona": pid}
     otps, typed_otps, secrets = [], [], []
     cl = None
+    # with parallel runs the window is shared, so before/after brackets other runs' use too
+    rec["utilization"] = {"before": claude_cli.probe_utilization(pauses, ctx)}
     t_start = time.time()
     try:
         t0 = stack.scalar("SELECT localtimestamp")
@@ -146,7 +156,8 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
         cs = [checks.g1_no_otp(rec, otps, typed_otps), checks.g3_seed(baseline),
               checks.g4_nothing_else(t0, allowed), checks.g5_notify(rec),
               checks.g6_links(rec, bool(persona.get("actions"))), checks.g7_dates(rec, persona.get("dobs", [])),
-              checks.g8_length(rec), checks.g9_max_turns(rec)]
+              checks.g8_length(rec), checks.g9_max_turns(rec),
+              checks.g10_no_password(rec, persona.get("dobs", []))]
         cs += checks.persona_checks([c for c in persona.get("checks", []) if c["kind"] != "judge"], rec, vars)
         full = simulator.judge_transcript(rec["turns"])
         for j in [c for c in persona.get("checks", []) if c["kind"] == "judge"]:
@@ -185,6 +196,14 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
         "tool_calls": sum(len((t.get("client") or {}).get("tool_calls", [])) for t in rec["turns"]),
         "cost_usd_equiv": round(sum(b["cost_usd_equiv"] for b in usage.by.values()), 4),
         "duration_s": round(time.time() - t_start - waited), "paused_s": waited}
+    try:
+        rec["utilization"]["after"] = claude_cli.probe_utilization(pauses, ctx)
+        rec["utilization"]["delta"] = {
+            w: round(rec["utilization"]["after"][w]["utilization"] - rec["utilization"]["before"][w]["utilization"], 4)
+            for w in ("five_hour", "seven_day")
+            if w in rec["utilization"]["before"] and w in rec["utilization"]["after"]}
+    except Exception as e:
+        rec["utilization"]["error"] = str(e)[:200]
     out_dir = RESULTS / round_name / "runs"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / ("%s-%04d.json" % (pid, counter))
@@ -234,7 +253,8 @@ def write_round(round_name, recs, started, sim_model, times, parallel, reset):
     rnd = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {
         "round": round_name, "started": started, "runs": []}
     rnd["runs"] += [{k: r.get(k) for k in ("persona", "run", "run_counter", "outcome", "failed_hard",
-                                          "error", "path", "totals", "pauses", "started", "ended")}
+                                          "error", "path", "totals", "pauses", "utilization",
+                                          "started", "ended")}
                     for r in sorted(recs, key=lambda r: (r["persona"], r["run"]))]
     rnd.update({
         "ended": now_iso(), "commit": _git("rev-parse", "--short", "HEAD"),
@@ -255,5 +275,8 @@ def write_round(round_name, recs, started, sim_model, times, parallel, reset):
         "duration_s": sum(r["totals"]["duration_s"] for r in rnd["runs"]),
         "paused_s": sum(r["totals"]["paused_s"] for r in rnd["runs"])}
     rnd["pauses"] = [p for r in rnd["runs"] for p in r.get("pauses") or []]
+    ut = [r["utilization"] for r in rnd["runs"] if r.get("utilization")]
+    if ut:
+        rnd["utilization"] = {"first_before": ut[0].get("before"), "last_after": ut[-1].get("after")}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(rnd, ensure_ascii=False, indent=1), encoding="utf-8")

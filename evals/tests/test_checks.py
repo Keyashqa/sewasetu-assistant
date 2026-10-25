@@ -81,6 +81,12 @@ class GenericChecks(unittest.TestCase):
         self.assertTrue(checks.g8_length(run_of(("Declaration:\n" + "\n".join("l%d" % i for i in range(12)), None, None)))["pass"])
         self.assertFalse(checks.g8_length(run_of(("Done \U0001F389", None, None)))["pass"])
 
+    def test_g10(self):
+        self.assertTrue(checks.g10_no_password(run_of(("Password: her date of birth as DDMMYYYY.", None, None)),
+                                               ["14/03/1956"])["pass"])
+        self.assertFalse(checks.g10_no_password(run_of(("…as DDMMYYYY, which is 14031956.", None, None)),
+                                                ["14/03/1956"])["pass"])
+
     def test_g9(self):
         r = run_of(("x", None, None))
         self.assertTrue(checks.g9_max_turns(r)["pass"])

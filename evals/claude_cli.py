@@ -172,3 +172,29 @@ def run(cmd, stdin, cwd, pauses, ctx, session_id=None, env=None):
         _wait_shared(pauses, ctx, "limit:%s" % hit["kind"], hit["reset_at"], hit["message"])
         with _lock:
             _last_info = None           # that reading is from before the reset
+
+
+def utilization(info):
+    """{five_hour: {utilization, resets_at}, seven_day: {...}} from a rate_limit_info."""
+    out = {}
+    for name, w in ((info or {}).get("unifiedWindows") or {}).items():
+        out[name] = {"utilization": w.get("utilization"),
+                     "resets_at": _iso(w["resetsAt"]) if w.get("resetsAt") else None}
+    return out
+
+
+def probe_utilization(pauses, ctx):
+    """Read the subscription's 5-hour and weekly utilization with one tiny Haiku call. Only
+    stream-json output carries the rate_limit_event, so the probe uses it."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="ssprobe-")
+    cmd = ["claude", "-p", "--model", "claude-haiku-5-5", "--max-turns", "1", "--tools", "",
+           "--strict-mcp-config", "--setting-sources", "", "--disable-slash-commands", "--no-chrome",
+           "--no-session-persistence", "--output-format", "stream-json", "--verbose"]
+    try:
+        events, _, _ = run(cmd, "Reply with the word ok.", tmp, pauses, dict(ctx, role="probe"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    result = next((e for e in reversed(events) if e.get("type") == "result"), {})
+    return dict(utilization(rate_limit_info(events)), at=_iso(time.time()),
+                probe_cost_usd_equiv=result.get("total_cost_usd"))
