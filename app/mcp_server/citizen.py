@@ -144,15 +144,19 @@ def _for(mobile, p):
 async def get_scheme_info() -> dict:
     s = await _run(services.scheme_info)
     w = s["window"]
-    return {
-        "reply": replies.lines(
+    if w["open"]:
+        reply = replies.lines(
             "**Old Age Pension** — Rs %d a month for residents of Purvanchal aged %d or above."
             % (s["amount_inr"], s["min_age"]),
             "Age proof: %s." % replies.either([d if "ID" in d else d.lower()
                                                for d in s["documents_accepted"]]),
             "Decision within %d days; approved automatically if none." % s["sla_days"],
-            "Applications close %s." % w["deadline_ist"] if w["open"] else
-            fmt.closed_sentence(w)),
+            "Applications close %s." % w["deadline_ist"])
+    else:
+        # closed: the one sentence leads, alone (finding F7)
+        reply = fmt.closed_sentence(w)
+    out = {
+        "reply": reply,
         "amount": "Rs %d per month" % s["amount_inr"],
         "min_age": s["min_age"],
         "residency": s["residency"],
@@ -164,6 +168,12 @@ async def get_scheme_info() -> dict:
         "blocks": s["blocks"],
         "villages_by_block": s["villages_by_block"],
     }
+    if not w["open"]:
+        out["next_step"] = ("Applications are closed. Answer with the reply exactly as written, "
+                            "date as DD/MM/YYYY; add nothing about when or whether applications "
+                            "open again, and do not suggest asking anyone about it, preparing for "
+                            "it, or coming back later.")
+    return out
 
 
 @citizen.tool(
