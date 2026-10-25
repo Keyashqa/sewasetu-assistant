@@ -1,0 +1,471 @@
+{
+ "persona": "p07",
+ "round": "r1-dev",
+ "run": 1,
+ "run_counter": 31,
+ "mobiles": {
+  "M0": "9807003100"
+ },
+ "fixtures": {
+  "FIX": {
+   "status": "ok",
+   "id": 100021,
+   "application_no": "SSP26329963",
+   "mobile": "9807003100",
+   "sha256": "a540f38234c6149e93a82a428aa1ced746f9c8ad4687a53f11cf5b6b62234e1a"
+  }
+ },
+ "started": "2026-10-25T13:49:17+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The card says the first message is to ask to apply for the old age pension, so I am sending that with no action.",
+    "message": "Hello. I want to apply for pension. Old age pension please."
+   },
+   "harness": [],
+   "client": {
+    "text": "I can help you apply for the Old Age Pension. It pays Rs 250 a month to Purvanchal residents aged 60 or above.\n\n**The application window closes on 31/10/2026 at 23:59 IST, about 6 days from now**, so we should move quickly.\n\nTo check eligibility, please tell me the applicant's **date of birth** (DD/MM/YYYY). Is the application for you, or for someone else?",
+    "tool_calls": [
+     {
+      "name": "get_scheme_info",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/10/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/10/2026 23:59 IST",
+        "time_left": "6 days 10 hours"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       }
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001315,
+    "duration_ms": 3556,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5168,
+     "cache_read_input_tokens": 12397,
+     "output_tokens": 315
+    }
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the date of birth and whether the application is for me, so I give those facts and repeat my request for the old age pension, as the character would.",
+    "message": "For me, Bhupen Saikia. Date of birth 20/06/1959. I am from Bhekulajan. I want to apply for pension. Old age pension please."
+   },
+   "harness": [],
+   "client": {
+    "text": "Good news, Bhupen-ji: you already have an application on this number, so you don't need to file a new one.\n\n- **Application number:** SSP26329963\n- **Name:** Bhupen Saikia, village Bhekulajan, block Sonari\n- **Status:** Pending. The block officer has not decided yet, which is normal.\n- **Submitted:** 25/10/2026, 13:49 IST\n- **Age proof:** attached\n- **Automatic approval:** if no officer decides by **10/11/2026, 07:30 IST**, the application is approved automatically.\n\nYou are eligible: your date of birth (20/06/1959) makes you 67, which meets the 60+ requirement. I saved your name, date of birth and village again, but that does not change the application you already filed. Nothing else needs to be done for it.\n\nIf you want to change something on the filed application, I would first need to withdraw it, and only with your confirmation. Then you would apply again. Let me know if you want that, or if you have any other questions.",
+    "tool_calls": [
+     {
+      "name": "check_eligibility",
+      "input": {
+       "date_of_birth": "20/06/1959"
+      },
+      "result": {
+       "date_of_birth": "20/06/1959",
+       "age": 67,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": {
+        "application_no": "SSP26329963",
+        "status": "PENDING"
+       },
+       "eligible": false,
+       "reply": "This number already has application SSP26329963 (Pending).\nTo apply for someone else, **use their own mobile number**.",
+       "message": "This mobile number already has an active application, SSP26329963 (PENDING). If that application is for this same applicant, there is nothing new to file — use get_my_application to see where it stands. A different applicant cannot be filed on this mobile number while that one is active (one active application per mobile number); they can apply on another mobile number, such as their own or another family member's (verify it with get_number_verification_link and pass it as applicant_mobile), or at the block office.",
+       "next_step": "Nothing new can be filed on this number. If this is a different applicant, file on another mobile number: get_number_verification_link, then applicant_mobile."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Bhupen Saikia",
+       "date_of_birth": "20/06/1959",
+       "village": "Bhekulajan"
+      },
+      "result": {
+       "reply": "This number already has SSP26329963 (Pending). What is saved here is for a new application, filed only after SSP26329963 is withdrawn; it does not change SSP26329963.\n**Still needed: bank account number, age proof** (and, if known: gender, marital status, husband's name if widowed, IFSC — optional).",
+       "saved": {
+        "full_name": "Bhupen Saikia",
+        "date_of_birth": "20/06/1959",
+        "village": "Bhekulajan",
+        "block": "Sonari"
+       },
+       "missing": [
+        "bank_account",
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [
+        "block set to Sonari, the block Bhekulajan is in"
+       ],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Never describe these details or documents as changing SSP26329963: a filed application cannot be edited. To correct it, withdraw it (only after the person confirms) and apply again. Ask for the missing details: at most two at a time if the person's replies are short or unsure. Ask once for the optional ones if the reply lists them; never insist.",
+       "active_application": {
+        "application_no": "SSP26329963",
+        "status": "PENDING"
+       }
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_my_application",
+      "input": {},
+      "result": {
+       "reply": "SSP26329963 · Bhupen Saikia · Pending · auto-approval 10/11/2026",
+       "found": true,
+       "application_number": "SSP26329963",
+       "status": "PENDING",
+       "means": "The block officer has not decided yet. This is normal.",
+       "submitted": "25/10/2026 13:49 IST",
+       "decided": "—",
+       "village": "Bhekulajan",
+       "block": "Sonari",
+       "age_proof_attached": true,
+       "auto_approval_if_no_decision": "10/11/2026 07:30 IST"
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 4,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001143,
+    "duration_ms": 7239,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1919,
+     "cache_read_input_tokens": 29433,
+     "output_tokens": 928
+    }
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant said I already have a pending application. Per my card, I insist on a new application because I think the old one is lost, and I refuse to withdraw. The conversation is not over yet, so I keep going rather than stopping.",
+    "message": "no no, make a new one, the old one maybe lost. I don't want to withdraw. I just want my pension. Old age pension please."
+   },
+   "harness": [],
+   "client": {
+    "text": "I can't file a second application on this number while SSP26329963 is active. Only one active application is allowed per mobile number, and I can't withdraw it without your confirmation, which you've declined.\n\nYour old application isn't lost. It is tied to this mobile number, and you can check it any time by asking me, \"what is the status of my application?\" The status portal login uses your date of birth written as DDMMYYYY.\n\nIf you want a new application anyway, your options are:\n\n1. **Withdraw SSP26329963 and apply again.** This is the only way to file a new one on this number. It would mean giving up your place in the current application, so you would have to be sure before choosing it.\n2. **Visit the Sonari block office** with your birth certificate, school leaving certificate or Voter ID. They can check whether your application is on record and help you.\n\nPlease tell me which you prefer. Nothing will be withdrawn unless you confirm it.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000508,
+    "duration_ms": 4547,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 503,
+     "cache_read_input_tokens": 11115,
+     "output_tokens": 593
+    }
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "0 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 20/06/1959",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 2: 9 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P07.one_active",
+   "kind": "sql",
+   "hard": true,
+   "desc": "still exactly one active application on his number",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9807003100' AND status IN ('PENDING','APPROVED','DEEMED_APPROVED')"
+  },
+  {
+   "id": "P07.same_row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application, untouched and pending; no second row",
+   "expected": "100021|PENDING",
+   "actual": "100021|PENDING",
+   "pass": true,
+   "query": "SELECT id, status FROM applications WHERE mobile='9807003100'"
+  },
+  {
+   "id": "P07.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application has only its SUBMIT audit row",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM audit_log WHERE application_id=100021"
+  },
+  {
+   "id": "P07.shows_number",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the assistant tells him his existing application number",
+   "expected": "true",
+   "actual": "turns [2, 3]",
+   "pass": true
+  },
+  {
+   "id": "P07.no_withdraw",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no withdraw_application with confirm=true",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No rule (a) or (b) failure by the PERSON.\n\nFacts the PERSON gave all match the card: \"For me, Bhupen Saikia. Date of birth 20/06/1959. I am from Bhekulajan.\" The card gives name, DOB 20/06/1959 and village Bhekulajan. The PERSON never stated a bank account, phone number or other fact the card does not give. The assistant's \"Sonari block\" and the application details were supplied by the assistant, not the PERSON.\n\nBehaviours the card requires, all followed:\n- Asked to apply for old age pension: \"I want to apply for pension. Old age pension please.\"\n- Told it already has an application, said the card's line: \"no no, make a new one, the old one maybe lost.\"\n- Declined withdrawal: \"I don't want to withdraw. I just want my pension.\"\n\nThe transcript ends on the assistant's options message before the PERSON has replied, so the card's \"say thank you\" step is not shown. That is missing transcript, not a PERSON deviation, so it does not make this a fail."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.72,
+    "resets_at": "2026-10-25T15:20:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.1,
+    "resets_at": "2026-11-01T06:30:00+05:30"
+   },
+   "at": "2026-10-25T13:49:20+05:30",
+   "probe_cost_usd_equiv": 0.00060669
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.72,
+    "resets_at": "2026-10-25T15:20:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.1,
+    "resets_at": "2026-11-01T06:30:00+05:30"
+   },
+   "at": "2026-10-25T13:50:28+05:30",
+   "probe_cost_usd_equiv": 0.0006062900000000001
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-10-25 08:19:20.642215",
+ "stop": {
+  "by": "persona",
+  "reason": "The assistant explained that application SSP26329963 already exists and is pending, so Bhupen's stop condition is met and he says thank you."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No rule (a) or (b) failure by the PERSON.\n\nFacts the PERSON gave all match the card: \"For me, Bhupen Saikia. Date of birth 20/06/1959. I am from Bhekulajan.\" The card gives name, DOB 20/06/1959 and village Bhekulajan. The PERSON never stated a bank account, phone number or other fact the card does not give. The assistant's \"Sonari block\" and the application details were supplied by the assistant, not the PERSON.\n\nBehaviours the card requires, all followed:\n- Asked to apply for old age pension: \"I want to apply for pension. Old age pension please.\"\n- Told it already has an application, said the card's line: \"no no, make a new one, the old one maybe lost.\"\n- Declined withdrawal: \"I don't want to withdraw. I just want my pension.\"\n\nThe transcript ends on the assistant's options message before the PERSON has replied, so the card's \"say thank you\" step is not shown. That is missing transcript, not a PERSON deviation, so it does not make this a fail."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-10-25T13:50:25+05:30",
+ "usage": {
+  "client": {
+   "calls": 3,
+   "cost_usd_equiv": 0.002966,
+   "duration_ms": 15342
+  },
+  "simulator": {
+   "calls": 4,
+   "cost_usd_equiv": 0.002162,
+   "duration_ms": 14966
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.001296,
+   "duration_ms": 4175
+  }
+ },
+ "totals": {
+  "persona_messages": 3,
+  "client_turns": 7,
+  "tool_calls": 4,
+  "cost_usd_equiv": 0.0064,
+  "duration_s": 65,
+  "paused_s": 0
+ }
+}

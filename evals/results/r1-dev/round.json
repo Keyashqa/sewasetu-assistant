@@ -1107,10 +1107,110 @@
    },
    "started": "2026-10-25T13:07:24+05:30",
    "ended": "2026-10-25T13:08:28+05:30"
+  },
+  {
+   "persona": "p07",
+   "run": 1,
+   "run_counter": 31,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p07-0031.json",
+   "totals": {
+    "persona_messages": 3,
+    "client_turns": 7,
+    "tool_calls": 4,
+    "cost_usd_equiv": 0.0064,
+    "duration_s": 65,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.72,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:49:20+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.72,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:50:28+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:49:17+05:30",
+   "ended": "2026-10-25T13:50:25+05:30"
+  },
+  {
+   "persona": "p08",
+   "run": 1,
+   "run_counter": 30,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p08-0030.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 13,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0104,
+    "duration_s": 89,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.72,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:49:21+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.72,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:50:53+05:30",
+     "probe_cost_usd_equiv": 0.0006054900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:49:17+05:30",
+   "ended": "2026-10-25T13:50:50+05:30"
   }
  ],
- "ended": "2026-10-25T13:08:36+05:30",
- "commit": "850606d",
+ "ended": "2026-10-25T13:50:56+05:30",
+ "commit": "bd77a7b",
  "dirty": true,
  "claude_code": "2.1.310",
  "models": {
@@ -1122,18 +1222,18 @@
   "max_turns_per_message": 6
  },
  "runs_per_persona": 1,
- "parallel": 1,
+ "parallel": 2,
  "fresh_stack": false,
  "partial": true,
  "summary": {
-  "runs": 23,
-  "valid_runs": 19,
-  "passed": 14,
-  "pass_rate": 0.737,
+  "runs": 25,
+  "valid_runs": 21,
+  "passed": 16,
+  "pass_rate": 0.762,
   "invalid": 3,
   "errors": 1,
-  "cost_usd_equiv": 0.246,
-  "duration_s": 2900,
+  "cost_usd_equiv": 0.2628,
+  "duration_s": 3054,
   "paused_s": 0
  },
  "pauses": [],
@@ -1152,15 +1252,15 @@
   },
   "last_after": {
    "five_hour": {
-    "utilization": 0.62,
+    "utilization": 0.72,
     "resets_at": "2026-10-25T15:20:00+05:30"
    },
    "seven_day": {
-    "utilization": 0.08,
+    "utilization": 0.1,
     "resets_at": "2026-11-01T06:30:00+05:30"
    },
-   "at": "2026-10-25T13:08:32+05:30",
-   "probe_cost_usd_equiv": 0.00060669
+   "at": "2026-10-25T13:50:53+05:30",
+   "probe_cost_usd_equiv": 0.0006054900000000001
   }
  },
  "batches": [
@@ -1451,6 +1551,38 @@
      "resets_at": "2026-11-01T06:30:00+05:30"
     },
     "at": "2026-10-25T13:08:36+05:30",
+    "probe_cost_usd_equiv": 0.0006062900000000001
+   }
+  },
+  {
+   "personas": [
+    "p08",
+    "p07"
+   ],
+   "started": "2026-10-25T13:49:12+05:30",
+   "ended": "2026-10-25T13:50:56+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.72,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.1,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:49:16+05:30",
+    "probe_cost_usd_equiv": 0.00060669
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.72,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.1,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:50:56+05:30",
     "probe_cost_usd_equiv": 0.0006062900000000001
    }
   }

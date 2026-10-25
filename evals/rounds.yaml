@@ -166,9 +166,13 @@ rounds:
           next_step says never to describe them as changing the filed application. The
           instruction gets one line: a filed application cannot be edited; to correct it,
           withdraw (with confirmation) and apply again.
-        status: proposed (not applied)
-        changed: []
-        rerun: null
+        status: applied
+        changed: [bd77a7b]
+        rerun: >
+          p08-0030 pass (5 messages): the first reply says "The portal does not let me edit a
+          filed application, so the only way to fix the date of birth is to withdraw this
+          application and apply again"; no draft before the plan; withdrew only after "Yes, I
+          confirm". p07-0031 pass: existing application shown, no duplicate, no withdrawal.
       - id: F4
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)
