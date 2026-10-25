@@ -28,21 +28,17 @@
   <li><b>Known limit.</b> When the window is closed, the assistant gives the exact closed-window sentence, but sometimes adds a line about a future window.</li>
   <li><b>1 run per person.</b> One run shows that a behaviour happened, not how often; small models vary from run to run. These runs use a small model as the simulated person.</li>
   <li><b>Not tested here.</b> An evaluator's assistant may have extra tools (shell, web) ours does not; real phones and real SMS; several officers.</li>
-  <li><b>Soft checks</b> (reply length, emojis, optional details collected, some plain-language judgements) are reported but do not decide pass or fail.</li>
 </ul>
 </details>
 
-<h2>Every person</h2>
+<h2 id="people">Every person</h2>
 <div class="scroll">
 <table class="tbl">
-<tr><th>Person</th><th>Result</th><th>Checks not passed (expected → actual)</th></tr>
+<tr><th>Person</th><th>Result</th></tr>
 {% for x in r.personas %}{% set p = personas.get(x.persona, {}) %}
 <tr>
   <td><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ p.name or "Conversation" }}</a><br><span class="muted">{{ p.line or p.title }}</span></td>
-  <td><span class="badge {{ x.outcome }}">{{ x.outcome }}</span><br><span class="muted">{{ x.messages }} msgs</span></td>
-  <td>{% for c in x.failed %}<div><span class="badge {{ 'fail' if c.hard else 'soft' }}">{{ 'hard' if c.hard else 'soft' }}</span>
-      {{ c.desc|public }}<br><span class="muted">expected</span> {{ c.expected }} <span class="muted">→ actual</span> {{ c.actual }}</div>
-      {% else %}<span class="muted">none</span>{% endfor %}</td>
+  <td><span class="badge {{ x.outcome }}">{{ x.outcome }}</span><br><span class="muted">{{ x.messages }} messages</span></td>
 </tr>
 {% endfor %}
 </table>

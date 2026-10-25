@@ -168,7 +168,7 @@ rounds:
           (1) Put the password sentence in the submitted reply template itself ("Portal login:
           mobile number + the applicant's date of birth as DDMMYYYY"), so the model copies it
           instead of composing a summary. (2) Name the case in the instruction: "never work out
-          or write the password digits, also when summarising several applications". The no-password-digits check stays hard.
+          or write the password digits, also when summarising several applications". The no-password-digits check still decides pass or fail.
         status: applied
         changed: [b9746c1]
         rerun: >

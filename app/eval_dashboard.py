@@ -97,6 +97,20 @@ def _public(text):
     return re.sub(r"\b([Pp])ersona", lambda m: m.group(1) + "erson", text)
 
 
+@eval_dashboard.app_template_filter("missed")
+def _missed(check):
+    """A failed check's expected -> actual in plain words."""
+    def words(v):
+        if isinstance(v, (list, tuple)):
+            return "; ".join(words(x) for x in v) or "nothing"
+        return {True: "yes", False: "no", None: "nothing", "true": "yes", "false": "no", "": "nothing"}.get(v, str(v))
+    m = re.fullmatch(r"turns? \[([\d, ]+)\]", str(check.get("actual")))
+    if m:
+        turns = [x.strip() for x in m.group(1).split(",")]
+        return "It happened in turn%s %s." % ("s" if len(turns) > 1 else "", ", ".join(turns))
+    return "Expected %s, but got %s." % (words(check.get("expected")), words(check.get("actual")))
+
+
 @eval_dashboard.app_template_filter("pjson")
 def _pjson(value):
     """Readable JSON for the transcript (non-ASCII kept; Jinja escapes it for HTML)."""

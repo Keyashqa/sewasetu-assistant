@@ -22,20 +22,12 @@
 <details class="box">
 <summary>What we checked</summary>
 <p><span class="muted">Should end with:</span> {{ p.expected_end_state }}</p>
-<div class="scroll">
-<table class="tbl">
-<tr><th>Check</th><th>Expected</th><th>Actual</th></tr>
-{% for c in run.checks %}
-<tr><td><span class="badge {{ 'pass' if c.pass else ('fail' if c.hard else 'soft') }}">{{ 'pass' if c.pass else ('fail' if c.hard else 'soft fail') }}</span><br>
-  {{ c.desc|public }}{% if not c.hard %} <span class="muted">(soft)</span>{% endif %}</td>
-  <td><pre>{{ c.expected }}</pre></td><td><pre>{{ c.actual }}</pre>{% if c.evidence %}<details><summary>judge's evidence</summary><p>{{ c.evidence }}</p></details>{% endif %}</td></tr>
+<ul class="checks">
+{% for c in run.checks if c.hard %}
+  <li class="{{ 'ok' if c.pass else 'no' }}">{{ '✓' if c.pass else '✗' }} {{ c.desc|public }}{% if not c.pass %}<br><span class="muted">{{ c|missed }}</span>{% endif %}</li>
 {% endfor %}
-</table>
-</div>
-{% if run.fidelity %}
-<p class="muted">Did the simulated person stay in character? <span class="badge {{ 'pass' if run.fidelity.verdict == 'pass' else 'invalid' }}">{{ run.fidelity.verdict }}</span></p>
-<details><summary>judge's evidence</summary><p>{{ run.fidelity.evidence }}</p></details>
-{% endif %}
+{% if run.fidelity %}<li class="{{ 'ok' if run.fidelity.verdict == 'pass' else 'no' }}">{{ '✓' if run.fidelity.verdict == 'pass' else '✗' }} the simulated person stayed in character</li>{% endif %}
+</ul>
 <p class="muted">Code <code>{{ run.commit }}</code> · {{ run.started[:16]|replace("T", " ") }} IST ·
   {{ run.totals.persona_messages }} messages, {{ run.totals.tool_calls }} tool calls, {{ run.totals.duration_s }} s</p>
 </details>
