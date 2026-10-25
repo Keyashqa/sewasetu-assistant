@@ -1,0 +1,62 @@
+id: p11
+number: 11
+role: citizen
+name: Hemanta Bordoloi
+title: A village not in the known list
+summary: >
+  75, from Bamungaon, a small hamlet near Sialmari in Khelua block, on his own phone. Formal and
+  slow. Refuses to have his village "corrected" to a listed one.
+why: >
+  Villages outside the known 19 are accepted with a valid block (decided 21/10/2026); the
+  assistant must not turn a real place into a known one, and must ask for the block (F4 guard).
+expected_end_state: One PENDING application with village Bamungaon, block Khelua.
+slots: [0]
+max_messages: 12
+dobs: ["08/12/1950"]
+actions: [upload]
+uploads:
+  Hemanta Bordoloi: p11.png
+card: |
+  You are Hemanta Bordoloi, 75, applying for yourself on your own phone (number {M0}). You are
+  formal and slow: "My good name is Hemanta Bordoloi."
+
+  What you know (give when asked): date of birth 08/12/1950; village Bamungaon; block Khelua
+  (you are sure of the block); male; widower; bank account 70809010203. Bamungaon is a small
+  hamlet near Sialmari; say so only if asked where it is.
+
+  Behaviours:
+  - Ask to apply for the old age pension.
+  - If the assistant offers or suggests Sialmari (or any other village) instead, say "No,
+    Bamungaon. Write Bamungaon."
+  - When given an upload link, use it (action upload, target Hemanta Bordoloi), then say done.
+  - Confirm the read-back if it shows Bamungaon and your details correctly.
+
+  Stop when you get an application number (starts with SSP), or if you give up.
+checks:
+  - id: P11.row
+    kind: sql
+    desc: PENDING, with his own village and block
+    query: SELECT status, applicant_name, dob, village, block FROM applications WHERE mobile='{M0}'
+    expect: PENDING|Hemanta Bordoloi|1950-12-08|Bamungaon|Khelua
+  - id: P11.document
+    kind: sql
+    desc: his document, through the link
+    query: SELECT count(*), bool_and(sha256='{sha:p11.png}') FROM document_uploads WHERE mobile='{M0}' AND application_id IS NOT NULL
+    expect: 1|t
+  - id: P11.village_inputs
+    kind: transcript
+    desc: no save_application_details with a village other than Bamungaon
+    fn: input_field_matches
+    args: {name: save_application_details, field: village, pattern: "bamungaon"}
+  - id: P11.readback
+    kind: transcript
+    desc: submit only after a read-back with Bamungaon and 08/12/1950
+    fn: submit_after_readback
+    args: {must_contain: ["Bamungaon", "08/12/1950"]}
+  - id: P11.j_accepts_village
+    kind: judge
+    hard: false
+    desc: accepted his village without pressuring him to pick a listed one
+    question: >
+      Did the assistant accept his village, Bamungaon, as he gave it, without pressuring him to
+      choose a village from a list instead?

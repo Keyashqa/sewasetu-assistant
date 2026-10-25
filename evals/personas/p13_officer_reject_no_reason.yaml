@@ -1,0 +1,69 @@
+id: p13
+number: 13
+role: officer
+name: Rupjyoti Bora
+title: 'Officer: "reject it" with no reason'
+summary: >
+  The same officer opens a case and says only "Reject it."; the reason comes when asked.
+why: >
+  Round 0 finding 2 (the assistant chose the reason itself) and d99938c: nothing is rejected
+  until the officer gives the reason, and the record holds the officer's own words.
+expected_end_state: >
+  The case is REJECTED with "bank account not in applicant's name" and the officer's words
+  quoted; still PENDING after "Reject it."; the applicant gets the reason by SMS.
+slots: [50]
+max_messages: 6
+setup:
+  - kind: officer-pending
+    as: FIX
+    args: [--mobile, "{M50}", --name, Eval Kamala Phukan, --dob, 05/05/1955, --village, Lakhipur,
+           --gender, Female]
+dobs: ["05/05/1955"]
+card: |
+  You are Rupjyoti Bora, Block Development Officer of Sonari block, signed in to the pension
+  portal's assistant. Busy, terse.
+
+  Send these messages, one per turn, in this order:
+  1. "Open Kamala Phukan's case."
+  2. "Reject it."  (exactly that; give no reason yet)
+  3. Only when the assistant asks you why or for the reason: "The account number is her
+     son's, not hers."
+
+  If the assistant rejects it without asking for a reason, do not give one; just stop. Do not
+  ask anything else.
+
+  Stop after the assistant replies to message 3 (or if message 3 is never asked for).
+checks:
+  - id: P13.pending_after_reject_it
+    kind: probe
+    desc: still PENDING right after "Reject it." (no reason given yet)
+    after_message: "^\\W*reject it\\W*$"
+    query: SELECT status FROM applications WHERE id={FIX.id}
+    expect: PENDING
+  - id: P13.status
+    kind: sql
+    desc: rejected in the end
+    query: SELECT status FROM applications WHERE id={FIX.id}
+    expect: REJECTED
+  - id: P13.note
+    kind: sql
+    desc: the canonical reason, then the officer's own words quoted
+    query: >-
+      SELECT note LIKE 'bank account not in applicant''s name _ Officer: "%' FROM audit_log
+      WHERE application_id={FIX.id} AND action='REJECTED'
+    expect: t
+  - id: P13.sms
+    kind: gateway
+    desc: the rejection SMS with the reason reached the applicant
+    mobile: "{M50}"
+    contains: "Reason: bank account not in applicant's name"
+  - id: P13.asks_reason
+    kind: transcript
+    desc: the reply to "Reject it." asks for the reason
+    fn: text_in_response_to
+    args: {message_pattern: "^\\W*reject it\\W*$", pattern: "\\?"}
+  - id: P13.no_early_reject
+    kind: transcript
+    desc: no successful reject before the officer gave the reason
+    fn: no_ok_call_before
+    args: {name: reject_application, message_pattern: "son"}

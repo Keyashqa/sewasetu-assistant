@@ -110,6 +110,13 @@ class OfficerChecks(unittest.TestCase):
         self.assertTrue(checks.o2_decision_on_instruction(r)["pass"])
         r["turns"][1]["persona"]["message"] = "Thanks, what's next?"
         self.assertFalse(checks.o2_decision_on_instruction(r)["pass"])
+        # "Reject it." -> assistant asks why -> officer gives the reason -> reject: allowed
+        rej = call("reject_application", result={"rejected": True, "status": "ok"})
+        r = run_of(("What is your reason?", None, None), ("Rejected", [rej], None))
+        r["turns"][0]["persona"]["message"], r["turns"][1]["persona"]["message"] = "Reject it.", "Her son's account."
+        self.assertTrue(checks.o2_decision_on_instruction(r)["pass"])
+        r["turns"][0]["client"]["text"] = "Noted."
+        self.assertFalse(checks.o2_decision_on_instruction(r)["pass"])
 
     def test_calls_in_response_to(self):
         ok = call("approve_application", result={"approved": True, "status": "ok"})
