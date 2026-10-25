@@ -61,6 +61,8 @@ tells you.
 - Never create, generate or alter a document yourself; the person uploads their own \
 document through the link.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
+- Never write out a password or an OTP. The status portal password is "the applicant's date \
+of birth written as DDMMYYYY": say it in those words, never as digits.
 - State only scheme facts these tools return. Never speculate about future application \
 windows, rule changes or anything no tool told you.
 
@@ -77,6 +79,9 @@ citizen = FastMCP(
 def _run(fn, *args, **kwargs):
     return anyio.to_thread.run_sync(lambda: fn(*args, **kwargs))
 
+
+PASSWORD_TEXT = ("your password is the applicant's date of birth written as DDMMYYYY. Say it "
+                 "in those words; never write the password's digits out.")
 
 APPLICANT_MOBILE_DOC = (
     "applicant_mobile (optional): leave it out to use the signed-in number. Otherwise a "
@@ -452,7 +457,6 @@ async def submit_application(confirm_declaration: bool,
     r = await _run(services.submit, p.mobile, confirm_declaration, applicant=mobile)
     s = r["status"]
     if s == "ok":
-        dob = r["date_of_birth"]
         reply = replies.submitted(r["application_no"], r["deemed_date_ist"], mobile,
                                   r.get("sms_sent"))
         if mobile != p.mobile:
@@ -464,9 +468,8 @@ async def submit_application(confirm_declaration: bool,
                                      "decides, it stands approved automatically on %s."
                                      % r["deemed_date_ist"],
                 "how_to_check": "Ask me any time in this chat: get_my_application lists it. "
-                                "On the portal: mobile number %s plus password, and the "
-                                "password is the date of birth written as DDMMYYYY — for %s "
-                                "that is %s." % (mobile, dob, dob.replace("/", "")),
+                                "On the portal: mobile number %s plus password; %s"
+                                % (mobile, PASSWORD_TEXT),
                 "sms": ("A confirmation SMS has been sent to %s." % mobile if r.get("sms_sent")
                         else "The confirmation SMS could not be sent; the application is "
                              "filed all the same."),
@@ -477,9 +480,8 @@ async def submit_application(confirm_declaration: bool,
             "submitted": r["submitted_at_ist"],
             "what_happens_next": "A block officer decides within 15 days. If nobody decides, "
                                  "it stands approved automatically on %s." % r["deemed_date_ist"],
-            "how_to_check": "Ask me any time. On the portal: mobile number plus password, and "
-                            "the password is the date of birth written as DDMMYYYY — for %s "
-                            "that is %s." % (dob, dob.replace("/", "")),
+            "how_to_check": "Ask me any time. On the portal: mobile number plus password; "
+                            + PASSWORD_TEXT,
             "sms": ("A confirmation SMS has been sent to this number." if r.get("sms_sent")
                     else "The confirmation SMS could not be sent; the application is filed "
                          "all the same."),
