@@ -47,8 +47,10 @@ rounds:
             … log in on the portal with the mobile number and the password (her date of birth
             as DDMMYYYY, which is 14031956).
         why_it_matters: Applicants share phones and sit at kiosks; the chat stays on screen.
-        changed: []
-        rerun: null
+        changed: [97d7b73]
+        rerun: >
+          p01-0006 pass. G10 pass; the assistant wrote: log in "with that mobile number and the
+          password 'her date of birth written as DDMMYYYY'".
       - id: F2
         persona: p01
         check: P01.optional_filled (soft)
@@ -64,5 +66,8 @@ rounds:
           PERSON: her name is dulumoni gogoi. village namdang. bank is sbi acc no 30219876543
           ASSISTANT: Details saved. … Upload her age proof …
         why_it_matters: The officer sees an application missing details the family had at hand.
-        changed: []
-        rerun: null
+        changed: [c04c08a]
+        rerun: >
+          p01-0006 pass. The assistant asked for the optional fields (turn 1 on its own, turn 2
+          from the save reply) without insisting. The person gave the IFSC but not gender or
+          marital status (simulator choice), so P01.optional_filled (soft) is |||SBIN0003077.
