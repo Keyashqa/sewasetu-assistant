@@ -1,0 +1,68 @@
+# The story the dashboard tells: per round, what was found -> what changed (commits) -> the
+# re-run result. Findings are logged here BEFORE the fix (EVAL_PLAN §9b). Type (a) harness or
+# persona-card bugs are fixed without a finding; only assistant/server bugs (type b) appear.
+
+rounds:
+  - id: r0-manual
+    label: Round 0 — manual runs in Claude Code with Haiku (Phase 0)
+    source: docs/phase0-test-log.md
+    findings:
+      - id: R0-1
+        persona: grandson filing for his grandmother (S1)
+        found: The assistant refused helpers; it would not file for the grandmother because the signed-in mobile was the grandson's.
+        changed: [13f489e]
+        rerun: S1-S7 pass with Haiku.
+      - id: R0-2
+        persona: officer, "Reject it." with no reason (S11)
+        found: The assistant chose the rejection reason itself, then recorded its own observation of the document as the reason.
+        changed: [7110034, d99938c]
+        rerun: S11 passes; the reason and a verbatim officer quote are recorded.
+      - id: R0-3
+        persona: officer reviewing cases
+        found: The officer assistant investigated and fraud-checked documents instead of reporting.
+        changed: [44247a7, 781aad3, a5f7e62]
+        rerun: covered by check scripts; re-tested in Phase 1 (P12-P16).
+      - id: R0-4
+        persona: all
+        found: Replies were too long for old users on phones.
+        changed: [64af3d0]
+        rerun: check_replies.py — every result has a reply of at most 6 lines.
+
+  - id: r1-dev
+    label: Round 1 (dev) — persona by persona, Haiku simulator
+    findings:
+      - id: F1
+        persona: p01
+        check: observed in P01 runs p01-0004 and p01-0005 (no check yet); G10 added to catch it
+        found: >
+          After submitting, the assistant printed the status-portal password digits in the chat.
+          The submit_application result's how_to_check gave them.
+        expected: The password is described ("the applicant's date of birth written as
+          DDMMYYYY"), never written out.
+        actual: '"…log in on the portal with the mobile number and the password (her date of
+          birth as DDMMYYYY, which is 14031956)."'
+        excerpt: |
+          PERSON: yes all correct. she says ok
+          ASSISTANT: Submitted for Dulumoni Gogoi. Application number: SSP26395522 (Pending).
+            … log in on the portal with the mobile number and the password (her date of birth
+            as DDMMYYYY, which is 14031956).
+        why_it_matters: Applicants share phones and sit at kiosks; the chat stays on screen.
+        changed: []
+        rerun: null
+      - id: F2
+        persona: p01
+        check: P01.optional_filled (soft)
+        found: >
+          Gender, marital status, husband's name and IFSC were never asked, though the grandson
+          knew them all; the application was filed without them.
+        expected: Female|Widowed|Tileswar Gogoi|SBIN0003077 (asked once, alongside the required
+          details; never insisted on)
+        actual: '|||'
+        excerpt: |
+          ASSISTANT: She is eligible, age 70. Please send her full name, village, and bank
+            account number.
+          PERSON: her name is dulumoni gogoi. village namdang. bank is sbi acc no 30219876543
+          ASSISTANT: Details saved. … Upload her age proof …
+        why_it_matters: The officer sees an application missing details the family had at hand.
+        changed: []
+        rerun: null
