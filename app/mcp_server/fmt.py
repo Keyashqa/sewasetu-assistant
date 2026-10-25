@@ -25,7 +25,8 @@ def window_text(win):
 
 def window_closed_message(win):
     return ("The application window has closed (it closed on %s). No application can be "
-            "filed through the portal now, by the assistant or at the counter."
+            "filed through the portal now, by the assistant or at the counter. No tool knows "
+            "whether or when it will reopen: do not say or imply that it will."
             % win["deadline_ist"])
 
 
