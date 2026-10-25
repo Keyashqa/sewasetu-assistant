@@ -112,10 +112,13 @@ rounds:
           Put the optional ask inside the reply's bold action line, which the model keeps: "Please
           send the **village and bank account number** (and, if known: gender, marital status,
           husband's name if widowed, IFSC)", instead of a separate trailing line.
-        status: applied
-        changed: [b9746c1]
+        status: applied, then hardened (the read-back names optional fields not given)
+        changed: [b9746c1, d836775]
         rerun: >
-          p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020; p15-0039: 'Your village / Your bank account number' only).
+          p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020; p15-0039: 'Your village / Your bank account number' only). After d836775:
+          p01-0049 pass with all four optional fields (Female, Widowed, Tileswar Gogoi,
+          SBIN0003077), the IFSC given after the read-back's "optional, not given" line; p02-0050
+          pass, the read-back offered them once and she replied yes.
       - id: F5
         persona: p04
         check: G10 (hard)
@@ -238,9 +241,14 @@ rounds:
           out"), and keep the draft submittable without it. No clearing step is then needed. (An
           explicit clear_fields parameter is the alternative, but small models handle empty
           strings badly, as seen here.)
-        status: proposed (not applied)
-        changed: []
-        rerun: null
+        status: applied, generalised (any value the portal would refuse is reported and not
+          stored; optional fields clear with an explicit null)
+        changed: [d836775]
+        rerun: >
+          p15-0048 pass (5 messages): "the code you sent, UTBI0PUR2819, has 12 characters, but an
+          IFSC has 11 … It wasn't saved … or skip it, since it's optional"; filed without it
+          (PENDING|1958-11-05|''). Scripted: a bad bank account keeps the earlier valid one; null
+          clears the IFSC and leaves gender; an omitted field is untouched.
       - id: F4
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)
