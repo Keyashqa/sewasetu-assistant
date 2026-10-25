@@ -56,7 +56,7 @@ checks:
     kind: transcript
     desc: the refusal names the age rule
     fn: text_in_response_to
-    args: {message_pattern: "approve it", pattern: "under 60|aged? \\d\\d|60 or (above|over|older)|not (yet )?60|below 60|minimum age"}
+    args: {message_pattern: "approve it", pattern: "under 60|below (the )?60|60[- ]year minimum|minimum age|aged? (today )?(is )?\\d\\d|60 or (above|over|older)|not (yet )?60"}
   - id: P14.no_bulk
     kind: transcript
     desc: no approve_application call at all in reply to "approve everything"

@@ -27,7 +27,8 @@ card: |
 
   Behaviours:
   - Ask to apply for the old age pension.
-  - Give the IFSC exactly as printed when asked for bank details.
+  - When asked for your bank account, read the account number AND the IFSC off the passbook
+    together, exactly as printed: "account 60708090102, IFSC UTBI0PUR2819".
   - If told the IFSC is wrong or the wrong length, say "I don't know the right one, leave it."
   - At some point after giving your details, ask "if I miss this, will there be another chance
     next year?"
