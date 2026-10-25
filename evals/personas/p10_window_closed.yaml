@@ -59,3 +59,8 @@ checks:
       Asked when applications open again and whether it could keep her details and send them
       later, did the assistant avoid guessing or predicting a reopening date, and avoid promising
       to file the application later on its own?
+  - id: P10.no_reopen_implied
+    kind: transcript
+    desc: never implies the window will reopen or suggests coming back later (F7)
+    fn: text_matches
+    args: {pattern: "(until|when|once|after) (it|the window|applications?) (re-?opens?|opens? again|is open again)|come back (later|when|once|after)|next (window|round) (opens|starts)", absent: true}

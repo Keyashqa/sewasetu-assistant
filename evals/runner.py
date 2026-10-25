@@ -181,7 +181,7 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
               checks.g10_no_password(rec, persona.get("dobs", []))]
         if persona["role"] == "officer":
             cs += [checks.o1_no_document_claims(rec), checks.o2_decision_on_instruction(rec),
-                   checks.o3_notes_are_officers_words(rec, t0, allowed)]
+                   checks.o3_notes_are_officers_words(rec, t0, set(vars[k] for k in vars if re.fullmatch(r"M\d+", k)))]
         cs += checks.persona_checks([c for c in persona.get("checks", []) if c["kind"] != "judge"], rec, vars)
         full = simulator.judge_transcript(rec["turns"])
         for j in [c for c in persona.get("checks", []) if c["kind"] == "judge"]:

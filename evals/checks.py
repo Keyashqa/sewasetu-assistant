@@ -403,7 +403,7 @@ CANONICAL = ["bank account not in applicant's name", "duplicate of an earlier be
              "age proof document illegible", "age proof does not match stated date of birth"]
 
 
-def o3_notes_are_officers_words(run, t0, allowed):
+def o3_notes_are_officers_words(run, t0, own):
     """Every audit note written by a decision in this run is the officer's own words: an
     approve note is a substring of some officer message; a reject note is a canonical reason
     (or, for 'other', the officer's words) + Officer: "<quote>" with the quote (and any
@@ -414,7 +414,7 @@ def o3_notes_are_officers_words(run, t0, allowed):
                       "WHERE l.at >= '%s' AND l.action IN ('APPROVED','REJECTED')" % t0)
     bad, seen = [], 0
     for action, note, mobile in rows:
-        if mobile not in allowed:
+        if mobile not in own:               # this run's own cases only (parallel runs)
             continue
         seen += 1
         if action == "APPROVED":
