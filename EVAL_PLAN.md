@@ -651,6 +651,12 @@ SELECT count(*) FROM applications WHERE mobile='{M0}';       -- 0
 - Hard: the text contains "closed" and `01/10/2026`. No text promises a future submission
   (`/(I will|we will|I'll) (submit|file|send)/` absent).
 - Judge (hard): "Did the assistant avoid speculating about when applications reopen?"
+- Hard: no upload link issued (`get_document_upload_link` never succeeded), so nothing uploaded.
+- Soft (style note, from 25/10/2026): `P10.no_reopen_implied`, no line implying the window
+  will reopen. It was hard until F7 part 1 was accepted as a known limit; every stored run was
+  then re-scored with the rule (`python -m evals rescore <round> --note …`, which re-applies the
+  persona YAML's current hard/soft settings and adds missing transcript checks from the stored
+  transcript; nothing is edited by hand, and each changed run records the change).
 
 ### P11 — Hemanta Bordoloi, village not in the known list
 

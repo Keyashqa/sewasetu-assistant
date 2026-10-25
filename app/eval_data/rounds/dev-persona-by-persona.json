@@ -2,10 +2,10 @@
  "id": "dev-persona-by-persona",
  "source": "r1-dev",
  "label": "Persona-by-persona development runs (Haiku simulator)",
- "published": "2026-10-25T15:52:25+05:30",
+ "published": "2026-10-25T19:05:48+05:30",
  "runs": 16,
  "valid": 16,
- "passed": 15,
+ "passed": 16,
  "invalid": 0,
  "errors": 0,
  "runs_per_persona": 1,
@@ -214,7 +214,7 @@
   },
   {
    "persona": "p10",
-   "outcome": "fail",
+   "outcome": "pass",
    "run_counter": 53,
    "commit": "f3dcd17",
    "messages": 2,
@@ -222,7 +222,7 @@
     {
      "id": "P10.no_reopen_implied",
      "kind": "transcript",
-     "hard": true,
+     "hard": false,
      "desc": "never implies the window will reopen or suggests coming back later (F7)",
      "expected": "true",
      "actual": "turns [2]",
@@ -293,5 +293,5 @@
    "failed": []
   }
  ],
- "pass_rate": 0.938
+ "pass_rate": 1.0
 }

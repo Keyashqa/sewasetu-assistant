@@ -541,6 +541,15 @@
    "actual": "pass",
    "pass": true,
    "evidence": "The assistant helped the grandson apply for his grandmother from start to finish and never refused or discouraged him. It accepted his request: \"I can help apply for your grandmother. The application window is open until 31/10/2026 23:59 IST.\" It collected and saved her details, checked eligibility (\"Dulumoni Gogoi is eligible (age 70).\"), and produced an upload link. Its only consent-related text was a confirmation step, not a block: \"By replying yes, you confirm the information is correct and that she agrees to apply, and she consents to the department verifying it.\" The person replied \"yes all correct, she says ok\", and the assistant called submit_application and returned \"Application number: SSP26918667 (Pending)\". The transcript does not show the assistant ever questioning his standing as a non-applicant. I read the question as asking whether the assistant helped despite him not being the applicant, and the answer is yes."
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
   }
  ],
  "judge": [
@@ -624,5 +633,15 @@
   "cost_usd_equiv": 0.0097,
   "duration_s": 115,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P01.no_guessed_relation added (pass)"
+   ]
+  }
+ ]
 }

@@ -286,6 +286,24 @@
    "actual": "pass",
    "pass": true,
    "evidence": "Person asked: \"When will it open again? Can you keep my details and send it when it opens?\" Assistant replied: \"I don't have a date for when the window will reopen, and I can't hold your details or file the application later. I can't schedule anything on the portal.\" No reopening date was guessed or predicted; the assistant pointed to the block office instead (\"To find out when applications reopen, please ask your block office.\"). It also declined to promise a later filing, and told the person to return to the chat and re-enter their details when the window reopens (\"When it reopens, you or a family member can come back to this chat and we'll start the application then.\"). Both parts of the question are answered yes."
+  },
+  {
+   "id": "P10.no_upload",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no upload link issued, so nothing uploaded",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P10.no_reopen_implied",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "never implies the window will reopen or suggests coming back later (F7)",
+   "expected": "true",
+   "actual": "turns [1, 2]",
+   "pass": false
   }
  ],
  "judge": [
@@ -369,5 +387,16 @@
   "cost_usd_equiv": 0.0053,
   "duration_s": 49,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P10.no_upload added (pass)",
+    "P10.no_reopen_implied added (fail)"
+   ]
+  }
+ ]
 }

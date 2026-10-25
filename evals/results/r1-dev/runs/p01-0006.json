@@ -473,6 +473,15 @@
    "actual": "pass",
    "pass": true,
    "evidence": "The assistant never refused or discouraged the person, and it carried the application through to submission. Its first reply was \"I can help with that. To check eligibility and start the application, I need your aunt's details,\" and it went on to check eligibility, save details, generate an upload link, and submit: \"**Submitted: application number SSP26522584 (Pending)**\". Before submitting, it asked the person to confirm that \"The applicant agrees to apply and these details are correct.\" The person answered \"yes all correct. she says ok,\" and the assistant proceeded. The transcript never cites the person not being the applicant as a reason to refuse or delay. Side note: the assistant called the applicant \"your aunt\" although the person wrote \"my aita\" (Assamese for grandmother). That mislabel does not change the answer."
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "turns [1]",
+   "pass": false
   }
  ],
  "judge": [
@@ -529,8 +538,10 @@
   "verdict": "pass",
   "evidence": "No rule (a) or rule (b) failure found. Every fact the PERSON gave matches the card: \"name is Dulumoni Gogoi. dob 14/03/1956. village namdang, sonari\" (card: name, DOB 14/03/1956, village Namdang, block \"sonari\"); \"bank account 30219876543. its sbi. ifsc SBIN0003077\" (card: account 30219876543, SBI, IFSC SBIN0003077). The PERSON's upload was the voter ID photo, which the card allows (\"done. uploaded the voter id photo. it said uploaded\"). At the confirmation step the PERSON said \"yes all correct. she says ok\", which matches the card's required wording. The PERSON never volunteered the gender or widowhood details the assistant asked for as optional, but the card says to give information only when asked, so that is not a skipped required behaviour. The assistant never hesitated about the applicant, so the \"she is sitting beside you\" line was not needed. The PERSON signed in on their own number 9801000600, as the card requires."
  },
- "outcome": "pass",
- "failed_hard": [],
+ "outcome": "fail",
+ "failed_hard": [
+  "P01.no_guessed_relation"
+ ],
  "ended": "2026-10-25T12:01:31+05:30",
  "usage": {
   "client": {
@@ -556,5 +567,16 @@
   "cost_usd_equiv": 0.0106,
   "duration_s": 105,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P01.no_guessed_relation added (fail)",
+    "outcome: pass -> fail"
+   ]
+  }
+ ]
 }

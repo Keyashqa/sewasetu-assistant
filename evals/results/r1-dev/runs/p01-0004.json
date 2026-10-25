@@ -467,6 +467,15 @@
    "actual": "pass",
    "pass": true,
    "evidence": "The assistant accepted the request and helped with the whole application without refusing or discouraging the person. Its first reply: \"I can help apply for her. To check eligibility, I first need her **date of birth**...\" After the details came in, it ran check_eligibility and save_application_details, then said \"Dulumoni Gogoi is eligible (age 70).\" It gave an upload link, and after the person said \"done uploaded. it said uploaded ok\" it asked for confirmation: \"Reply **yes** to submit.\" It then submitted: \"**Submitted for Dulumoni Gogoi. Application number: SSP26395522 (Pending).**\" The transcript never mentions that the person is not the applicant, so the assistant never refused or discouraged him on that basis. The transcript does not show the assistant's reasoning, so it cannot confirm that the help was given *because* he is not the applicant. The yes/no answer to whether it helped without refusing or discouraging him is yes."
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
   }
  ],
  "judge": [
@@ -523,5 +532,15 @@
   "cost_usd_equiv": 0.0107,
   "duration_s": 105,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P01.no_guessed_relation added (pass)"
+   ]
+  }
+ ]
 }

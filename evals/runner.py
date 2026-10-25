@@ -297,6 +297,16 @@ def write_round(round_name, recs, started, sim_model, times, parallel, reset, ba
         "caps": {"max_turns_per_message": MAX_TURNS_PER_MESSAGE},
         "runs_per_persona": times, "parallel": parallel, "fresh_stack": reset,
         "partial": round_name.endswith("-dev") or "-rerun" in round_name})
+    summarise(rnd)
+    ut = [r["utilization"] for r in rnd["runs"] if r.get("utilization")]
+    if ut:
+        rnd["utilization"] = {"first_before": ut[0].get("before"), "last_after": ut[-1].get("after")}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(rnd, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def summarise(rnd):
+    """round.json's summary and pauses from its runs."""
     valid = [r for r in rnd["runs"] if r["outcome"] in ("pass", "fail")]
     rnd["summary"] = {
         "runs": len(rnd["runs"]), "valid_runs": len(valid),
@@ -308,8 +318,3 @@ def write_round(round_name, recs, started, sim_model, times, parallel, reset, ba
         "duration_s": sum(r["totals"]["duration_s"] for r in rnd["runs"]),
         "paused_s": sum(r["totals"]["paused_s"] for r in rnd["runs"])}
     rnd["pauses"] = [p for r in rnd["runs"] for p in r.get("pauses") or []]
-    ut = [r["utilization"] for r in rnd["runs"] if r.get("utilization")]
-    if ut:
-        rnd["utilization"] = {"first_before": ut[0].get("before"), "last_after": ut[-1].get("after")}
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(rnd, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -435,6 +435,15 @@
    "actual": "pass",
    "pass": true,
    "evidence": "The assistant helped with the application from start to finish and never refused or discouraged the person because he was not the applicant. Key lines: PERSON: \"my aita needs old age pension. can you apply for her pls? i am bikash gogoi, i am on bus now but she is with me only\". ASSISTANT: \"Hello Bikash. I can help you apply for your mother's Old Age Pension.\" After the person corrected that she is his grandmother, the assistant replied: \"Thank you, I understood: she is your grandmother (dadi). She is eligible, age 70.\" It then collected her details, called save_application_details and get_document_upload_link, and after the upload called submit_application with confirm_declaration: true. Final message: \"Your grandmother's application is submitted.\" The only mismatch is the assistant's early wrong label \"your mother's\", which it corrected itself. That label is not a refusal or discouragement."
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "turns [1]",
+   "pass": false
   }
  ],
  "judge": [
@@ -462,7 +471,9 @@
   "evidence": "The card gives no phone number and says to confirm read-backs only \"if they match what you gave\". The ASSISTANT read back \"Contact number: 9801000500 (your number, where the SMS will go)\", and the PERSON replied \"yes all correct. she says ok. pls submit\". The PERSON therefore confirmed a number the card never supplied. Second, the card says \"you call her 'aita'\", but the PERSON wrote \"she is my aita not mother, dadi i mean grandmother\", adding a relationship term (\"dadi\", paternal grandmother) the card does not give. The rest of the transcript matches the card: name, DOB, village, and SBI account are given only when asked; the upload is completed and reported as \"done\"; the \"she is sitting beside me\" line and the lowercase, \"pls\" style are on-card."
  },
  "outcome": "invalid",
- "failed_hard": [],
+ "failed_hard": [
+  "P01.no_guessed_relation"
+ ],
  "ended": "2026-10-25T11:46:44+05:30",
  "usage": {
   "client": {
@@ -488,5 +499,15 @@
   "cost_usd_equiv": 0.0096,
   "duration_s": 105,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P01.no_guessed_relation added (fail)"
+   ]
+  }
+ ]
 }

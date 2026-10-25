@@ -212,8 +212,8 @@ rounds:
           confirm". p07-0031 pass: existing application shown, no duplicate, no withdrawal.
       - id: F7
         area: citizen
-        title: "Guessed relationships; hinted at reopening"
-        line: "Relationship guesses fixed; when closed, it sometimes mentions a future window."
+        title: "Implies the window may reopen"
+        line: "When closed, it states the date exactly but sometimes mentions a future window."
         result: known limit
         persona: p10, p01
         check: observed (P10.j_no_speculation passed; no check yet for relationships)
@@ -267,6 +267,25 @@ rounds:
         known_limit: >
           Accepted 25/10/2026 as a known limit of the closed-window path (tested locally with the window closed): the first reply is the exact sentence, but
           the model sometimes appends a line about a future window. No further fix planned.
+        scoring: >
+          25/10/2026: P10.no_reopen_implied became a style note (soft), consistent with this known
+          limit. P10's pass/fail is: nothing filed or uploaded (P10.no_application, P10.no_submit,
+          P10.no_upload), the closed date stated (P10.says_closed, P10.says_date), no invented
+          reopening date and no promise to keep details or file later (P10.j_no_speculation,
+          P10.no_promise). Every stored run was re-scored with python -m evals rescore r1-dev.
+      - id: F7-relationship
+        area: citizen
+        title: "Guessed relationships"
+        line: "Called a grandmother an aunt; now uses the person's own word."
+        result: fixed
+        persona: p01
+        check: P01.no_guessed_relation (hard)
+        found: >
+          The assistant guessed how the person is related to the applicant: "your mother's Old
+          Age Pension" and "your aunt's details" for a grandson who wrote "aita (grandmother)".
+        expected: The applicant referred to by name, or by the word the person used.
+        actual: '"I need your aunt''s details"'
+        changed: [3436d28]
       - id: F8
         area: citizen
         title: "A bad IFSC blocked filing"

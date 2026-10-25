@@ -567,6 +567,15 @@
    "actual": "pass",
    "pass": true,
    "evidence": "The assistant did not refuse or discourage the grandson for not being the applicant. Its first reply says \"I can help you apply for your aunt.\" After he corrected it (\"she is my aita not aunt, grandmother ok\"), it continued with \"Thank you. Your grandmother, Dulumoni Gogoi, is eligible.\" It then collected the remaining details, asked him to confirm with her (\"Since she is beside you, please check with her that she agrees\"), and submitted the application: \"Dulumoni Gogoi's Old Age Pension application is submitted. Application number: SSP26351594 (Pending).\" The only issue is the initial \"aunt\" mislabel, which was corrected and is not a refusal."
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "turns [1]",
+   "pass": false
   }
  ],
  "judge": [
@@ -623,8 +632,10 @@
   "verdict": "pass",
   "evidence": "The PERSON stayed within the card, with no failure under rule (a) or (b).\n\nRule (a), facts the card does not give: every fact the PERSON stated matches the card.\n- \"her name is Dulumoni Gogoi. dob 14/03/1956.\" matches the card's name and date of birth.\n- \"she is my aita not aunt, grandmother ok.\" is the relationship correction the card requires.\n- \"she is sitting beside me only\" matches the card's \"she is sitting beside you and she agrees.\"\n- \"village is namdang. bank account 30219876543, sbi\" matches the card's village and bank account.\n- \"ifsc is SBIN0003077 also. she is widow, husband was tileswar gogoi\" matches the card's IFSC, widowhood and husband's name.\n- The \"Sonari block\" and \"Contact number: 9801002100\" lines were the ASSISTANT's own values, not PERSON facts. The PERSON did not contradict them.\n\nRule (b), required behaviours: all were followed.\n- The PERSON gave the optional IFSC and husband's name in the message after being asked, as the card requires.\n- The PERSON replied \"done uploaded\" after the upload, as the card requires.\n- The PERSON confirmed the read-back with \"yes all correct, she says ok. pls submit\", matching the card.\n- The PERSON stopped once the SSP application number was given, as the card requires.\n\nNo behaviour was skipped or contradicted."
  },
- "outcome": "pass",
- "failed_hard": [],
+ "outcome": "fail",
+ "failed_hard": [
+  "P01.no_guessed_relation"
+ ],
  "ended": "2026-10-25T12:43:41+05:30",
  "usage": {
   "client": {
@@ -650,5 +661,16 @@
   "cost_usd_equiv": 0.0108,
   "duration_s": 124,
   "paused_s": 0
- }
+ },
+ "rescored": [
+  {
+   "at": "2026-10-25T19:05:16+05:30",
+   "commit": "42d4dbf",
+   "note": "P10.no_reopen_implied is a style note, not pass/fail (F7 part 1 accepted as a known limit); P10.no_upload added; P10 decided by: nothing filed or uploaded, closed date stated, no invented reopening date, no promise to keep details or file later",
+   "changes": [
+    "P01.no_guessed_relation added (fail)",
+    "outcome: pass -> fail"
+   ]
+  }
+ ]
 }

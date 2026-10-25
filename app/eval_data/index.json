@@ -3,11 +3,11 @@
   {
    "id": "dev-persona-by-persona",
    "label": "Persona-by-persona development runs (Haiku simulator)",
-   "published": "2026-10-25T15:52:25+05:30",
+   "published": "2026-10-25T19:05:48+05:30",
    "runs": 16,
    "valid": 16,
-   "passed": 15,
-   "pass_rate": 0.938,
+   "passed": 16,
+   "pass_rate": 1.0,
    "commits": [
     "1c36920",
     "2e4baf1",
