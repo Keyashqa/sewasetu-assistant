@@ -79,7 +79,7 @@ def _act(persona, sim, last_text, vars):
 def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
     persona = load_persona(pid)
     pauses, usage = [], Usage()
-    counter, ms = stack.reserve_mobiles(persona["no"], persona.get("slots", [0]))
+    counter, ms = stack.reserve_mobiles(persona["number"], persona.get("slots", [0]))
     allowed.update(ms.values())
     vars = {"M%d" % s: m for s, m in ms.items()}
     rec = {"persona": pid, "round": round_name, "run": index, "run_counter": counter,
