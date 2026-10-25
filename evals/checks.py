@@ -237,9 +237,18 @@ def no_tool_call(run, vars, name, input_has=None):
     return ("turns %s" % hits if hits else "none"), not hits
 
 
-def text_matches(run, vars, pattern, absent=False):
+def text_matches(run, vars, pattern, absent=False, unless=None):
+    """`pattern` found (or, with absent, not found) in assistant text. With `unless`, a
+    sentence that also matches it is skipped (e.g. a refusal echoing the person's words:
+    "I can't send it when it opens")."""
     rx = re.compile(fill(pattern, vars), re.I)
-    hits = [i for i, text in texts(run) if rx.search(text)]
+    skip = re.compile(unless, re.I) if unless else None
+    hits = []
+    for i, text in texts(run):
+        sentences = re.split(r"(?<=[.!?])\s+|\n+", text) if skip else [text]
+        found = [s for s in sentences if rx.search(s) and not (skip and skip.search(s))]
+        if found:
+            hits.append(i)
     return ("turns %s" % hits if hits else "none"), (not hits) if absent else bool(hits)
 
 

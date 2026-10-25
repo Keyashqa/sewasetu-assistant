@@ -63,4 +63,6 @@ checks:
     kind: transcript
     desc: never implies the window will reopen or suggests coming back later (F7)
     fn: text_matches
-    args: {pattern: "(until|when|once|after) (it|the window|applications?) (re-?opens?|opens?|is open)\\b|come back (later|when|once|after)|next (application )?(window|period|round)|applications? reopen", absent: true}
+    # a refusal or disclaimer that echoes her words ("I can't send it when it opens") is not
+    # an implication that it will reopen
+    args: {pattern: "(until|when|once|after) (it|the window|applications?) (re-?opens?|opens?|is open)\\b|come back (later|when|once|after)|next (application )?(window|period|round)|applications? reopen|check with [^.]*(date|when)|(keep|have) [^.]*ready", absent: true, unless: "\\b(can't|cannot|can not|don't|do not|no information|not able)\\b"}
