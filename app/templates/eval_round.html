@@ -1,0 +1,23 @@
+{% extends "_eval_base.html" %}
+{% block title %}{{ r.label }}{% endblock %}
+{% block body %}
+<p class="muted"><a href="/eval-dashboard">← dashboard</a></p>
+<h1>{{ r.label }}</h1>
+<p><span class="badge {{ 'pass' if r.passed == r.valid else 'fail' }}">{{ r.passed }} / {{ r.valid }} passed</span>
+  <span class="muted">· 1 run per persona · client <code>{{ r.client }}</code> · simulator {{ r.simulator|join(", ") }}</span></p>
+
+<div class="scroll">
+<table class="tbl">
+<tr><th>Persona</th><th>Result</th><th>Checks not passed (expected → actual)</th></tr>
+{% for x in r.personas %}{% set p = personas.get(x.persona, {}) %}
+<tr>
+  <td><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ x.persona|upper }}</a><br><span class="muted">{{ p.name }}</span></td>
+  <td><span class="badge {{ x.outcome }}">{{ x.outcome }}</span><br><span class="muted">{{ x.messages }} msgs · <code>{{ x.commit }}</code></span></td>
+  <td>{% for c in x.failed %}<div><span class="badge {{ 'fail' if c.hard else 'soft' }}">{{ 'hard' if c.hard else 'soft' }}</span>
+      <b>{{ c.id }}</b> {{ c.desc }}<br><span class="muted">expected</span> {{ c.expected }} <span class="muted">→ actual</span> {{ c.actual }}</div>
+      {% else %}<span class="muted">none</span>{% endfor %}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

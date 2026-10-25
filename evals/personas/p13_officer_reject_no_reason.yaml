@@ -5,6 +5,7 @@ name: Rupjyoti Bora
 title: 'Officer: "reject it" with no reason'
 summary: >
   The same officer opens a case and says only "Reject it."; the reason comes when asked.
+talks: "Busy and terse: \"Reject it.\" — the reason only when asked."
 why: >
   Round 0 finding 2 (the assistant chose the reason itself) and d99938c: nothing is rejected
   until the officer gives the reason, and the record holds the officer's own words.

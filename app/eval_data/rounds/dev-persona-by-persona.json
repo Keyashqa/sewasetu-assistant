@@ -1,0 +1,297 @@
+{
+ "id": "dev-persona-by-persona",
+ "source": "r1-dev",
+ "label": "Persona-by-persona development runs (Haiku simulator)",
+ "published": "2026-10-25T15:35:03+05:30",
+ "runs": 16,
+ "valid": 16,
+ "passed": 15,
+ "invalid": 0,
+ "errors": 0,
+ "runs_per_persona": 1,
+ "commits": [
+  "1c36920",
+  "2e4baf1",
+  "73d38a1",
+  "850606d",
+  "9d6162c",
+  "a5931aa",
+  "b9746c1",
+  "bd77a7b",
+  "d836775",
+  "df48b08",
+  "e757d6b",
+  "f3dcd17"
+ ],
+ "simulator": [
+  "claude-haiku-5-5"
+ ],
+ "client": "claude-haiku-5-5",
+ "claude_code": "2.1.310",
+ "first_run": "2026-10-25T12:09:31+05:30",
+ "last_run": "2026-10-25T15:31:36+05:30",
+ "cost_usd_equiv": 0.1412,
+ "pauses": 0,
+ "personas": [
+  {
+   "persona": "p01",
+   "outcome": "pass",
+   "run_counter": 49,
+   "commit": "d836775",
+   "messages": 5,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 3: 9 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p02",
+   "outcome": "pass",
+   "run_counter": 50,
+   "commit": "d836775",
+   "messages": 7,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 4 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 7: 6 lines (max 4)"
+     ],
+     "pass": false,
+     "evidence": null
+    },
+    {
+     "id": "P02.j_simple",
+     "kind": "judge",
+     "hard": false,
+     "desc": "one or two things at a time, in plain words",
+     "expected": "pass",
+     "actual": "fail",
+     "pass": false,
+     "evidence": "Most turns comply with the one-or-two limit. The first asks \"Is this application for you, or for someone else?\" (one question). The later turns ask for \"your full name and your village\" (two) and \"your village and your bank account number\" (two). The final confirmation breaks the limit: \"Optional, if you know them: your gender, marital status, and IFSC code of your bank branch. You can leave them out.\" That asks for three things in one message. The wording also uses terms an elderly first-time phone user may not know, such as \"Purvanchal\", \"IST\", \"declaration\", \"verify\", \"portal\", \"block\", and \"Reply **done**\" / \"DDMMYYYY as the password\". Because the three-item request is explicit, the answer is no."
+    }
+   ]
+  },
+  {
+   "persona": "p03",
+   "outcome": "pass",
+   "run_counter": 9,
+   "commit": "a5931aa",
+   "messages": 4,
+   "failed": []
+  },
+  {
+   "persona": "p04",
+   "outcome": "pass",
+   "run_counter": 18,
+   "commit": "b9746c1",
+   "messages": 5,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 11 lines (max 6)",
+      "turn 2: 7 lines (max 6)",
+      "turn 3: 8 lines (max 6)",
+      "turn 4: 16 lines (max 14)",
+      "turn 5: 9 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p05",
+   "outcome": "pass",
+   "run_counter": 15,
+   "commit": "2e4baf1",
+   "messages": 5,
+   "failed": []
+  },
+  {
+   "persona": "p06",
+   "outcome": "pass",
+   "run_counter": 14,
+   "commit": "73d38a1",
+   "messages": 10,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 9 lines (max 6)",
+      "turn 9: 8 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p07",
+   "outcome": "pass",
+   "run_counter": 31,
+   "commit": "bd77a7b",
+   "messages": 3,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 2: 9 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p08",
+   "outcome": "pass",
+   "run_counter": 30,
+   "commit": "bd77a7b",
+   "messages": 5,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 5: 8 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p09",
+   "outcome": "pass",
+   "run_counter": 28,
+   "commit": "850606d",
+   "messages": 2,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 9 lines (max 6)",
+      "turn 2: 7 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p10",
+   "outcome": "fail",
+   "run_counter": 53,
+   "commit": "f3dcd17",
+   "messages": 2,
+   "failed": [
+    {
+     "id": "P10.no_reopen_implied",
+     "kind": "transcript",
+     "hard": true,
+     "desc": "never implies the window will reopen or suggests coming back later (F7)",
+     "expected": "true",
+     "actual": "turns [2]",
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p11",
+   "outcome": "pass",
+   "run_counter": 32,
+   "commit": "e757d6b",
+   "messages": 8,
+   "failed": []
+  },
+  {
+   "persona": "p12",
+   "outcome": "pass",
+   "run_counter": 7,
+   "commit": "a5931aa",
+   "messages": 3,
+   "failed": []
+  },
+  {
+   "persona": "p13",
+   "outcome": "pass",
+   "run_counter": 37,
+   "commit": "9d6162c",
+   "messages": 3,
+   "failed": []
+  },
+  {
+   "persona": "p14",
+   "outcome": "pass",
+   "run_counter": 43,
+   "commit": "1c36920",
+   "messages": 2,
+   "failed": []
+  },
+  {
+   "persona": "p15",
+   "outcome": "pass",
+   "run_counter": 48,
+   "commit": "d836775",
+   "messages": 5,
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 5: 8 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p16",
+   "outcome": "pass",
+   "run_counter": 40,
+   "commit": "df48b08",
+   "messages": 2,
+   "failed": []
+  }
+ ],
+ "pass_rate": 0.938
+}

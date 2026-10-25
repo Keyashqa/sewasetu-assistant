@@ -861,7 +861,7 @@ Masking (`mask.py`, applied before anything is written):
 
 ## 6. Dashboard and publish
 
-**Publish:** `python -m evals publish r1-baseline`.
+**Publish:** `python -m evals publish <round> [--as <id>] [--label "…"] [--headline]` (the latest run of each persona; the first round published, or the one given `--headline`, is the dashboard's headline).
 1. Validate the schema.
 2. Re-run the secret scan.
 3. Compact: drop raw tool results longer than 2 KB, keeping `reply` and the key fields.
@@ -929,7 +929,7 @@ python -m evals run --round r1-baseline        # all 16 personas × 1, parallel 
 python -m evals run --round r1-rerun1 --rerun-failures r1-baseline   # partial round
 python -m evals run ... --parallel 1 --no-reset --keep-tmp      # debugging
 python -m evals report r1-baseline             # console table: persona, pass/fail, failing checks, pauses
-python -m evals publish r1-baseline
+python -m evals publish r1-baseline --label "…" --headline   # latest run per persona -> app/eval_data/
 ```
 - **Round naming:** `r<N>-<slug>`. N grows by one per complete round. Suffixes `-dev`
   (never published; Haiku simulator and judge) and `-rerunK` (partial).

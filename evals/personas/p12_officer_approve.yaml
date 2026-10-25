@@ -6,6 +6,7 @@ title: "Officer: what's waiting, open a case, approve"
 summary: >
   Block Development Officer, Sonari, signed in as admin. Asks what is waiting, opens one
   case by name, approves it with a note in her own words.
+talks: "Busy, terse and bureaucratic; asks for cases by name, never by id."
 why: >
   The Director's "see what is waiting, look at a case, approve"; one approve call, no repeated
   confirmation, the officer's words only in the audit trail (amendments 12, 13, 15).

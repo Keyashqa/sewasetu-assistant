@@ -730,6 +730,9 @@ import services                               # noqa: E402  (imports this module
 from oauth import oauth as _oauth_blueprint   # noqa: E402  (needs the definitions above)
 app.register_blueprint(_oauth_blueprint)
 
+from eval_dashboard import eval_dashboard as _eval_dashboard   # noqa: E402
+app.register_blueprint(_eval_dashboard)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)

@@ -1,0 +1,47 @@
+{% extends "_eval_base.html" %}
+{% block title %}{{ p.id|upper }} {{ p.name }}{% endblock %}
+{% block body %}
+<p class="muted"><a href="/eval-dashboard">← dashboard</a> · <a href="/eval-dashboard/{{ r.id }}">{{ r.label }}</a></p>
+<h1>{{ p.id|upper }} · {{ p.name }}</h1>
+<p><b>{{ p.title }}</b> <span class="badge {{ run.outcome }}">{{ run.outcome }}</span></p>
+<div class="card">
+  <p>{{ p.summary }}</p>
+  {% if p.talks %}<p><span class="muted">How they talk:</span> {{ p.talks }}</p>{% endif %}
+  <p><span class="muted">Why this person:</span> {{ p.why }}</p>
+  <p><span class="muted">Should end with:</span> {{ p.expected_end_state }}</p>
+  <p class="muted">Run #{{ run.run_counter }} · code <code>{{ run.commit }}</code> · {{ run.started[:16]|replace("T", " ") }} IST ·
+    {{ run.totals.persona_messages }} messages, {{ run.totals.tool_calls }} tool calls, {{ run.totals.duration_s }} s ·
+    ended: {{ run.stop.by if run.stop else "?" }}{% if run.error %} · error: {{ run.error }}{% endif %}</p>
+</div>
+
+<h2>Checks</h2>
+<div class="scroll">
+<table class="tbl">
+<tr><th>Check</th><th>Expected</th><th>Actual</th></tr>
+{% for c in run.checks %}
+<tr><td><b>{{ c.id }}</b> <span class="badge {{ 'pass' if c.pass else ('fail' if c.hard else 'soft') }}">{{ 'pass' if c.pass else ('fail' if c.hard else 'soft fail') }}</span><br>
+  <span class="muted">{{ c.desc }}{% if not c.hard %} (soft){% endif %} · {{ c.kind }}</span></td>
+  <td><pre>{{ c.expected }}</pre></td><td><pre>{{ c.actual }}</pre>{% if c.evidence %}<details><summary>judge's evidence</summary><p>{{ c.evidence }}</p></details>{% endif %}</td></tr>
+{% endfor %}
+</table>
+</div>
+{% if run.fidelity %}
+<p class="muted">Did the simulated person stay in character? <span class="badge {{ 'pass' if run.fidelity.verdict == 'pass' else 'invalid' }}">{{ run.fidelity.verdict }}</span></p>
+<details><summary>judge's evidence</summary><p>{{ run.fidelity.evidence }}</p></details>
+{% endif %}
+
+<h2>Conversation</h2>
+<p class="muted">As the person saw it, plus the assistant's tool calls (collapsed). Mobile numbers, links and OTPs are masked.</p>
+{% for t in run.turns %}
+  {% for h in t.harness %}<div class="phone">On the phone: {{ h.observation }}</div>{% endfor %}
+  {% if t.persona.message %}<div class="msg person"><div class="who">{{ p.name or "Person" }}</div><pre>{{ t.persona.message }}</pre></div>{% endif %}
+  {% if t.client %}
+    {% for tc in t.client.tool_calls %}
+    <details class="tool"><summary>tool: {{ tc.name }}{% if tc.is_error %} (error){% endif %}</summary>
+      <pre>input: {{ tc.input|pjson }}</pre><pre>result: {{ tc.result|pjson }}</pre></details>
+    {% endfor %}
+    <div class="msg assistant"><div class="who">Assistant</div><pre>{{ t.client.text or "(no reply)" }}</pre></div>
+  {% endif %}
+{% endfor %}
+{% if run.stop %}<p class="muted">Conversation ended by the {{ run.stop.by }}{% if run.stop.reason %}: {{ run.stop.reason }}{% endif %}</p>{% endif %}
+{% endblock %}

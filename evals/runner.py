@@ -93,6 +93,7 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
     allowed.update(ms.values())
     vars = {"M%d" % s: m for s, m in ms.items()}
     rec = {"persona": pid, "round": round_name, "run": index, "run_counter": counter,
+           "commit": _git("rev-parse", "--short", "HEAD"),
            "mobiles": dict(vars), "fixtures": {}, "started": now_iso(), "models": {
                "client": CLIENT_MODEL, "simulator": sim_model, "judge": sim_model},
            "turns": [], "checks": [], "judge": [], "pauses": pauses}

@@ -22,6 +22,11 @@ def main():
     r.add_argument("--sim-model")
     rp = sub.add_parser("report")
     rp.add_argument("round")
+    pb = sub.add_parser("publish")
+    pb.add_argument("round", help="source round under evals/results/")
+    pb.add_argument("--as", dest="as_id", help="published id (default: the source round's)")
+    pb.add_argument("--label")
+    pb.add_argument("--headline", action="store_true", help="make this the dashboard's headline")
     a = ap.parse_args()
 
     if a.cmd == "stack":
@@ -35,6 +40,10 @@ def main():
             raise SystemExit("--no-reset is refused for a complete round")
         sim = a.sim_model or (SIM_MODEL_DEV if dev else SIM_MODEL_PUBLISHED)
         runner.run_round(a.round, pids, a.times, a.parallel, sim, not a.no_reset)
+        return 0
+    if a.cmd == "publish":
+        from . import publish
+        publish.publish(a.round, a.as_id, a.label, a.headline)
         return 0
     if a.cmd == "report":
         rnd = json.loads((RESULTS / a.round / "round.json").read_text(encoding="utf-8"))

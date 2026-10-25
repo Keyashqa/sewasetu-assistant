@@ -1,0 +1,200 @@
+{
+ "rounds": [
+  {
+   "id": "r0-manual",
+   "label": "Round 0 — manual runs in Claude Code with Haiku (Phase 0)",
+   "source": "docs/phase0-test-log.md",
+   "findings": [
+    {
+     "id": "R0-1",
+     "persona": "grandson filing for his grandmother (S1)",
+     "found": "The assistant refused helpers; it would not file for the grandmother because the signed-in mobile was the grandson's.",
+     "changed": [
+      "13f489e"
+     ],
+     "rerun": "S1-S7 pass with Haiku."
+    },
+    {
+     "id": "R0-2",
+     "persona": "officer, \"Reject it.\" with no reason (S11)",
+     "found": "The assistant chose the rejection reason itself, then recorded its own observation of the document as the reason.",
+     "changed": [
+      7110034,
+      "d99938c"
+     ],
+     "rerun": "S11 passes; the reason and a verbatim officer quote are recorded."
+    },
+    {
+     "id": "R0-3",
+     "persona": "officer reviewing cases",
+     "found": "The officer assistant investigated and fraud-checked documents instead of reporting.",
+     "changed": [
+      "44247a7",
+      "781aad3",
+      "a5f7e62"
+     ],
+     "rerun": "covered by check scripts; re-tested in Phase 1 (P12-P16)."
+    },
+    {
+     "id": "R0-4",
+     "persona": "all",
+     "found": "Replies were too long for old users on phones.",
+     "changed": [
+      "64af3d0"
+     ],
+     "rerun": "check_replies.py — every result has a reply of at most 6 lines."
+    }
+   ]
+  },
+  {
+   "id": "r1-dev",
+   "label": "Round 1 (dev) — persona by persona, Haiku simulator",
+   "findings": [
+    {
+     "id": "F1",
+     "persona": "p01",
+     "check": "observed in P01 runs p01-0004 and p01-0005 (no check yet); G10 added to catch it",
+     "found": "After submitting, the assistant printed the status-portal password digits in the chat. The submit_application result's how_to_check gave them.\n",
+     "expected": "The password is described (\"the applicant's date of birth written as DDMMYYYY\"), never written out.",
+     "actual": "\"…log in on the portal with the mobile number and the password (her date of birth as DDMMYYYY, which is 14031956).\"",
+     "excerpt": "PERSON: yes all correct. she says ok\nASSISTANT: Submitted for Dulumoni Gogoi. Application number: SSP26395522 (Pending).\n  … log in on the portal with the mobile number and the password (her date of birth\n  as DDMMYYYY, which is 14031956).\n",
+     "why_it_matters": "Applicants share phones and sit at kiosks; the chat stays on screen.",
+     "changed": [
+      "97d7b73"
+     ],
+     "rerun": "p01-0006 pass. G10 pass; the assistant wrote: log in \"with that mobile number and the password 'her date of birth written as DDMMYYYY'\".\n"
+    },
+    {
+     "id": "F2",
+     "persona": "p01",
+     "check": "P01.optional_filled (soft)",
+     "found": "Gender, marital status, husband's name and IFSC were never asked, though the grandson knew them all; the application was filed without them.\n",
+     "expected": "Female|Widowed|Tileswar Gogoi|SBIN0003077 (asked once, alongside the required details; never insisted on)",
+     "actual": "|||",
+     "excerpt": "ASSISTANT: She is eligible, age 70. Please send her full name, village, and bank\n  account number.\nPERSON: her name is dulumoni gogoi. village namdang. bank is sbi acc no 30219876543\nASSISTANT: Details saved. … Upload her age proof …\n",
+     "why_it_matters": "The officer sees an application missing details the family had at hand.",
+     "changed": [
+      "c04c08a"
+     ],
+     "rerun": "p01-0006 pass. The assistant asked for the optional fields (turn 1 on its own, turn 2 from the save reply) without insisting. The person gave the IFSC but not gender or marital status (simulator choice), so P01.optional_filled (soft) is |||SBIN0003077.\n"
+    },
+    {
+     "id": "F3",
+     "persona": "p02",
+     "check": "P02.j_simple (soft judge)",
+     "found": "For a 72-year-old alone at a kiosk who answers one thing at a time, the assistant asked for three required details plus four optional ones in one message (check_eligibility's reply after F2). She answered two; the bank account needed a second ask.\n",
+     "expected": "one or two things at a time, in plain words",
+     "actual": "judge fail: \"asked for one thing at a time in some turns, but not consistently\"",
+     "excerpt": "ASSISTANT: The applicant is eligible, aged 72. Please send the applicant's full name,\n  village and bank account number. If known, also send gender, marital status,\n  husband's name (if widowed) and IFSC code. These optional details can be left out.\nPERSON: Lakhi Bora. Kathoni\n",
+     "why_it_matters": "The Director's users are old and at kiosks; F2 made the first ask longer.",
+     "proposed_fix": "check_eligibility's reply asks only for \"full name and village\". The save reply then asks for the bank account, with the optional line once (F2 keeps holding: optional details asked once, alongside a required one). At most two required things per message.\n",
+     "status": "approved with a tweak — adaptive, not fixed (instruction + tool replies)",
+     "changed": [
+      "b9a6e96"
+     ],
+     "rerun": "p02-0010 pass; P02.j_simple pass (\"each assistant request asks for one or two items\"). p01-0011 pass in 5 messages (same as before): he gave several details at once and the assistant accepted them all.\n"
+    },
+    {
+     "id": "F2-regression",
+     "persona": "p01",
+     "check": "P01.optional_filled (soft)",
+     "found": "In p01-0011 (after F3) the optional fields were not asked: the save reply carried the optional line, but the assistant rewrote it as a two-item list and dropped it. The grandson volunteered the IFSC only.\n",
+     "expected": "Female|Widowed|Tileswar Gogoi|SBIN0003077",
+     "actual": "|||SBIN0003077",
+     "excerpt": "ASSISTANT: Dulumoni Gogoi is eligible (age 70). Please tell me: 1. Her village\n  2. Her bank account number\n",
+     "proposed_fix": "Put the optional ask inside the reply's bold action line, which the model keeps: \"Please send the **village and bank account number** (and, if known: gender, marital status, husband's name if widowed, IFSC)\", instead of a separate trailing line.\n",
+     "status": "applied, then hardened (the read-back names optional fields not given)",
+     "changed": [
+      "b9746c1",
+      "d836775"
+     ],
+     "rerun": "p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020; p15-0039: 'Your village / Your bank account number' only). After d836775: p01-0049 pass with all four optional fields (Female, Widowed, Tileswar Gogoi, SBIN0003077), the IFSC given after the read-back's \"optional, not given\" line; p02-0050 pass, the read-back offered them once and she replied yes.\n"
+    },
+    {
+     "id": "F5",
+     "persona": "p04",
+     "check": "G10 (hard)",
+     "found": "F1 regression on the two-applicant path. In the closing summary of two filings, the assistant computed each applicant's portal password from the date of birth and wrote the digits. No tool returned them; the instruction and how_to_check say not to.\n",
+     "expected": "the password described (\"date of birth written as DDMMYYYY\"), never the digits",
+     "actual": "turn 8: 02021950, 19071958",
+     "excerpt": "ASSISTANT: Both applications are filed: … To check status on the portal, use each\n  applicant's mobile number with the password written as their date of birth in\n  DDMMYYYY format. Jogen's is 02021950 and Rupa's is 19071958.\n",
+     "why_it_matters": "CSC counters are shared screens; the operator's chat holds two people's passwords.",
+     "proposed_fix": "(1) Put the password sentence in the submitted reply template itself (\"Portal login: mobile number + the applicant's date of birth as DDMMYYYY\"), so the model copies it instead of composing a summary. (2) Name the case in the instruction: \"never work out or write the password digits, also when summarising several applications\". G10 stays hard.\n",
+     "status": "applied",
+     "changed": [
+      "b9746c1"
+     ],
+     "rerun": "p04-0018 pass (5 messages, down from 8): G10 pass; the closing summary uses the template's password line, no digits.\n"
+    },
+    {
+     "id": "F6",
+     "persona": "p08",
+     "check": "observed in p08-0023 (the run itself failed on a persona-card issue)",
+     "found": "While her application SSP26968983 was pending, the assistant saved her corrected date of birth and her birth certificate into a draft for a new application, then described them as if they were on the filed application: the upload \"has arrived\" and the status check \"shows an age proof attached\" (that was the old document). The tools allowed draft writes on a number with an active application without saying so.\n",
+     "expected": "Say plainly that a filed application cannot be edited; the only way to correct it is to withdraw it (confirmed) and apply again; nothing saved now changes the filed one.\n",
+     "actual": "\"I have saved your corrected date of birth as 04/03/1963, but I cannot confirm that it changed application SSP26968983.\"",
+     "excerpt": "ASSISTANT: Your birth certificate has arrived. The upload tool shows it is attached,\n  and the status check for SSP26968983 shows an age proof attached and the application\n  still Pending.\n",
+     "why_it_matters": "She leaves believing her paper may have reached the filed application.",
+     "proposed_fix": "When the signed-in (or applicant) number already has an active application, save_application_details and get_document_upload_link say so in the reply (\"This number already has SSP… (Pending). Details and documents here are for a new application, which can be filed only after that one is withdrawn; they do not change SSP…\") and next_step says never to describe them as changing the filed application. The instruction gets one line: a filed application cannot be edited; to correct it, withdraw (with confirmation) and apply again.\n",
+     "status": "applied",
+     "changed": [
+      "bd77a7b"
+     ],
+     "rerun": "p08-0030 pass (5 messages): the first reply says \"The portal does not let me edit a filed application, so the only way to fix the date of birth is to withdraw this application and apply again\"; no draft before the plan; withdrew only after \"Yes, I confirm\". p07-0031 pass: existing application shown, no duplicate, no withdrawal.\n"
+    },
+    {
+     "id": "F7",
+     "persona": "p10, p01",
+     "check": "observed (P10.j_no_speculation passed; no check yet for relationships)",
+     "found": "(1) Window closed: the assistant said the portal \"won't accept new applications until it reopens\" and \"when it reopens, … come back to this chat\", implying a reopening no tool reported. (2) Relationships: the assistant guessed how the person is related to the applicant: \"your mother's Old Age Pension\" and \"your aunt's details\" for a grandson who wrote \"aita (grandmother)\".\n",
+     "expected": "(1) Only that the window closed on <date> and nothing can be filed now. (2) The applicant referred to by name, or by the word the person used; no guessed relationship.\n",
+     "actual": "\"…the portal won't accept new applications until it reopens.\" / \"I need your aunt's details\"",
+     "excerpt": "P10 ASSISTANT: The application window … closed on 01/10/2026 at 00:00 IST, and the\n  portal won't accept new applications until it reopens.\nP01 ASSISTANT: I can help with that. … I need your aunt's details\n",
+     "why_it_matters": "No-speculation is a stated rule; a wrong relationship in an official assistant reads as careless to a family at the counter.\n",
+     "proposed_fix": "Instruction and the closed-window replies/next_step: say only that the window closed on <date> and nothing can be filed now; never say or imply it will reopen or suggest coming back later. Instruction: refer to the applicant by name (or the word the person used); never guess a relationship.\n",
+     "status": "part (2) fixed; part (1) improved but still open: the first reply is now the exact sentence, but Haiku sometimes adds a line implying a future window\n",
+     "changed": [
+      "3436d28",
+      "9d121c9",
+      "2a25737"
+     ],
+     "rerun": "p01-0045 pass; P01.no_guessed_relation pass (re-scored after fixing the check's pattern, which had a YAML escape bug). p10-0046 FAIL P10.no_reopen_implied (turns 1, 2): \"please check with the Borgaon block office … for the next application period\", \"Ask the Borgaon block office when the next application period starts\", \"Keep your papers ready so you can apply quickly when it opens\". It does say \"I don't know when the window will open again\".\n",
+     "proposed_followup": "Give the model the sentence to use, as F5 did for the password: the closed-window replies end \"Nothing can be filed now, and I have no information about any future window.\" The instruction adds: do not mention a next window or period, do not suggest asking anyone about it, and do not advise preparing for one.\n",
+     "followup_rerun": "After 9d121c9 (one closed-window sentence) and 2a25737 (get_scheme_info's reply is that sentence alone, with a next_step to copy it): p10-0051 FAIL (paraphrased \"closed on 1 October 2026\"; \"please check with your Borgaon block office for the date\"); p10-0052 pass on substance (first reply exact: \"They closed on 01/10/2026 at 00:00 IST, so nothing can be filed now, and I have no information about any future application window\"; the check was refined to skip refusals echoing her words); p10-0053 FAIL (\"Once applications open again, you or someone helping you can start a new …\"). P10 passes P10.says_date and the no-speculation judge in all three.\n",
+     "open": "The model appends a helpful line about a future window in about two of three runs. Further text changes are unlikely to remove it with Haiku; options are to accept it as a known limit, or make the closed state end the conversation (no further help offered).\n"
+    },
+    {
+     "id": "F8",
+     "persona": "p15",
+     "check": "P15.row, P15.readback (hard)",
+     "found": "A 12-character IFSC read off the passbook (the seed's most common defect) is stored in the draft even though the portal will refuse it. The only way out is to clear it by sending ifsc as an empty string; Haiku sent malformed input ({\"ifsc\": }) eleven times, the submit was refused, and the conversation hit the 12-message cap with nothing filed.\n",
+     "expected": "PENDING|1958-11-05| (filed without the IFSC once he says \"leave it\")",
+     "actual": "nothing filed; 11 malformed save_application_details calls",
+     "excerpt": "PERSON: I don't know the right one, leave it.\nASSISTANT: I haven't been able to clear the IFSC code yet. My attempts to update the\n  record failed because the request was malformed on my side …\nPERSON: Can you submit with the bank account 60708090102 and leave out the IFSC?\nASSISTANT: I can't submit it yet. The portal needs the IFSC field cleared, and I still\n  can't clear it …\n",
+     "why_it_matters": "16.6% of the seed's IFSCs have this defect, so real passbooks will produce it; an optional field must never block a filing.\n",
+     "proposed_fix": "Treat an IFSC that fails the portal's format like other unreadable values: do not store it, report the problem (\"12 characters; it must be 11 — check the passbook, or leave it out\"), and keep the draft submittable without it. No clearing step is then needed. (An explicit clear_fields parameter is the alternative, but small models handle empty strings badly, as seen here.)\n",
+     "status": "applied, generalised (any value the portal would refuse is reported and not stored; optional fields clear with an explicit null)",
+     "changed": [
+      "d836775"
+     ],
+     "rerun": "p15-0048 pass (5 messages): \"the code you sent, UTBI0PUR2819, has 12 characters, but an IFSC has 11 … It wasn't saved … or skip it, since it's optional\"; filed without it (PENDING|1958-11-05|''). Scripted: a bad bank account keeps the earlier valid one; null clears the IFSC and leaves gender; an omitted field is untouched.\n"
+    },
+    {
+     "id": "F4",
+     "persona": "p02",
+     "check": "G8 (soft; at most 4 lines for this persona)",
+     "found": "Asked for village and block, the assistant listed all 19 villages by block (8 lines) to a 72-year-old answering in a few words. The list comes from get_scheme_info's villages_by_block.\n",
+     "expected": "at most 4 lines",
+     "actual": "turn 2: 8 lines",
+     "excerpt": "ASSISTANT: Lakhi Bora is eligible, aged 72. Please share the village and block. The\n  village should be from the list below if possible. - Sonari: Bhekulajan, … - Rajapara: …\n",
+     "proposed_fix": "Instruction: ask for the village only; the block is filled in for known villages. Never list the villages or blocks unless the person asks or the village is not recognised, and then only that one block's villages. Matching get_scheme_info next_step text.\n",
+     "status": "applied",
+     "changed": [
+      "b9746c1"
+     ],
+     "rerun": "p02-0022 and p01-0021 pass: no village list; 'Kathoni is saved, and its block (Dhemaji Pathar) was filled in automatically.' Unknown village (scripted check): 'I don't know the village Bamungaon. **Which block is it in?**', saved with the block. Still open (soft): P02.j_simple fails and replies run 5-7 lines against her 4.\n"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "rounds": [
+  {
+   "id": "dev-persona-by-persona",
+   "label": "Persona-by-persona development runs (Haiku simulator)",
+   "published": "2026-10-25T15:35:03+05:30",
+   "runs": 16,
+   "valid": 16,
+   "passed": 15,
+   "pass_rate": 0.938,
+   "commits": [
+    "1c36920",
+    "2e4baf1",
+    "73d38a1",
+    "850606d",
+    "9d6162c",
+    "a5931aa",
+    "b9746c1",
+    "bd77a7b",
+    "d836775",
+    "df48b08",
+    "e757d6b",
+    "f3dcd17"
+   ],
+   "simulator": [
+    "claude-haiku-5-5"
+   ],
+   "client": "claude-haiku-5-5"
+  }
+ ],
+ "headline": "dev-persona-by-persona"
+}

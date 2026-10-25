@@ -1,0 +1,87 @@
+{% extends "_eval_base.html" %}
+{% block title %}Eval dashboard{% endblock %}
+{% block body %}
+<h1>What we tested, and what passed</h1>
+<p>Sixteen invented people (twelve citizens or their helpers, four block-officer scenarios) talk to the
+assistant through a real MCP client. After each conversation the portal's own database, its SMS
+gateway and the transcript are checked against what should be true.</p>
+
+{% if head %}
+<h2>Summary</h2>
+<div class="card">
+  <div class="big">{{ head.passed }} / {{ head.valid }} passed</div>
+  <p class="muted">{{ head.label }}{% if head.invalid %} · {{ head.invalid }} invalid run(s) excluded{% endif %}{% if head.errors %} · {{ head.errors }} error(s){% endif %}</p>
+  <dl class="kv">
+    <dt>Runs</dt><dd>1 run per persona ({{ head.runs }} runs)</dd>
+    <dt>Client under test</dt><dd>Claude Code {{ head.claude_code or "" }} (<code>claude -p</code>), model <code>{{ head.client }}</code>, only the Sewa Setu MCP server, no other tools</dd>
+    <dt>Caps</dt><dd>up to 6 model turns per message; 4–20 messages per conversation depending on the persona (12 by default)</dd>
+    <dt>Simulated person</dt><dd>{% for s in head.simulator %}<code>{{ s }}</code>{% if not loop.last %}, {% endif %}{% endfor %} (also the judge)</dd>
+    <dt>Code</dt><dd>{% for c in head.commits %}<code>{{ c }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% if head.commits|length > 1 %} <span class="muted">(development runs, each on the commit current when it ran)</span>{% endif %}</dd>
+    <dt>Runs between</dt><dd>{{ head.first_run[:16]|replace("T", " ") }} and {{ head.last_run[:16]|replace("T", " ") }} IST</dd>
+    <dt>Published</dt><dd>{{ head.published[:16]|replace("T", " ") }} · <a href="/eval-dashboard/{{ head.id }}">all checks for this round</a></dd>
+  </dl>
+</div>
+{% else %}
+<p class="card">No round has been published yet.</p>
+{% endif %}
+
+<h2>The people</h2>
+<p class="muted">Each card links to the conversation and every check (expected vs actual).</p>
+<div class="grid">
+{% for p in personas %}{% set res = results.get(p.id) %}
+  <div class="card">
+    <h3>{{ p.id|upper }} · {{ p.name }}</h3>
+    <p><b>{{ p.title }}</b></p>
+    <p class="muted">{{ p.summary }}</p>
+    {% if p.talks %}<p><span class="muted">How they talk:</span> {{ p.talks }}</p>{% endif %}
+    <p><span class="muted">Why:</span> {{ p.why }}</p>
+    <p><span class="muted">Should end with:</span> {{ p.expected_end_state }}</p>
+    {% if res %}<p><span class="badge {{ res.outcome }}">{{ res.outcome }}</span>
+      {% if head %}<a href="/eval-dashboard/{{ head.id }}/{{ p.id }}">conversation and checks</a>{% endif %}</p>{% endif %}
+  </div>
+{% endfor %}
+</div>
+
+<h2>What the evals found, and what changed</h2>
+<p class="muted">Each finding: what went wrong → the commit that changed it → what the re-run showed. Findings
+are logged before the fix. Harness and persona-card mistakes are fixed without a finding.</p>
+{% for rnd in findings.rounds %}
+<h3 style="margin-top:16px">{{ rnd.label }}</h3>
+{% for f in rnd.findings %}
+<div class="card finding">
+  <p><b>{{ f.id }}</b> · <span class="muted">{{ f.persona }}{% if f.check %} · {{ f.check }}{% endif %}</span></p>
+  <p><span class="muted">Found:</span> {{ f.found }}</p>
+  {% if f.expected %}<p><span class="muted">Expected:</span> {{ f.expected }}<br><span class="muted">Actual:</span> {{ f.actual }}</p>{% endif %}
+  {% if f.excerpt %}<details><summary>transcript excerpt</summary><pre>{{ f.excerpt }}</pre></details>{% endif %}
+  <p><span class="muted">Changed:</span> {% if f.changed %}{% for c in f.changed %}<code>{{ c }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% else %}not yet{% endif %}
+    {% if f.status %}<span class="muted">· {{ f.status }}</span>{% endif %}</p>
+  {% if f.rerun %}<p><span class="muted">Re-run:</span> {{ f.rerun }}</p>{% endif %}
+  {% if f.followup_rerun %}<p><span class="muted">Follow-up:</span> {{ f.followup_rerun }}</p>{% endif %}
+  {% if f.open %}<p><span class="badge invalid">open</span> {{ f.open }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endfor %}
+
+{% if idx.rounds|length > 1 %}
+<h2>Published rounds</h2>
+<table class="tbl"><tr><th>Round</th><th>Passed</th><th>Simulator</th></tr>
+{% for r in idx.rounds|reverse %}<tr><td><a href="/eval-dashboard/{{ r.id }}">{{ r.label }}</a>{% if r.id == idx.headline %} <span class="badge pass">headline</span>{% endif %}</td>
+<td>{{ r.passed }} / {{ r.valid }}</td><td>{{ r.simulator|join(", ") }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h2>Method and limits</h2>
+<div class="card">
+<ul class="plain">
+  <li><b>Real client.</b> Each person's messages go to stock Claude Code in print mode with a small model, the way an evaluator's assistant would. Its only tools are the Sewa Setu MCP server's (8 citizen or 6 officer tools); every turn asserts that nothing else is loaded. No extra system prompt: the only guidance is the server's own instructions and tool texts.</li>
+  <li><b>Simulated people.</b> Another model plays each person from a written card (who they are, what they know, how they talk, what they do), seeing only what that person would see. A judge marks a run invalid if the person broke their card; invalid runs are shown, not counted.</li>
+  <li><b>Their hands.</b> Uploads and number verification happen on the portal's real pages, using only links the assistant showed in the chat. OTPs arrive on the simulated SMS gateway and are typed on the page; they never enter the chat (except where a persona deliberately pastes one, to test the assistant's refusal).</li>
+  <li><b>Checks are mostly the database.</b> SQL against the portal after the conversation (status, details, audit trail, documents by hash, nothing else changed), the SMS inbox, and transcript checks (no OTPs, no password digits, no month-first dates, links shown verbatim, decisions only on the officer's instruction, audit notes in the officer's words). A model judges only a few listed items, with its evidence shown.</li>
+  <li><b>Sign-in.</b> The harness signs each person in through the portal's real OAuth pages (OTP or the officer login) and hands the client a short-lived token. Claude Code's own sign-in to the deployed servers was checked by hand in Phase 0.</li>
+  <li><b>Where it ran.</b> A fresh local copy of the portal (the full seed, the deemed-approval job off so the 700 pending cases stay pending) on the same code as the deployment. Nothing is ever run against the live portal. P10 alone runs with the application window closed.</li>
+  <li><b>1 run per persona.</b> One run shows that a behaviour happened, not how often; small models vary from run to run. Development runs use a small model as the simulated person; the headline round uses a larger one.</li>
+  <li><b>Not tested here.</b> An evaluator's assistant may have extra tools (shell, web) ours does not; real phones and real SMS; several officers.</li>
+  <li><b>Soft checks</b> (reply length, emojis, optional details collected, some plain-language judgements) are reported but do not decide pass or fail.</li>
+</ul>
+</div>
+{% endblock %}
