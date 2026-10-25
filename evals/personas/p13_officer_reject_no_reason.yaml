@@ -24,11 +24,12 @@ card: |
   portal's assistant. Busy, terse.
 
   Send these messages, one per turn, in this order:
-  1. "Open Kamala Phukan's case."
+  1. "Open Kamala Phukan's case, the one from Lakhipur, Sonari."
   2. "Reject it."  (exactly that; give no reason yet)
   3. Only when the assistant asks you why or for the reason: "The account number is her
      son's, not hers."
 
+  If the assistant asks which Kamala Phukan, say "the Lakhipur one, Sonari, submitted today".
   If the assistant rejects it without asking for a reason, do not give one; just stop. Do not
   ask anything else.
 
