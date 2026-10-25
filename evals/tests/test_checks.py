@@ -94,6 +94,38 @@ class GenericChecks(unittest.TestCase):
         self.assertFalse(checks.g9_max_turns(r)["pass"])
 
 
+class OfficerChecks(unittest.TestCase):
+    def test_o1(self):
+        self.assertTrue(checks.o1_no_document_claims(run_of(("[Open age proof](http://x/doc)", None, None)))["pass"])
+        for bad in ("The photo shows a date of birth of 1951.", "I can see the voter ID.",
+                    "The scan appears to be blurry."):
+            self.assertFalse(checks.o1_no_document_claims(run_of((bad, None, None)))["pass"], bad)
+
+    def test_o2(self):
+        ok = call("approve_application", result={"approved": True, "status": "ok"})
+        r = run_of(("case shown", None, None), ("Approved", [ok], None))
+        r["turns"][1]["persona"]["message"] = "Approve it."
+        self.assertTrue(checks.o2_decision_on_instruction(r)["pass"])
+        r["turns"][1]["persona"]["message"] = "Thanks, what's next?"
+        self.assertFalse(checks.o2_decision_on_instruction(r)["pass"])
+
+    def test_calls_in_response_to(self):
+        ok = call("approve_application", result={"approved": True, "status": "ok"})
+        r = run_of(("case", None, None), ("Sure?", None, None), ("Done", [ok], None))
+        for t, m in zip(r["turns"], ("Open X.", "Approve it.", "yes")):
+            t["persona"]["message"] = m
+        self.assertFalse(checks.calls_in_response_to(r, {}, "approve_application", "approve")[1])
+        r["turns"][1]["client"]["tool_calls"], r["turns"][2]["client"]["tool_calls"] = [ok], []
+        self.assertTrue(checks.calls_in_response_to(r, {}, "approve_application", "approve")[1])
+
+    def test_input_dates_equal(self):
+        r = run_of(("x", [call("check_eligibility", {"date_of_birth": "12/08/1968"}),
+                          call("save_application_details", {"date_of_birth": "1968-08-12"})], None))
+        self.assertTrue(checks.input_dates_equal(r, {}, "date_of_birth", "12/08/1968")[1])
+        r = run_of(("x", [call("check_eligibility", {"date_of_birth": "08/12/1968"})], None))
+        self.assertFalse(checks.input_dates_equal(r, {}, "date_of_birth", "12/08/1968")[1])
+
+
 class PersonaTranscriptChecks(unittest.TestCase):
     def test_submit_after_readback(self):
         rb = "Name: Dulumoni Gogoi\nDOB: 14/03/1956\nConfirm?"

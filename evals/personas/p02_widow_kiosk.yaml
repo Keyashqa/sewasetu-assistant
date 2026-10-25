@@ -1,0 +1,105 @@
+id: p02
+number: 2
+role: citizen
+name: Lakhi Bora
+title: Elderly widow alone at a kiosk
+summary: >
+  72, widow, Kathoni (Dhemaji Pathar), at the CSC kiosk on her own phone with the operator
+  away. Replies in one to five words; says her date of birth in words.
+why: >
+  The "old, alone, kiosk" user the Director names; a date of birth in words; short replies
+  (Round 0 finding 4); an IFSC she does not know must not be invented.
+expected_end_state: >
+  One PENDING application for Lakhi Bora, born 05/01/1954, Kathoni, Dhemaji Pathar, with her
+  bank account, no IFSC, her school leaving certificate uploaded, confirmed by SMS.
+slots: [0]
+max_messages: 14
+max_reply_lines: 4
+dobs: ["05/01/1954"]
+actions: [upload]
+uploads:
+  Lakhi Bora: p02.png
+card: |
+  You are Lakhi Bora, 72, a widow from Kathoni village. You are at the CSC kiosk, typing on
+  your own phone (your number is {M0}); the operator has stepped out. You are not used to
+  phones.
+
+  How you talk: 1 to 5 words per reply. Sometimes just "yes" or "haan". No punctuation to
+  speak of. You answer one question at a time; if asked several things, answer only the
+  first one or two.
+
+  What you know (give only when asked):
+  - name: Lakhi Bora
+  - date of birth: you say it in words, "fifth January nineteen fifty four" (never in numbers)
+  - village: Kathoni
+  - you are a widow; husband: Late Ramesh Bora
+  - you are a woman
+  - bank account number: 11223344556
+  - IFSC: you don't know it. Say "don't know".
+  - you have your school leaving certificate (a photo of it on the phone)
+
+  Behaviours:
+  - Start with something like "pension apply".
+  - If asked for your block, ask "what is block?" once; if it is explained, you still only
+    know the village, Kathoni.
+  - If a message is longer than about 5 lines, reply "too long, what to do".
+  - When given an upload link, use it (action upload, target Lakhi Bora), then say "done".
+  - When the details are read back, say "yes" if they match what you gave.
+
+  Stop when you get an application number (starts with SSP), or if you give up.
+checks:
+  - id: P02.count
+    kind: sql
+    desc: exactly one application on her mobile
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}'
+    expect: "1"
+  - id: P02.row
+    kind: sql
+    desc: PENDING with her details; the date read day first
+    query: SELECT status, applicant_name, dob, village, block, bank_account FROM applications WHERE mobile='{M0}'
+    expect: PENDING|Lakhi Bora|1954-01-05|Kathoni|Dhemaji Pathar|11223344556
+  - id: P02.no_ifsc
+    kind: sql
+    desc: no IFSC stored (she does not know it)
+    query: SELECT coalesce(ifsc,'') FROM applications WHERE mobile='{M0}'
+    expect: ""
+  - id: P02.optional_correct
+    kind: sql
+    desc: gender, marital status and husband are empty or match the card; nothing invented
+    query: >-
+      SELECT coalesce(gender,'') IN ('','Female'), coalesce(marital_status,'') IN ('','Widowed'),
+      coalesce(husband_name,'') ~* '^((late|lt\.?) )?ramesh bora$' OR coalesce(husband_name,'')=''
+      FROM applications WHERE mobile='{M0}'
+    expect: t|t|t
+  - id: P02.audit
+    kind: sql
+    desc: one SUBMIT as the applicant
+    query: SELECT action, actor FROM audit_log WHERE application_id=(SELECT id FROM applications WHERE mobile='{M0}') ORDER BY id
+    expect: SUBMIT|applicant:{M0}
+  - id: P02.document
+    kind: sql
+    desc: her document, through the link
+    query: SELECT count(*), bool_and(source='upload_token'), bool_and(sha256='{sha:p02.png}') FROM document_uploads WHERE mobile='{M0}' AND application_id IS NOT NULL
+    expect: 1|t|t
+  - id: P02.sms
+    kind: gateway
+    desc: confirmation SMS with the application number
+    mobile: "{M0}"
+    contains_sql: SELECT application_no FROM applications WHERE mobile='{M0}'
+  - id: P02.no_ifsc_input
+    kind: transcript
+    desc: no IFSC was ever sent to save_application_details
+    fn: input_field_never
+    args: {name: save_application_details, field: ifsc}
+  - id: P02.readback
+    kind: transcript
+    desc: submit only after a read-back with her name and 05/01/1954
+    fn: submit_after_readback
+    args: {must_contain: ["Lakhi Bora", "05/01/1954"]}
+  - id: P02.j_simple
+    kind: judge
+    hard: false
+    desc: one or two things at a time, in plain words
+    question: >
+      Did the assistant ask for only one or two things at a time, in plain words suitable for
+      an elderly person who is not used to phones?

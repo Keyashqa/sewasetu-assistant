@@ -1,0 +1,76 @@
+id: p12
+number: 12
+role: officer
+name: Rupjyoti Bora
+title: "Officer: what's waiting, open a case, approve"
+summary: >
+  Block Development Officer, Sonari, signed in as admin. Asks what is waiting, opens one
+  case by name, approves it with a note in her own words.
+why: >
+  The Director's "see what is waiting, look at a case, approve"; one approve call, no repeated
+  confirmation, the officer's words only in the audit trail (amendments 12, 13, 15).
+expected_end_state: >
+  The fixture case is APPROVED by admin via the assistant, the audit note is exactly the
+  officer's note, the applicant gets the approval SMS, and nothing else in the queue changes.
+slots: [50]
+max_messages: 6
+setup:
+  - kind: officer-pending
+    as: FIX
+    args: [--mobile, "{M50}", --name, Eval Sarbeswar Dutta, --dob, 11/11/1951, --village, Lakhipur]
+dobs: ["11/11/1951"]
+card: |
+  You are Rupjyoti Bora, Block Development Officer of Sonari block, signed in to the pension
+  portal's assistant. You are busy, terse and bureaucratic. You do not know application ids;
+  you ask by name.
+
+  Send exactly these three messages, one per turn, in this order (same meaning, your own
+  short words are fine, but keep the note text exactly):
+  1. "What's waiting for me today?"
+  2. "Open Sarbeswar Dutta's application."
+  3. "Approve it. Put a note: voter ID seen in original at the counter."
+
+  If the assistant asks you something before you have sent all three, answer briefly and
+  then continue with the next message. Do not ask anything else.
+
+  Stop after the assistant replies to message 3.
+checks:
+  - id: P12.status
+    kind: sql
+    desc: the case is approved, by admin
+    query: SELECT status, decided_by FROM applications WHERE id={FIX.id}
+    expect: APPROVED|admin
+  - id: P12.audit
+    kind: sql
+    desc: one APPROVED audit row, via the assistant, with the officer's note (case and trailing punctuation ignored)
+    query: >-
+      SELECT action, actor, lower(rtrim(trim(both '"' from note), '. ')) FROM audit_log
+      WHERE application_id={FIX.id} AND action='APPROVED'
+    expect: "APPROVED|officer:admin via assistant|voter id seen in original at the counter"
+  - id: P12.no_other_decisions
+    kind: sql
+    desc: no other application was approved or rejected
+    query: >-
+      SELECT count(*) FROM audit_log WHERE at >= '{T0}' AND action IN ('APPROVED','REJECTED')
+      AND application_id <> {FIX.id} AND application_id <= 100000
+    expect: "0"
+  - id: P12.queue
+    kind: sql
+    desc: the seed's 700 pending are untouched
+    query: SELECT count(*) FROM applications WHERE status='PENDING' AND id<=100000
+    expect: "700"
+  - id: P12.sms
+    kind: gateway
+    desc: the approval SMS reached the applicant
+    mobile: "{M50}"
+    contains: "{FIX.application_no} has been approved"
+  - id: P12.one_approve
+    kind: transcript
+    desc: exactly one approve_application, in the response to the approve message (no confirmation round)
+    fn: calls_in_response_to
+    args: {name: approve_application, message_pattern: "approve"}
+  - id: P12.doc_link
+    kind: transcript
+    desc: opening the case shows the officer's document link
+    fn: text_in_response_to
+    args: {message_pattern: "open", pattern: "/admin/application/{FIX.id}/document"}
