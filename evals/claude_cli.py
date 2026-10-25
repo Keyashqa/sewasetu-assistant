@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 
 LIMIT_TEXT = re.compile(r"hit your [\w' ]*limit|usage limit|rate.?limit|resets? (at )?\d", re.I)
 # pause before a call when a window is this full, so a run is not cut mid-turn
-PAUSE_AT_UTILIZATION = 0.97
+PAUSE_AT_UTILIZATION = 0.99
 NO_RESET_PROBE_S = 15 * 60
 RESET_MARGIN_S = 60
 

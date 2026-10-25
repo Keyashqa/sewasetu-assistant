@@ -229,7 +229,7 @@ Verified in step 1 (25/10/2026, 2.1.310, local stack at `f35f3c1`):
   This is §3.4's primary signal. The error text is composed at run time ("You've hit your …
   limit", "usage limit reached", "resets …") and is only the fallback.
   `evals/tests/test_claude_cli.py` covers both. The harness also pauses *before* a call when
-  a window is at 97% or more.
+  a window (5-hour or weekly) is at 99% or more.
 - Each client run's auto-memory directory is `~/.claude/projects/<mangled tmp path>/memory/`,
   fresh per run. `claude purge <tmp> -y` deletes that project's transcripts and memory and
   nothing else.
@@ -334,7 +334,8 @@ Every `claude -p` call goes through `claude_cli.py`:
   not retried.
 - **Pause.** Sleep until the rejected window's `resetsAt` plus 60 s. If no reset time is
   known, probe every 15 min with a one-word Haiku call. The harness also pauses *before* a
-  call when a window's utilization is at 97% or more, so a conversation is not cut mid-turn.
+  call when a window's utilization (5-hour or weekly) is at 99% or more; a call refused
+  below that is still caught by the pause-and-retry path.
   Pauses are capped at 6 h each; a weekly limit beyond that ends the
   round as `partial`, with the reason recorded.
 - **Retry the same call.** The client turn is retried with the same `--resume` session id
