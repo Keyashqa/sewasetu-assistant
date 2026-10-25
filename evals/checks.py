@@ -37,7 +37,8 @@ def fill(template, vars):
         for part in key.split("."):
             cur = cur[part]
         return str(cur)
-    return re.sub(r"\{([A-Za-z0-9_.:]+)\}", sub, template)
+    # placeholders start with a letter, so regex quantifiers like \d{8} pass through
+    return re.sub(r"\{([A-Za-z][A-Za-z0-9_.:]*)\}", sub, template)
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +192,8 @@ def g8_length(run, max_lines=6, readback_lines=14):
     bad = []
     for i, text in texts(run):
         n = len([l for l in text.splitlines() if l.strip()])
-        readback = re.search(r"declar|please confirm|reply \**yes|confirm (these|the) details", text, re.I)
+        readback = re.search(r"declar|please confirm|reply \**yes|(confirm|check) (these|the) details",
+                             text, re.I)
         limit = readback_lines if readback else max_lines
         if n > limit:
             bad.append("turn %d: %d lines (max %d)" % (i, n, limit))

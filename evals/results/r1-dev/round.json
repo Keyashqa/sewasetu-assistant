@@ -344,10 +344,162 @@
    },
    "started": "2026-10-25T12:18:43+05:30",
    "ended": "2026-10-25T12:20:41+05:30"
+  },
+  {
+   "persona": "p04",
+   "run": 1,
+   "run_counter": 12,
+   "outcome": "fail",
+   "failed_hard": [
+    "G10"
+   ],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p04-0012.json",
+   "totals": {
+    "persona_messages": 8,
+    "client_turns": 23,
+    "tool_calls": 15,
+    "cost_usd_equiv": 0.0186,
+    "duration_s": 170,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:23:37+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:26:32+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T12:23:32+05:30",
+   "ended": "2026-10-25T12:26:27+05:30"
+  },
+  {
+   "persona": "p05",
+   "run": 1,
+   "run_counter": 13,
+   "outcome": "error",
+   "failed_hard": null,
+   "error": "'8'\nTraceback (most recent call last):\n  File \"K:\\TechY\\b4b\\sewasetu-ai-handout\\evals\\runner.py\", line 181, in run_persona\n    cs += checks.persona_checks([c for c in persona.get(\"checks\", []) if c[\"kind\"] != \"judge\"], rec, vars)\n          ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\TechY\\b4b\\sewasetu-ai-handout\\evals\\checks.py\", line 426, in persona_checks\n    actual, ok = TRANSCRIPT[c[\"fn\"]](run, vars, **(c.get(\"args\") or {}))\n                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\TechY\\b4b\\sewasetu-ai-handout\\evals\\checks.py\", line 239, in text_matches\n    rx = re.compile(fill(pattern, vars), re.I)\n                    ~~~~^^^^^^^^^^^^^^^\n  File \"K:\\TechY\\b4b\\sewasetu-ai-handout\\evals\\checks.py\", line 40, in fill\n    return re.sub(r\"\\{([A-Za-z0-9_.:]+)\\}\", sub, template)\n           ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Program Files\\Python313\\Lib\\re\\__init__.py\", line 208, in sub\n    return _compile(pattern, flags).sub(repl, string, count)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\TechY\\b4b\\sewasetu-ai-handout\\evals\\checks.py\", line 38, in sub\n    cur = cur[part]\n          ~~~^^^^^^\nKeyError: '8'\n",
+   "path": "evals\\results\\r1-dev\\runs\\p05-0013.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 10,
+    "tool_calls": 5,
+    "cost_usd_equiv": 0.0072,
+    "duration_s": 93,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:23:37+05:30",
+     "probe_cost_usd_equiv": 0.00060589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:25:14+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T12:23:32+05:30",
+   "ended": "2026-10-25T12:25:09+05:30"
+  },
+  {
+   "persona": "p06",
+   "run": 1,
+   "run_counter": 14,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p06-0014.json",
+   "totals": {
+    "persona_messages": 10,
+    "client_turns": 20,
+    "tool_calls": 10,
+    "cost_usd_equiv": 0.0157,
+    "duration_s": 169,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:23:36+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.48,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.07,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T12:26:29+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T12:23:32+05:30",
+   "ended": "2026-10-25T12:26:25+05:30"
   }
  ],
- "ended": "2026-10-25T12:20:52+05:30",
- "commit": "b9a6e96",
+ "ended": "2026-10-25T12:26:36+05:30",
+ "commit": "73d38a1",
  "dirty": true,
  "claude_code": "2.1.310",
  "models": {
@@ -359,18 +511,18 @@
   "max_turns_per_message": 6
  },
  "runs_per_persona": 1,
- "parallel": 2,
+ "parallel": 3,
  "fresh_stack": true,
  "partial": true,
  "summary": {
-  "runs": 8,
-  "valid_runs": 7,
-  "passed": 6,
-  "pass_rate": 0.857,
+  "runs": 11,
+  "valid_runs": 9,
+  "passed": 7,
+  "pass_rate": 0.778,
   "invalid": 1,
-  "errors": 0,
-  "cost_usd_equiv": 0.0745,
-  "duration_s": 816,
+  "errors": 1,
+  "cost_usd_equiv": 0.116,
+  "duration_s": 1248,
   "paused_s": 0
  },
  "pauses": [],
@@ -389,15 +541,15 @@
   },
   "last_after": {
    "five_hour": {
-    "utilization": 0.46,
+    "utilization": 0.48,
     "resets_at": "2026-10-25T15:20:00+05:30"
    },
    "seven_day": {
-    "utilization": 0.06,
+    "utilization": 0.07,
     "resets_at": "2026-11-01T06:30:00+05:30"
    },
-   "at": "2026-10-25T12:20:44+05:30",
-   "probe_cost_usd_equiv": 0.00060709
+   "at": "2026-10-25T12:26:29+05:30",
+   "probe_cost_usd_equiv": 0.0006062900000000001
   }
  },
  "batches": [
@@ -464,6 +616,39 @@
     },
     "at": "2026-10-25T12:20:52+05:30",
     "probe_cost_usd_equiv": 0.00060669
+   }
+  },
+  {
+   "personas": [
+    "p04",
+    "p05",
+    "p06"
+   ],
+   "started": "2026-10-25T12:23:04+05:30",
+   "ended": "2026-10-25T12:26:36+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.07,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T12:23:32+05:30",
+    "probe_cost_usd_equiv": 0.0006062900000000001
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.48,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.07,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T12:26:36+05:30",
+    "probe_cost_usd_equiv": 0.00060709
    }
   }
  ]

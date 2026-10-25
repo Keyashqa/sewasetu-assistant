@@ -139,6 +139,7 @@ class PersonaTranscriptChecks(unittest.TestCase):
 
     def test_fill(self):
         self.assertEqual(checks.fill("x {M0} {FIX.id}", {"M0": "98", "FIX": {"id": 7}}), "x 98 7")
+        self.assertEqual(checks.fill(r"SSP\d{8} {M0}", {"M0": "98"}), r"SSP\d{8} 98")
 
 
 if __name__ == "__main__":
