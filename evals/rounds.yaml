@@ -112,9 +112,10 @@ rounds:
           Put the optional ask inside the reply's bold action line, which the model keeps: "Please
           send the **village and bank account number** (and, if known: gender, marital status,
           husband's name if widowed, IFSC)", instead of a separate trailing line.
-        status: proposed (not applied)
-        changed: []
-        rerun: null
+        status: applied
+        changed: [b9746c1]
+        rerun: >
+          p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020 asked it only alongside the upload link).
       - id: F5
         persona: p04
         check: G10 (hard)
@@ -135,9 +136,10 @@ rounds:
           instead of composing a summary. (2) Name the case in the instruction: "never work out
           or write the password digits, also when summarising several applications". G10 stays
           hard.
-        status: proposed (not applied)
-        changed: []
-        rerun: null
+        status: applied
+        changed: [b9746c1]
+        rerun: >
+          p04-0018 pass (5 messages, down from 8): G10 pass; the closing summary uses the template's password line, no digits.
       - id: F4
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)
@@ -155,6 +157,7 @@ rounds:
           Never list the villages or blocks unless the person asks or the village is not
           recognised, and then only that one block's villages. Matching get_scheme_info
           next_step text.
-        status: proposed (not applied)
-        changed: []
-        rerun: null
+        status: applied
+        changed: [b9746c1]
+        rerun: >
+          p02-0022 and p01-0021 pass: no village list; 'Kathoni is saved, and its block (Dhemaji Pathar) was filled in automatically.' Unknown village (scripted check): 'I don't know the village Bamungaon. **Which block is it in?**', saved with the block. Still open (soft): P02.j_simple fails and replies run 5-7 lines against her 4.
