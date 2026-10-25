@@ -46,6 +46,11 @@ def _round(rid):
     return r
 
 
+def _challenges():
+    """Every finding from findings.json as one flat list (visitors see no rounds)."""
+    return [f for rnd in (_load("findings.json") or {}).get("rounds", []) for f in rnd.get("findings", [])]
+
+
 @eval_dashboard.get("/eval-dashboard")
 def index():
     idx = _load("index.json") or {"rounds": []}
@@ -53,15 +58,14 @@ def index():
     personas = _load("personas.json") or []
     results = {p["persona"]: p for p in (head or {}).get("personas", [])}
     return render_template("eval_dashboard.html", idx=idx, head=head, personas=personas,
-                           results=results, findings=_load("findings.json") or {"rounds": []})
+                           results=results, challenges=_challenges())
 
 
 @eval_dashboard.get("/eval-dashboard/<rid>")
 def round_view(rid):
     r = _round(rid)
     personas = {p["id"]: p for p in (_load("personas.json") or [])}
-    return render_template("eval_round.html", r=r, personas=personas,
-                           findings=_load("findings.json") or {"rounds": []},
+    return render_template("eval_round.html", r=r, personas=personas, challenges=_challenges(),
                            rounds=(_load("index.json") or {}).get("rounds", []))
 
 
@@ -82,6 +86,15 @@ def _dmy(iso):
     """2026-10-25T15:52:25+05:30 -> 25/10/2026 (never month-first)."""
     y, m, d = (iso or "")[:10].split("-") if len(iso or "") >= 10 else ("", "", "")
     return "%s/%s/%s" % (d, m, y) if y else ""
+
+
+@eval_dashboard.app_template_filter("public")
+def _public(text):
+    """Visitor wording for harness text: no finding ids, rounds or "persona"."""
+    if not isinstance(text, str):
+        return text
+    text = re.sub(r"\s*\(F\d\)", "", text).replace("this round", "this run")
+    return re.sub(r"\b([Pp])ersona", lambda m: m.group(1) + "erson", text)
 
 
 @eval_dashboard.app_template_filter("pjson")

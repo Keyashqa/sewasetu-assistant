@@ -25,20 +25,23 @@
 {% endfor %}
 </div>
 
-<h2>What the evals found</h2>
-{% for rnd in findings.rounds %}
-<div class="round">{{ rnd.label }}</div>
+<h2 id="challenges">Challenges found and fixed</h2>
+{% for area, label in [("citizen", "Citizen assistant"), ("officer", "Officer assistant")] %}
+{% set items = challenges|selectattr("area", "equalto", area)|list %}
+{% if items %}
+<div class="round">{{ label }}</div>
 <div class="rows">
-{% for f in rnd.findings %}
+{% for f in items %}
   <div class="row">
-    <p><b>{{ f.title or f.id }}</b></p>
+    <p><b>{{ f.title }}</b></p>
     <div class="meta">
-      {% if f.result %}<span class="badge {{ 'limit' if f.result == 'known limit' else 'fixed' }}">{{ f.result|capitalize }}</span>{% endif %}
-      <span>{% for c in f.changed or [] %}<code>{{ c }}</code>{% if not loop.last %} {% endif %}{% endfor %}</span>
+      <span class="badge {{ 'limit' if f.result == 'known limit' else 'fixed' }}">{{ (f.result or "fixed")|capitalize }}</span>
+      <span>{% for c in f.changed or [] %}<a class="commit" href="https://github.com/Keyashqa/sewasetu-assistant/commit/{{ c }}" target="_blank" rel="noopener noreferrer"><code>{{ c }}</code></a>{% if not loop.last %} {% endif %}{% endfor %}</span>
     </div>
-    <p class="muted">{{ f.line or f.found }}</p>
+    <p class="muted">{{ f.line }}</p>
   </div>
 {% endfor %}
 </div>
+{% endif %}
 {% endfor %}
 {% endblock %}

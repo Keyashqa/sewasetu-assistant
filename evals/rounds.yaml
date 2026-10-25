@@ -8,6 +8,7 @@ rounds:
     source: docs/phase0-test-log.md
     findings:
       - id: R0-1
+        area: citizen
         title: "Refused helpers"
         line: "Would not file for a grandmother from her grandson's phone."
         persona: grandson filing for his grandmother (S1)
@@ -15,6 +16,7 @@ rounds:
         changed: [13f489e]
         rerun: S1-S7 pass with Haiku.
       - id: R0-2
+        area: officer
         title: "Chose its own rejection reason"
         line: "Picked a reason itself and recorded its own view of the document."
         persona: officer, "Reject it." with no reason (S11)
@@ -22,6 +24,7 @@ rounds:
         changed: [7110034, d99938c]
         rerun: S11 passes; the reason and a verbatim officer quote are recorded.
       - id: R0-3
+        area: officer
         title: "Investigated instead of reporting"
         line: "The officer assistant fraud-checked documents it was not asked to."
         persona: officer reviewing cases
@@ -29,6 +32,7 @@ rounds:
         changed: [44247a7, 781aad3, a5f7e62]
         rerun: covered by check scripts; re-tested in Phase 1 (P12-P16).
       - id: R0-4
+        area: citizen
         title: "Replies too long"
         line: "Too long for older users reading on a phone."
         persona: all
@@ -40,6 +44,7 @@ rounds:
     label: Round 1 — one conversation per person
     findings:
       - id: F1
+        area: citizen
         title: "Password digits in the chat"
         line: "After submitting, it wrote out the portal password."
         result: fixed
@@ -63,6 +68,7 @@ rounds:
           p01-0006 pass. G10 pass; the assistant wrote: log in "with that mobile number and the
           password 'her date of birth written as DDMMYYYY'".
       - id: F2
+        area: citizen
         title: "Optional details never asked"
         line: "Gender, marital status, husband's name and IFSC were skipped."
         result: fixed
@@ -86,6 +92,7 @@ rounds:
           from the save reply) without insisting. The person gave the IFSC but not gender or
           marital status (simulator choice), so P01.optional_filled (soft) is |||SBIN0003077.
       - id: F3
+        area: citizen
         title: "Too many questions at once"
         line: "Asked a 72-year-old for seven details in one message."
         result: fixed
@@ -93,8 +100,7 @@ rounds:
         check: P02.j_simple (soft judge)
         found: >
           For a 72-year-old alone at a kiosk who answers one thing at a time, the assistant asked
-          for three required details plus four optional ones in one message (check_eligibility's
-          reply after F2). She answered two; the bank account needed a second ask.
+          for three required details plus four optional ones in one message (check_eligibility's reply after the optional-details fix). She answered two; the bank account needed a second ask.
         expected: one or two things at a time, in plain words
         actual: 'judge fail: "asked for one thing at a time in some turns, but not consistently"'
         excerpt: |
@@ -102,10 +108,10 @@ rounds:
             village and bank account number. If known, also send gender, marital status,
             husband's name (if widowed) and IFSC code. These optional details can be left out.
           PERSON: Lakhi Bora. Kathoni
-        why_it_matters: The Director's users are old and at kiosks; F2 made the first ask longer.
+        why_it_matters: The Director's users are old and at kiosks; the optional-details fix made the first ask longer.
         proposed_fix: >
           check_eligibility's reply asks only for "full name and village". The save reply then
-          asks for the bank account, with the optional line once (F2 keeps holding: optional
+          asks for the bank account, with the optional line once (optional details keep holding: optional
           details asked once, alongside a required one). At most two required things per message.
         status: approved with a tweak — adaptive, not fixed (instruction + tool replies)
         changed: [b9a6e96]
@@ -114,13 +120,14 @@ rounds:
           p01-0011 pass in 5 messages (same as before): he gave several details at once and the
           assistant accepted them all.
       - id: F2-regression
+        area: citizen
         title: "Optional details dropped again"
         line: "It reworded the reply and lost the optional ask."
         result: fixed
         persona: p01
         check: P01.optional_filled (soft)
         found: >
-          In p01-0011 (after F3) the optional fields were not asked: the save reply carried the
+          In a later run (after the one-at-a-time fix) the optional fields were not asked: the save reply carried the
           optional line, but the assistant rewrote it as a two-item list and dropped it. The
           grandson volunteered the IFSC only.
         expected: Female|Widowed|Tileswar Gogoi|SBIN0003077
@@ -140,13 +147,14 @@ rounds:
           SBIN0003077), the IFSC given after the read-back's "optional, not given" line; p02-0050
           pass, the read-back offered them once and she replied yes.
       - id: F5
+        area: citizen
         title: "Passwords for two applicants"
         line: "In a two-person summary it worked out both passwords."
         result: fixed
         persona: p04
         check: G10 (hard)
         found: >
-          F1 regression on the two-applicant path. In the closing summary of two filings, the
+          The password leak came back on the two-applicant path. In the closing summary of two filings, the
           assistant computed each applicant's portal password from the date of birth and wrote
           the digits. No tool returned them; the instruction and how_to_check say not to.
         expected: the password described ("date of birth written as DDMMYYYY"), never the digits
@@ -160,13 +168,13 @@ rounds:
           (1) Put the password sentence in the submitted reply template itself ("Portal login:
           mobile number + the applicant's date of birth as DDMMYYYY"), so the model copies it
           instead of composing a summary. (2) Name the case in the instruction: "never work out
-          or write the password digits, also when summarising several applications". G10 stays
-          hard.
+          or write the password digits, also when summarising several applications". The no-password-digits check stays hard.
         status: applied
         changed: [b9746c1]
         rerun: >
           p04-0018 pass (5 messages, down from 8): G10 pass; the closing summary uses the template's password line, no digits.
       - id: F6
+        area: citizen
         title: "Implied a filed application changed"
         line: "Described new details as if they changed a pending application."
         result: fixed
@@ -203,6 +211,7 @@ rounds:
           application and apply again"; no draft before the plan; withdrew only after "Yes, I
           confirm". p07-0031 pass: existing application shown, no duplicate, no withdrawal.
       - id: F7
+        area: citizen
         title: "Guessed relationships; hinted at reopening"
         line: "Relationship guesses fixed; when closed, it sometimes mentions a future window."
         result: known limit
@@ -219,9 +228,9 @@ rounds:
           applicant referred to by name, or by the word the person used; no guessed relationship.
         actual: '"…the portal won''t accept new applications until it reopens." / "I need your aunt''s details"'
         excerpt: |
-          P10 ASSISTANT: The application window … closed on 01/10/2026 at 00:00 IST, and the
+          ASSISTANT (window closed): The application window … closed on 01/10/2026 at 00:00 IST, and the
             portal won't accept new applications until it reopens.
-          P01 ASSISTANT: I can help with that. … I need your aunt's details
+          ASSISTANT (grandson): I can help with that. … I need your aunt's details
         why_it_matters: >
           No-speculation is a stated rule; a wrong relationship in an official assistant reads
           as careless to a family at the counter.
@@ -242,7 +251,7 @@ rounds:
           ready so you can apply quickly when it opens". It does say "I don't know when the window
           will open again".
         proposed_followup: >
-          Give the model the sentence to use, as F5 did for the password: the closed-window
+          Give the model the sentence to use, as was done for the password: the closed-window
           replies end "Nothing can be filed now, and I have no information about any future
           window." The instruction adds: do not mention a next window or period, do not suggest
           asking anyone about it, and do not advise preparing for one.
@@ -256,10 +265,10 @@ rounds:
           ("Once applications open again, you or someone helping you can start a new …").
           P10 passes P10.says_date and the no-speculation judge in all three.
         known_limit: >
-          Accepted 25/10/2026 as a known limit of the closed-window path (tested locally by
-          P10, which runs with the window closed): the first reply is the exact sentence, but
+          Accepted 25/10/2026 as a known limit of the closed-window path (tested locally with the window closed): the first reply is the exact sentence, but
           the model sometimes appends a line about a future window. No further fix planned.
       - id: F8
+        area: citizen
         title: "A bad IFSC blocked filing"
         line: "A 12-character IFSC got stuck in the draft; nothing was filed."
         result: fixed
@@ -297,6 +306,7 @@ rounds:
           (PENDING|1958-11-05|''). Scripted: a bad bank account keeps the earlier valid one; null
           clears the IFSC and leaves gender; an omitted field is untouched.
       - id: F4
+        area: citizen
         title: "Listed every village"
         line: "Sent all 19 villages to an elderly user; now asks for the village only."
         result: fixed

@@ -61,8 +61,9 @@ summary{cursor:pointer;color:var(--blue);font-weight:600}
 .assistant{background:var(--card);border:1px solid var(--line);margin-left:6%}
 .msg pre{font-family:inherit;font-size:16px}
 .phone{color:var(--muted);font-size:15px;font-style:italic;margin:8px 0 8px 4px}
-.tool{background:#f7f8fa;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;margin:4px 0;font-size:13px}
-.tool summary{font-weight:400}
+.tool{padding:0 4px;margin:2px 0;font-size:13px;color:var(--muted)}
+.tool summary{font-weight:400;color:var(--muted)}
+.tool[open]{background:#f7f8fa;border-radius:6px;padding:4px 8px}
 ul.plain{padding-left:20px;margin:6px 0} ul.plain li{margin:6px 0}
 @media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.grid{grid-template-columns:1fr}.big{font-size:36px}.hero{padding:18px}
