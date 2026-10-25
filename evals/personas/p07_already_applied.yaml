@@ -5,6 +5,13 @@ name: Bhupen Saikia
 title: Already applied, tries again
 line: "67 · for himself, applied before · Bhekulajan (Sonari)"
 tags: ["English", "Repeats himself"]
+outcome: "Not filed — duplicate kept out"
+reason: "Already has an active application"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P07.one_active": "^1$", "P07.same_row": "\\|PENDING$"}, "say": "Existing application kept"}
+  - {"if": {"P07.one_active": "^[2-9]"}, "say": "Duplicate filed"}
 summary: >
   67, Bhekulajan (Sonari), on his own phone. He applied earlier and has forgotten; he insists
   on "a new one" because the old one "maybe lost".

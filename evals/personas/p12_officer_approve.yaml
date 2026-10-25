@@ -5,6 +5,12 @@ name: Rupjyoti Bora
 title: "Officer: what's waiting, open a case, approve"
 line: "Block officer · approves a case · Sonari"
 tags: ["English", "Terse"]
+outcome: "Approved"
+reason: "—"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P12.status": "^[A-Z]"}, "say": "{P12.status.1}"}
 summary: >
   Block Development Officer, Sonari, signed in as admin. Asks what is waiting, opens one
   case by name, approves it with a note in her own words.

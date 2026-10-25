@@ -49,6 +49,9 @@ a{color:var(--blue)}
 .tbl th{background:#eef1f4}
 .tbl th:first-child,.tbl td:first-child{min-width:92px;overflow-wrap:normal;word-break:normal}
 .scroll{overflow-x:auto}
+.small{font-size:12px;color:var(--muted);white-space:nowrap}
+.people td:nth-child(5){white-space:nowrap}
+.people td:first-child{width:30%}
 code,pre{font-family:ui-monospace,Consolas,monospace;font-size:13px}
 pre{white-space:pre-wrap;word-break:break-word;margin:4px 0}
 details{margin:12px 0}
@@ -70,6 +73,13 @@ ul.plain{padding-left:20px;margin:6px 0} ul.plain li{margin:6px 0}
 @media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.grid{grid-template-columns:1fr}.big{font-size:36px}.hero{padding:18px}
   .person{margin-right:0}.assistant{margin-left:0}
+  .people,.people tbody,.people tr,.people td{display:block;width:auto}
+  .people thead{display:none}
+  .people{background:none;border:0}
+  .people tr{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 12px}
+  .people td,.people td:first-child{border:0;padding:3px 0;width:auto;min-width:0}
+  .people td:not(:first-child)::before{content:attr(data-label);display:inline-block;min-width:112px;font-size:12px;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
   .row{grid-template-columns:1fr}.row .meta{grid-row:auto;order:3;text-align:left;flex-direction:row;align-items:center;flex-wrap:wrap}}
 </style>
 </head>

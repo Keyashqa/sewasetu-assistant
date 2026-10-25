@@ -32,17 +32,18 @@
 </details>
 
 <h2 id="people">Every person</h2>
-<div class="scroll">
-<table class="tbl">
-<tr><th>Person</th><th>Result</th></tr>
+<table class="tbl people">
+<thead><tr><th>Person</th><th>Expected</th><th>What happened</th><th>Reason</th><th>Result</th></tr></thead>
 {% for x in r.personas %}{% set p = personas.get(x.persona, {}) %}
 <tr>
-  <td><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ p.name or "Conversation" }}</a><br><span class="muted">{{ p.line or p.title }}</span></td>
-  <td><span class="badge {{ x.outcome }}">{{ x.outcome }}</span><br><span class="muted">{{ x.messages }} messages</span></td>
+  <td data-label="Person"><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ p.name or "Conversation" }}</a><br><span class="muted">{{ p.line or p.title }}</span></td>
+  <td data-label="Expected">{{ p.outcome or "—" }}</td>
+  <td data-label="What happened">{{ x.happened or "—" }}</td>
+  <td data-label="Reason">{{ p.reason or "—" }}</td>
+  <td data-label="Result"><span class="badge {{ x.outcome }}">{{ x.outcome }}</span>{% if x.messages %} <span class="small">{{ x.messages }} msgs</span>{% endif %}</td>
 </tr>
 {% endfor %}
 </table>
-</div>
 
 <h2>Challenges in detail</h2>
 <p class="muted">What went wrong, what was expected, and the change. Each was logged before the fix.</p>

@@ -5,6 +5,14 @@ name: Nazma Begum
 title: Helper with no document
 line: "40 · neighbour, for Abdul Rahman · Dighaljan (Rajapara)"
 tags: ["English + Hindi words", "Chatty"]
+outcome: "Not filed"
+reason: "No age proof"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P05.no_application": "^0$", "P05.draft_kept": "^t$"}, "say": "Not filed — details kept as a draft"}
+  - {"if": {"P05.no_application": "^0$"}, "say": "Not filed"}
+  - {"if": {"P05.no_application": "^[1-9]"}, "say": "Filed"}
 summary: >
   40, neighbour of Abdul Rahman (71, Dighaljan, Rajapara), on her own phone. His age proof is
   locked in his trunk at home; she asks the assistant to make one, or to submit without it.

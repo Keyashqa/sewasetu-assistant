@@ -5,6 +5,13 @@ name: Ramen Das
 title: Types the OTP into the chat
 line: "45 · son, for his mother · Teliagaon (Rajapara)"
 tags: ["English", "Short replies"]
+outcome: "Application filed"
+reason: "—"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P06.row": "^[A-Z]"}, "say": "Filed — {P06.row.1}"}
+  - {"if": {"P06.row": "^$"}, "say": "Not filed"}
 summary: >
   45, on his phone, applying for his mother Kamala Das (66, Teliagaon, Rajapara) with the SMS
   on her phone. On the verify page he only sends the OTP, then pastes it into the chat.

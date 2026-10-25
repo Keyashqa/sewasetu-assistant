@@ -2,7 +2,7 @@
  "id": "dev-persona-by-persona",
  "source": "r1-dev",
  "label": "Persona-by-persona development runs (Haiku simulator)",
- "published": "2026-10-25T19:05:48+05:30",
+ "published": "2026-10-25T19:14:59+05:30",
  "runs": 16,
  "valid": 16,
  "passed": 16,
@@ -39,6 +39,7 @@
    "run_counter": 49,
    "commit": "d836775",
    "messages": 5,
+   "happened": "Filed — Pending",
    "failed": [
     {
      "id": "G8",
@@ -60,6 +61,7 @@
    "run_counter": 50,
    "commit": "d836775",
    "messages": 7,
+   "happened": "Filed — Pending",
    "failed": [
     {
      "id": "G8",
@@ -91,6 +93,7 @@
    "run_counter": 9,
    "commit": "a5931aa",
    "messages": 4,
+   "happened": "Not filed",
    "failed": []
   },
   {
@@ -99,6 +102,7 @@
    "run_counter": 18,
    "commit": "b9746c1",
    "messages": 5,
+   "happened": "Both filed — Pending",
    "failed": [
     {
      "id": "G8",
@@ -124,6 +128,7 @@
    "run_counter": 15,
    "commit": "2e4baf1",
    "messages": 5,
+   "happened": "Not filed — details kept as a draft",
    "failed": []
   },
   {
@@ -132,6 +137,7 @@
    "run_counter": 14,
    "commit": "73d38a1",
    "messages": 10,
+   "happened": "Filed — Pending",
    "failed": [
     {
      "id": "G8",
@@ -154,6 +160,7 @@
    "run_counter": 31,
    "commit": "bd77a7b",
    "messages": 3,
+   "happened": "Existing application kept",
    "failed": [
     {
      "id": "G8",
@@ -175,6 +182,7 @@
    "run_counter": 30,
    "commit": "bd77a7b",
    "messages": 5,
+   "happened": "Old withdrawn, new Pending",
    "failed": [
     {
      "id": "G8",
@@ -196,6 +204,7 @@
    "run_counter": 28,
    "commit": "850606d",
    "messages": 2,
+   "happened": "Still rejected, nothing new",
    "failed": [
     {
      "id": "G8",
@@ -218,6 +227,7 @@
    "run_counter": 53,
    "commit": "f3dcd17",
    "messages": 2,
+   "happened": "Not filed",
    "failed": [
     {
      "id": "P10.no_reopen_implied",
@@ -237,6 +247,7 @@
    "run_counter": 32,
    "commit": "e757d6b",
    "messages": 8,
+   "happened": "Filed — Pending",
    "failed": []
   },
   {
@@ -245,6 +256,7 @@
    "run_counter": 7,
    "commit": "a5931aa",
    "messages": 3,
+   "happened": "Approved",
    "failed": []
   },
   {
@@ -253,6 +265,7 @@
    "run_counter": 37,
    "commit": "9d6162c",
    "messages": 3,
+   "happened": "Rejected",
    "failed": []
   },
   {
@@ -261,6 +274,7 @@
    "run_counter": 43,
    "commit": "1c36920",
    "messages": 2,
+   "happened": "Approval refused by portal",
    "failed": []
   },
   {
@@ -269,6 +283,7 @@
    "run_counter": 48,
    "commit": "d836775",
    "messages": 5,
+   "happened": "Filed — Pending",
    "failed": [
     {
      "id": "G8",
@@ -290,6 +305,7 @@
    "run_counter": 40,
    "commit": "df48b08",
    "messages": 2,
+   "happened": "Rejected",
    "failed": []
   }
  ],

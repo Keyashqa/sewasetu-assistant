@@ -5,6 +5,12 @@ name: Rupjyoti Bora
 title: 'Officer: "reject it" with no reason'
 line: "Block officer · rejects, no reason given · Sonari"
 tags: ["English", "Terse"]
+outcome: "Rejected with officer's reason"
+reason: "Bank account not in applicant's name"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P13.status": "^[A-Z]"}, "say": "{P13.status.1}"}
 summary: >
   The same officer opens a case and says only "Reject it."; the reason comes when asked.
 talks: "Busy and terse: \"Reject it.\" — the reason only when asked."

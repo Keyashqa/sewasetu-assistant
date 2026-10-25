@@ -5,6 +5,13 @@ name: Hemanta Bordoloi
 title: A village not in the known list
 line: "75 · for himself, unlisted village · Bamungaon (Khelua)"
 tags: ["English", "Formal"]
+outcome: "Application filed"
+reason: "—"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P11.row": "^[A-Z]"}, "say": "Filed — {P11.row.1}"}
+  - {"if": {"P11.row": "^$"}, "say": "Not filed"}
 summary: >
   75, from Bamungaon, a small hamlet near Sialmari in Khelua block, on his own phone. Formal and
   slow. Refuses to have his village "corrected" to a listed one.

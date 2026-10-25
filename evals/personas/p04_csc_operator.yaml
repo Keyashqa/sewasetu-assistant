@@ -5,6 +5,14 @@ name: Mridul Kalita
 title: CSC operator filing for two people
 line: "35 · CSC operator, for two people · Namti Chariali"
 tags: ["English", "Operator jargon"]
+outcome: "Two applications filed"
+reason: "—"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P04.rows": "\\|PENDING\\|[^\n]*\n[^\n]*\\|PENDING\\|"}, "say": "Both filed — Pending"}
+  - {"if": {"P04.rows": "\\|PENDING\\|"}, "say": "One filed — Pending"}
+  - {"if": {"P04.rows": "^$"}, "say": "Not filed"}
 summary: >
   35, runs the CSC at Namti Chariali, signed in on his business number. Files for Jogen and Rupa
   Phukan, each on their own verified mobile.

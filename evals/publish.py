@@ -73,9 +73,34 @@ def persona_cards():
     for pid in runner.all_personas():
         p = runner.load_persona(pid)
         cards.append({k: (" ".join(str(p.get(k, "")).split())) for k in
-                      ("id", "name", "title", "line", "summary", "why", "expected_end_state", "role")}
+                      ("id", "name", "title", "line", "summary", "why", "expected_end_state", "role",
+                       "outcome", "reason")}
                      | {"number": p["number"], "talks": _talks(p), "tags": p.get("tags", [])})
     return cards
+
+
+def _field(value, n):
+    """Field n (1-based) of a recorded SQL value's first row, as a word: PENDING -> Pending."""
+    parts = str(value).split("\n")[0].split("|")
+    return parts[n - 1].replace("_", " ").capitalize() if 0 < n <= len(parts) else ""
+
+
+def happened(r):
+    """What the run left in the portal, in a few words, from its recorded check values (and, for
+    a call: key, its stored tool results). The persona card's `happened` rules pick the phrase;
+    the first rule whose conditions all match the recorded data wins."""
+    actual = {c["id"]: "" if c.get("actual") is None else str(c["actual"]) for c in r.get("checks", [])}
+    results = {}
+    for t in r.get("turns", []):
+        for c in (t.get("client") or {}).get("tool_calls", []):
+            results.setdefault(c["name"], []).append(json.dumps(c.get("result"), ensure_ascii=False))
+    def value(key):
+        return "\n".join(results.get(key[5:], [])) if key.startswith("call:") else actual.get(key)
+    for rule in runner.load_persona(r["persona"]).get("happened", []):
+        if all(value(k) is not None and re.search(rx, value(k)) for k, rx in rule.get("if", {}).items()):
+            return re.sub(r"\{([A-Za-z0-9_.]+)\.(\d+)\}", lambda m: _field(actual.get(m.group(1), ""), int(m.group(2))),
+                          rule["say"])
+    return "Not recorded"
 
 
 def compact_run(r):
@@ -101,7 +126,7 @@ def compact_run(r):
                    for c in r.get("checks", [])],
         "judge": r.get("judge", []), "fidelity": r.get("fidelity"), "probes": r.get("probes", []),
         "totals": r.get("totals"), "usage": r.get("usage"), "pauses": r.get("pauses", []),
-        "turns": turns,
+        "turns": turns, "happened": happened(r),
     }
 
 
@@ -158,6 +183,7 @@ def publish(source, as_id=None, label=None, headline=False):
         "pauses": sum(len(r.get("pauses") or []) for r in runs),
         "personas": [{"persona": r["persona"], "outcome": r["outcome"], "run_counter": r["run_counter"],
                       "commit": r["commit"], "messages": (r.get("totals") or {}).get("persona_messages"),
+                      "happened": r["happened"],
                       "failed": [c for c in r["checks"] if not c["pass"]]} for r in runs],
     }
     summary["pass_rate"] = round(summary["passed"] / summary["valid"], 3) if summary["valid"] else None

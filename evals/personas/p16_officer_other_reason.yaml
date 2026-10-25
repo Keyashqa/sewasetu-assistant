@@ -5,6 +5,12 @@ name: Rupjyoti Bora
 title: "Officer: a reason that fits none of the four"
 line: "Block officer · a reason outside the four · Sonari"
 tags: ["English", "Terse"]
+outcome: "Rejected with officer's reason"
+reason: "Moved out of the state"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P16.status": "^[A-Z]"}, "say": "{P16.status.1}"}
 summary: >
   The officer rejects a case because the applicant moved out of the state: none of the four
   canonical reasons fits.

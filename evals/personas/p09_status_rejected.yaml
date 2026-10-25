@@ -5,6 +5,13 @@ name: Golap Bora
 title: Status check after a rejection
 line: "69 · for himself, was rejected · Lakhipur (Sonari)"
 tags: ["English", "Short replies"]
+outcome: "Stays rejected"
+reason: "Bank account not in applicant's name"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P09.unchanged": "^REJECTED", "P09.one_application": "^1$"}, "say": "Still rejected, nothing new"}
+  - {"if": {"P09.unchanged": "^[A-Z]"}, "say": "{P09.unchanged.1}"}
 summary: >
   69, Lakhipur (Sonari), on his own phone. Applied a while ago; the officer has since
   rejected it (bank account not in his name). He asks what happened and what to do now.

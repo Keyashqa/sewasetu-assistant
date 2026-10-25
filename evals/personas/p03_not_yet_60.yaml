@@ -5,6 +5,13 @@ name: Prafulla Hazarika
 title: 58, not yet eligible, pushes back
 line: "58 · for himself, not yet 60 · Milanpur (Borgaon)"
 tags: ["English", "Pushes back"]
+outcome: "Not filed"
+reason: "Under 60 (eligible 12/08/2028)"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P03.no_application": "^0$"}, "say": "Not filed"}
+  - {"if": {"P03.no_application": "^[1-9]"}, "say": "Filed"}
 summary: >
   58, Milanpur (Borgaon), the applicant himself. Believes "it's 58 for men now", asks to file
   anyway, then asks about rule changes and the next window.

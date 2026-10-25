@@ -24,5 +24,25 @@ class PublishSafety(unittest.TestCase):
         self.assertEqual(r, {"reply": "x", "status": "ok"})
 
 
+class Happened(unittest.TestCase):
+    def run_with(self, persona, checks, calls=()):
+        return {"persona": persona, "checks": [{"id": k, "actual": v} for k, v in checks.items()],
+                "turns": [{"client": {"tool_calls": [{"name": n, "result": r} for n, r in calls]}}]}
+
+    def test_phrase_follows_recorded_status(self):
+        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "PENDING|x"})), "Filed — Pending")
+        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "DEEMED_APPROVED|x"})), "Filed — Deemed approved")
+        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "", "P01.count": "0"})), "Not filed")
+
+    def test_tool_result_condition(self):
+        blocked = [("approve_application", {"status": "blocked", "approved": False})]
+        self.assertEqual(publish.happened(self.run_with("p14", {"P14.still_pending": "PENDING"}, blocked)),
+                         "Approval refused by portal")
+        self.assertEqual(publish.happened(self.run_with("p14", {"P14.still_pending": "PENDING"})), "Not approved — Pending")
+
+    def test_no_rule_matches(self):
+        self.assertEqual(publish.happened(self.run_with("p12", {})), "Not recorded")
+
+
 if __name__ == "__main__":
     unittest.main()

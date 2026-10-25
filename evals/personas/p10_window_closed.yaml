@@ -5,6 +5,13 @@ name: Dipali Kalita
 title: The window has closed
 line: "64 · for herself, window closed · Udaypur (Borgaon)"
 tags: ["English", "Chatty"]
+outcome: "Not filed"
+reason: "Window closed"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P10.no_application": "^0$"}, "say": "Not filed"}
+  - {"if": {"P10.no_application": "^[1-9]"}, "say": "Filed"}
 summary: >
   64, Udaypur (Borgaon), on her own phone, after the application window closed (this persona
   alone runs with SCHEME_DEADLINE 01/10/2026 00:00). Asks when it reopens and whether the

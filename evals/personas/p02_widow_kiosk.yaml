@@ -5,6 +5,13 @@ name: Lakhi Bora
 title: Elderly widow alone at a kiosk
 line: "72 · widow, alone at a kiosk · Kathoni (Dhemaji Pathar)"
 tags: ["English + Hindi words", "Very short replies"]
+outcome: "Application filed"
+reason: "—"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P02.row": "^[A-Z]"}, "say": "Filed — {P02.row.1}"}
+  - {"if": {"P02.count": "^0$"}, "say": "Not filed"}
 summary: >
   72, widow, Kathoni (Dhemaji Pathar), at the CSC kiosk on her own phone with the operator
   away. Replies in one to five words; says her date of birth in words.

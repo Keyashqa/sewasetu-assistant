@@ -5,6 +5,14 @@ name: Anjali Sonowal
 title: Wrong date of birth filed — withdraw and re-apply
 line: "63 · retired teacher, wrong date filed · Kakotibari (Sonari)"
 tags: ["English", "Full sentences"]
+outcome: "Withdrawn and re-filed"
+reason: "Wrong date of birth corrected"
+# What happened, from the run's recorded DB state: the first rule whose checks' recorded
+# values all match wins; {ID.n} is field n of that check's recorded value.
+happened:
+  - {"if": {"P08.old_withdrawn": "^WITHDRAWN$", "P08.one_pending": "^1$"}, "say": "Old withdrawn, new Pending"}
+  - {"if": {"P08.old_withdrawn": "^WITHDRAWN$"}, "say": "Old withdrawn, nothing new"}
+  - {"if": {"P08.old_withdrawn": "^[A-Z]"}, "say": "Old application {P08.old_withdrawn.1}"}
 summary: >
   63, retired schoolteacher, Kakotibari (Sonari). Her pending application has her date of birth
   with day and month swapped; she wants it corrected.
