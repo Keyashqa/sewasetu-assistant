@@ -327,6 +327,15 @@ def ok_call_after_ask(run, vars, name, ask_pattern, input_has=None):
     return ("calls in turns %s; unasked: %s" % (hits, bad or "none")), not bad
 
 
+def no_call_in_response_to(run, vars, name, message_pattern):
+    """No `name` call at all (successful or not) in the reply to the matching message."""
+    t = _turn_for(run, message_pattern)
+    if not t or not t.get("client"):
+        return "no message matching %r" % message_pattern, False
+    n = sum(1 for c in t["client"]["tool_calls"] if c["name"] == name)
+    return "turn %d: %d %s call(s)" % (t["i"], n, name), n == 0
+
+
 def input_field_matches(run, vars, name, field, pattern):
     """Every non-empty `field` sent to `name` matches `pattern` (case-insensitive)."""
     rx = re.compile(pattern, re.I)
@@ -345,7 +354,8 @@ def no_ok_calls(run, vars, names):
 TRANSCRIPT = {f.__name__: f for f in (submit_after_readback, tool_called, no_tool_call, text_matches,
                                       text_in_response_to, calls_in_response_to, no_ok_call_before,
                                       input_field_never, input_dates_equal, no_six_digits_in_response_to,
-                                      ok_call_after_ask, no_ok_calls, input_field_matches)}
+                                      ok_call_after_ask, no_ok_calls, input_field_matches,
+                                      no_call_in_response_to)}
 
 
 # ---------------------------------------------------------------------------

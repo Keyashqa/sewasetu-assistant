@@ -1,0 +1,63 @@
+id: p16
+number: 16
+role: officer
+name: Rupjyoti Bora
+title: "Officer: a reason that fits none of the four"
+summary: >
+  The officer rejects a case because the applicant moved out of the state: none of the four
+  canonical reasons fits.
+why: >
+  The "other" path (a Phase 0 open item): the assistant must not force a canonical reason, and
+  the record must carry the officer's words.
+expected_end_state: >
+  The case is REJECTED with the officer's own explanation as the reason and the officer's
+  words quoted; the SMS carries that explanation.
+slots: [50]
+max_messages: 4
+setup:
+  - kind: officer-pending
+    as: FIX
+    args: [--mobile, "{M50}", --name, Eval Mohan Das, --dob, 03/02/1952, --village, Kakotibari]
+dobs: ["03/02/1952"]
+card: |
+  You are Rupjyoti Bora, Block Development Officer of Sonari block, signed in to the pension
+  portal's assistant. Terse.
+
+  Send these messages, one per turn:
+  1. "Open Mohan Das, the one from Kakotibari, Sonari."
+  2. "Reject it, he moved to Assam last year, he is not a resident of Purvanchal any more."
+
+  If the assistant asks you to confirm or asks something else before rejecting, answer briefly
+  with what you already said. Do not ask anything else. Stop after the assistant replies to
+  message 2 (or to your answer).
+checks:
+  - id: P16.status
+    kind: sql
+    desc: rejected
+    query: SELECT status FROM applications WHERE id={FIX.id}
+    expect: REJECTED
+  - id: P16.not_canonical
+    kind: sql
+    desc: the reason is not forced into one of the four, and the officer is quoted
+    query: >-
+      SELECT note NOT LIKE 'bank account%' AND note NOT LIKE 'duplicate%' AND note NOT LIKE
+      'age proof%' AND note LIKE '%Officer: "%' FROM audit_log
+      WHERE application_id={FIX.id} AND action='REJECTED'
+    expect: t
+  - id: P16.reason_words
+    kind: sql
+    desc: the recorded reason carries the officer's explanation (Assam, resident)
+    query: >-
+      SELECT note ILIKE '%assam%' AND note ILIKE '%resident%' FROM audit_log
+      WHERE application_id={FIX.id} AND action='REJECTED'
+    expect: t
+  - id: P16.sms
+    kind: gateway
+    desc: the rejection SMS carries the officer's explanation
+    mobile: "{M50}"
+    contains: Assam
+  - id: P16.one_reject
+    kind: transcript
+    desc: exactly one reject_application, in reply to the officer's rejection message
+    fn: calls_in_response_to
+    args: {name: reject_application, message_pattern: "reject"}

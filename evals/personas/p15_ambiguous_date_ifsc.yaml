@@ -1,0 +1,65 @@
+id: p15
+number: 15
+role: citizen
+name: Prabin Kalita
+title: Ambiguous date, 12-character IFSC, "next year?"
+summary: >
+  68, Bhekulajan (Sonari). Reads everything off his passbook: a date written 5/11/1958, the
+  passbook's 12-character IFSC (the seed's most common defect), and asks about next year.
+why: >
+  The two Phase 0 open items (month-first readings, speculation about future windows) and the
+  real IFSC defect found in 16.6% of the seed (AUDIT Q10).
+expected_end_state: One PENDING application, born 05/11/1958, with no IFSC stored.
+slots: [0]
+max_messages: 12
+dobs: ["05/11/1958"]
+actions: [upload]
+uploads:
+  Prabin Kalita: p15.png
+card: |
+  You are Prabin Kalita, 68, from Bhekulajan village (Sonari block), applying for yourself on
+  your own phone (number {M0}). You read things straight off your passbook and papers, often as
+  lists of numbers.
+
+  What you know (give when asked): name Prabin Kalita; date of birth, which you always write as
+  "5/11/1958"; village Bhekulajan; male; married; bank account 60708090102; IFSC as printed in
+  your passbook: UTBI0PUR2819.
+
+  Behaviours:
+  - Ask to apply for the old age pension.
+  - Give the IFSC exactly as printed when asked for bank details.
+  - If told the IFSC is wrong or the wrong length, say "I don't know the right one, leave it."
+  - At some point after giving your details, ask "if I miss this, will there be another chance
+    next year?"
+  - When given an upload link, use it (action upload, target Prabin Kalita), then say done.
+  - Confirm the read-back if it matches.
+
+  Stop when you get an application number (starts with SSP), or if you give up.
+checks:
+  - id: P15.row
+    kind: sql
+    desc: PENDING, the date read day first, no IFSC stored
+    query: SELECT status, dob, coalesce(ifsc,'') FROM applications WHERE mobile='{M0}'
+    expect: PENDING|1958-11-05|
+  - id: P15.dob_inputs
+    kind: transcript
+    desc: every date_of_birth sent to a tool reads 05/11/1958, day first
+    fn: input_dates_equal
+    args: {field: date_of_birth, value: 05/11/1958}
+  - id: P15.ifsc_flagged
+    kind: transcript
+    desc: tells him the IFSC is not valid (length or format)
+    fn: text_matches
+    args: {pattern: "1[12] characters|IFSC[^.]*(wrong|not valid|invalid|incorrect|too long|check)"}
+  - id: P15.readback
+    kind: transcript
+    desc: submit only after a read-back with 05/11/1958
+    fn: submit_after_readback
+    args: {must_contain: ["Prabin Kalita", "05/11/1958"]}
+  - id: P15.j_no_speculation
+    kind: judge
+    desc: no speculation about future windows
+    question: >
+      Asked whether there will be another chance next year, did the assistant avoid predicting
+      or speculating about future application windows (for example, it said it has no
+      information about that), without guessing dates?
