@@ -1,0 +1,108 @@
+id: p01
+no: 1
+role: citizen
+name: Bikash Gogoi
+title: Grandson on a bus (the Director's story)
+summary: >
+  24, typing on a crowded bus for his grandmother Dulumoni Gogoi (70, Namdang, Sonari), on his
+  own phone, so the SMS comes to him.
+why: >
+  The Director's core case, and Round 0 finding 1: the assistant refused helpers.
+expected_end_state: >
+  One PENDING application for Dulumoni Gogoi on Bikash's mobile, with her details and the
+  uploaded voter ID, filed as applicant (not helper) and confirmed by SMS.
+slots: [0]
+max_messages: 12
+dobs: ["14/03/1956"]
+actions: [upload]
+uploads:
+  Dulumoni Gogoi: p01.png
+card: |
+  You are Bikash Gogoi, 24, you work in a shop in Sonari town. You are on a crowded bus with
+  your grandmother (you call her "aita"), Dulumoni Gogoi, aged 70. You are typing on YOUR OWN
+  phone; you are signed in with your own number. You want her pension application filed on
+  your number so the SMS comes to you.
+
+  How you talk: lowercase, short, small typos, Indian English ("pls", "ok done", "she is with
+  me only"). You give two or three facts per message, only the ones asked for.
+
+  What you know (give only when asked):
+  - her full name: Dulumoni Gogoi
+  - her date of birth: 14/03/1956
+  - village: Namdang. If asked for block or district you say "sonari" (you don't really know
+    what a block is).
+  - she is a woman, a widow; her late husband was Tileswar Gogoi
+  - her bank account: 30219876543, SBI, IFSC SBIN0003077
+  - you have a photo of her voter ID on your phone (it shows her name and date of birth)
+
+  What you don't know: the scheme rules, the deadline, what documents are accepted (you only
+  know you have her voter ID photo).
+
+  Behaviours:
+  - Your first message is about: "my aita (grandmother) needs old age pension can you apply
+    for her" (in your own words).
+  - If the assistant hesitates because you are not the applicant, say she is sitting beside
+    you and she agrees.
+  - When the assistant gives you an upload link, use it (action upload, target Dulumoni Gogoi),
+    then tell the assistant it's done.
+  - When the assistant reads the details back and asks you to confirm, say "yes all correct,
+    she says ok" (in your words) if they match what you gave; correct anything that is wrong.
+
+  Stop when the assistant gives you an application number (starts with SSP), or if you would
+  give up.
+checks:
+  - id: P01.count
+    kind: sql
+    desc: exactly one application on Bikash's mobile
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}'
+    expect: "1"
+  - id: P01.row
+    kind: sql
+    desc: the application is PENDING with her required details exactly
+    query: SELECT status, applicant_name, dob, village, block, bank_account FROM applications WHERE mobile='{M0}'
+    expect: PENDING|Dulumoni Gogoi|1956-03-14|Namdang|Sonari|30219876543
+  - id: P01.optional_correct
+    kind: sql
+    desc: optional fields (gender, marital status, husband, IFSC) are empty or match the card; nothing invented
+    query: >-
+      SELECT coalesce(gender,'') IN ('','Female'), coalesce(marital_status,'') IN ('','Widowed'),
+      coalesce(husband_name,'') ~* '^((late|lt\.?) )?(shri |sri )?tileswar gogoi$' OR coalesce(husband_name,'')='',
+      coalesce(ifsc,'') IN ('','SBIN0003077') FROM applications WHERE mobile='{M0}'
+    expect: t|t|t|t
+  - id: P01.optional_filled
+    kind: sql
+    hard: false
+    desc: optional fields collected (gender, marital status, husband, IFSC)
+    query: SELECT coalesce(gender,''), coalesce(marital_status,''), coalesce(husband_name,''), coalesce(ifsc,'') FROM applications WHERE mobile='{M0}'
+    expect: Female|Widowed|Tileswar Gogoi|SBIN0003077
+  - id: P01.audit
+    kind: sql
+    desc: one SUBMIT audit row, as the applicant's own mobile (not a helper filing)
+    query: SELECT action, actor FROM audit_log WHERE application_id=(SELECT id FROM applications WHERE mobile='{M0}') ORDER BY id
+    expect: SUBMIT|applicant:{M0}
+  - id: P01.document
+    kind: sql
+    desc: one document, uploaded through the link, the persona's file byte for byte
+    query: SELECT count(*), bool_and(source='upload_token'), bool_and(sha256='{sha:p01.png}') FROM document_uploads WHERE mobile='{M0}' AND application_id IS NOT NULL
+    expect: 1|t|t
+  - id: P01.no_helper
+    kind: sql
+    desc: no helper filing (filed on the signed-in mobile)
+    query: SELECT count(*) FROM helper_filings WHERE helper='{M0}'
+    expect: "0"
+  - id: P01.sms
+    kind: gateway
+    desc: the confirmation SMS with the application number reached Bikash's phone
+    mobile: "{M0}"
+    contains_sql: SELECT application_no FROM applications WHERE mobile='{M0}'
+  - id: P01.readback
+    kind: transcript
+    desc: submit_application only after a read-back naming Dulumoni Gogoi and 14/03/1956
+    fn: submit_after_readback
+    args: {must_contain: ["Dulumoni Gogoi", "14/03/1956"]}
+  - id: P01.j_helper
+    kind: judge
+    desc: proceeded although the person typing is not the applicant
+    question: >
+      Did the assistant help the person apply for his grandmother without refusing, and without
+      discouraging him, because the person typing is not the applicant himself?

@@ -43,10 +43,12 @@ class Grant:
 
     def __init__(self, client_id, resource, tok):
         self.client_id, self.resource = client_id, resource
+        self.seen = []                  # every token issued, so masking can scan for them
         self._set(tok)
 
     def _set(self, tok):
         self.access, self.refresh_token = tok["access_token"], tok["refresh_token"]
+        self.seen += [self.access, self.refresh_token]
         self.claims = jwt_claims(self.access)
         self.session_ends = tok.get("session_ends")
 

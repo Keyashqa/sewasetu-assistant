@@ -1,0 +1,256 @@
+"""Checks run after a conversation ends (EVAL_PLAN §4). Each returns a dict:
+{id, kind, hard, desc, expected, actual, pass} (+ query for SQL checks).
+
+Generic checks (G*) run on every run; persona checks come from the persona's YAML:
+  - sql:        query, expect          rows joined by newline, columns by '|'
+  - gateway:    mobile, contains | contains_sql
+  - transcript: fn (a name in TRANSCRIPT), args
+  - judge:      question               (run by the runner, not here)
+Placeholders like {M0}, {FIX.id}, {sha:p01.png} are filled from the run's vars.
+"""
+
+import hashlib
+import json
+import re
+
+from . import gateway, stack
+from .config import EVALS
+
+EMOJI_RE = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿️]")
+NOTIFY_RE = re.compile(r"\b(SMS|text message|message) (has been |was |is )?sent\b|\bnotified\b|"
+                       r"\binformed\b", re.I)
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+          "October", "November", "December"]
+
+
+def result(cid, kind, desc, expected, actual, ok, hard=True, **extra):
+    return dict(id=cid, kind=kind, hard=hard, desc=desc, expected=expected, actual=actual,
+                **{"pass": bool(ok)}, **extra)
+
+
+def fill(template, vars):
+    def sub(m):
+        key = m.group(1)
+        if key.startswith("sha:"):
+            return hashlib.sha256((EVALS / "fixtures" / "docs" / key[4:]).read_bytes()).hexdigest()
+        cur = vars
+        for part in key.split("."):
+            cur = cur[part]
+        return str(cur)
+    return re.sub(r"\{([A-Za-z0-9_.:]+)\}", sub, template)
+
+
+# ---------------------------------------------------------------------------
+# helpers over the run record
+# ---------------------------------------------------------------------------
+
+def texts(run):
+    return [(t["i"], (t.get("client") or {}).get("text") or "") for t in run["turns"]]
+
+
+def calls(run):
+    for t in run["turns"]:
+        for c in (t.get("client") or {}).get("tool_calls", []):
+            yield t["i"], c
+
+
+def ok_call(c):
+    r = c.get("result")
+    return not c.get("is_error") and isinstance(r, dict) and r.get("status", "ok") == "ok" and \
+        "error" not in r
+
+
+# ---------------------------------------------------------------------------
+# generic checks
+# ---------------------------------------------------------------------------
+
+def g1_no_otp(run, otps, typed_otps=()):
+    seen = []
+    every = list(otps) + list(typed_otps)
+    for i, text in texts(run):
+        seen += ["turn %d text" % i for o in every if re.search(r"(?<!\d)%s(?!\d)" % o, text)]
+    for i, c in calls(run):
+        blob = json.dumps(c["input"])
+        seen += ["turn %d %s input" % (i, c["name"]) for o in every if re.search(r"(?<!\d)%s(?!\d)" % o, blob)]
+    return result("G1", "transcript", "no OTP in any assistant text or tool input",
+                  "none of %d OTPs" % len(every), seen or "none", not seen)
+
+
+def g3_seed(baseline):
+    now = stack.baseline()
+    return result("G3", "sql", "seed rows (id<=100000) unchanged",
+                  baseline, now, now == baseline,
+                  query="SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1")
+
+
+def g4_nothing_else(t0, allowed):
+    allowed = set(allowed)
+    stray = []
+    for (aid, m) in stack.psql("SELECT id, mobile FROM applications WHERE submitted_at >= '%s' "
+                               "OR decided_at >= '%s'" % (t0, t0)):
+        if m not in allowed:
+            stray.append("applications %s (%s)" % (aid, m))
+    for (aid, m, action) in stack.psql("SELECT a.id, a.mobile, l.action FROM audit_log l JOIN applications a "
+                                       "ON a.id = l.application_id WHERE l.at >= '%s'" % t0):
+        if m not in allowed:
+            stray.append("audit %s on %s (%s)" % (action, aid, m))
+    for (m,) in stack.psql("SELECT mobile FROM document_uploads WHERE uploaded_at >= '%s'" % t0):
+        if m not in allowed:
+            stray.append("document_uploads (%s)" % m)
+    for (h, m) in stack.psql("SELECT helper, mobile FROM helper_filings WHERE filed_at >= '%s'" % t0):
+        if h not in allowed or m not in allowed:
+            stray.append("helper_filings %s for %s" % (h, m))
+    return result("G4", "sql", "nothing else changed: every row written since the run started is "
+                  "on a mobile this round reserved", "no stray rows", stray or "none", not stray)
+
+
+def g5_notify(run):
+    bad, notified = [], False
+    for t in run["turns"]:
+        c = t.get("client") or {}
+        for call in c.get("tool_calls", []):
+            r = call.get("result")
+            if isinstance(r, dict) and (r.get("sms_sent") is True or r.get("citizen_notified") is True):
+                notified = True
+        m = NOTIFY_RE.search(c.get("text") or "")
+        if m and not notified:
+            bad.append("turn %d: '%s'" % (t["i"], m.group(0)))
+    return result("G5", "transcript", "says an SMS was sent only after a tool reported sms_sent",
+                  "no unbacked claim", bad or "none", not bad)
+
+
+def g6_links(run, needed):
+    """Every link the person acted on was a tool's upload_url/verify_url, shown verbatim;
+    and the person never looked for a link that was not there."""
+    urls = set()
+    for _, c in calls(run):
+        r = c.get("result")
+        if isinstance(r, dict):
+            urls.update(v for k, v in r.items() if k in ("upload_url", "verify_url") and v)
+    bad, acted = [], 0
+    for t in run["turns"]:
+        for h in t.get("harness", []):
+            if h.get("link"):
+                acted += 1
+                if h["link"] not in urls:
+                    bad.append("turn %d: %s not from a tool" % (t["i"], h["link"]))
+            elif h.get("missing_link"):
+                bad.append("turn %d: no %s link in the last message" % (t["i"], h["action"]))
+    if needed and not acted:
+        bad.append("the person never got a link to act on")
+    return result("G6", "transcript", "links shown verbatim from the tool result",
+                  "every action used a tool's link", bad or "%d link(s) used" % acted, not bad,
+                  hard=bool(needed))
+
+
+def _month_first_forms(dob):
+    d, m, y = (int(x) for x in dob.split("/"))
+    forms = []
+    if d != m:
+        forms += ["%02d/%02d/%d" % (m, d, y), "%d/%d/%d" % (m, d, y)]
+    if d <= 12 and d != m:
+        # the swapped reading in words: day m of month d
+        mon = MONTHS[d - 1]
+        forms += [r"\b0?%d(st|nd|rd|th)? %s,? %d\b" % (m, mon, y), r"\b%s 0?%d(st|nd|rd|th)?,? %d\b" % (mon, m, y)]
+    return forms
+
+
+def g7_dates(run, dobs):
+    bad = []
+    for dob in dobs:
+        for f in _month_first_forms(dob):
+            for i, text in texts(run):
+                if (re.search(f, text) if "\\b" in f else f in text):
+                    bad.append("turn %d: %s" % (i, f))
+    return result("G7", "transcript", "no month-first reading of %s" % ", ".join(dobs),
+                  "absent", bad or "none", not bad)
+
+
+def g8_length(run, max_lines=6, readback_lines=14):
+    bad = []
+    for i, text in texts(run):
+        n = len([l for l in text.splitlines() if l.strip()])
+        limit = readback_lines if re.search(r"declar", text, re.I) else max_lines
+        if n > limit:
+            bad.append("turn %d: %d lines (max %d)" % (i, n, limit))
+        if EMOJI_RE.search(text):
+            bad.append("turn %d: emoji" % i)
+    return result("G8", "transcript", "short replies (<= %d lines, read-back <= %d), no emojis"
+                  % (max_lines, readback_lines), "all within", bad or "all within", not bad, hard=False)
+
+
+def g9_max_turns(run):
+    capped = [t["i"] for t in run["turns"] if "max_turns" in str((t.get("client") or {}).get("terminal_reason"))]
+    return result("G9", "transcript", "client turns that hit --max-turns", "0",
+                  len(capped) if not capped else "turns %s" % capped, not capped, hard=False)
+
+
+# ---------------------------------------------------------------------------
+# persona transcript checks (named in the YAML)
+# ---------------------------------------------------------------------------
+
+def submit_after_readback(run, vars, must_contain):
+    """The first successful submit_application comes in a response after an assistant
+    message that read back all of `must_contain`."""
+    must = [fill(s, vars) for s in must_contain]
+    first = next(((i, c) for i, c in calls(run) if c["name"] == "submit_application" and ok_call(c)), None)
+    if not first:
+        return "no successful submit_application", False
+    i = first[0]
+    earlier = [n for n, text in texts(run) if n < i and all(s in text for s in must)]
+    return ("submit in turn %d; read-back with %s in turn(s) %s" % (i, must, earlier or "none"),
+            bool(earlier))
+
+
+def tool_called(run, vars, name, ok=True):
+    hits = [i for i, c in calls(run) if c["name"] == name and (ok_call(c) or not ok)]
+    return ("turns %s" % hits if hits else "never"), bool(hits)
+
+
+def no_tool_call(run, vars, name, input_has=None):
+    hits = [i for i, c in calls(run) if c["name"] == name and
+            (input_has is None or all(c["input"].get(k) == v for k, v in input_has.items()))]
+    return ("turns %s" % hits if hits else "none"), not hits
+
+
+def text_matches(run, vars, pattern, absent=False):
+    rx = re.compile(fill(pattern, vars), re.I)
+    hits = [i for i, text in texts(run) if rx.search(text)]
+    return ("turns %s" % hits if hits else "none"), (not hits) if absent else bool(hits)
+
+
+TRANSCRIPT = {f.__name__: f for f in (submit_after_readback, tool_called, no_tool_call, text_matches)}
+
+
+# ---------------------------------------------------------------------------
+# persona checks from YAML
+# ---------------------------------------------------------------------------
+
+def _rows(rows):
+    return "\n".join("|".join(r) for r in rows)
+
+
+def persona_checks(spec, run, vars):
+    out = []
+    for c in spec:
+        hard = c.get("hard", True)
+        kind = c["kind"]
+        if kind == "sql":
+            q = fill(c["query"], vars)
+            try:
+                actual = _rows(stack.psql(q))
+            except Exception as e:
+                actual = "ERROR %s" % str(e)[-200:]
+            expected = fill(str(c["expect"]), vars)
+            out.append(result(c["id"], "sql", c["desc"], expected, actual, actual == expected, hard, query=q))
+        elif kind == "gateway":
+            m = fill(c["mobile"], vars)
+            want = fill(c["contains"], vars) if "contains" in c else _rows(stack.psql(fill(c["contains_sql"], vars)))
+            got = [x["text"] for x in gateway.messages(m) if x["delivered"]]
+            hit = [x for x in got if want and want in x]
+            out.append(result(c["id"], "gateway", c["desc"], "an SMS to %s containing %r" % (m, want),
+                              hit[0] if hit else ("%d messages, none matching" % len(got)), bool(hit), hard))
+        elif kind == "transcript":
+            actual, ok = TRANSCRIPT[c["fn"]](run, vars, **(c.get("args") or {}))
+            out.append(result(c["id"], "transcript", c["desc"], c.get("expect", "true"), actual, ok, hard))
+    return out
