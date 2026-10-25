@@ -198,9 +198,20 @@ rounds:
           <date> and nothing can be filed now; never say or imply it will reopen or suggest
           coming back later. Instruction: refer to the applicant by name (or the word the person
           used); never guess a relationship.
-        status: approved by the reviewer, to apply after batch 5
-        changed: []
-        rerun: null
+        status: applied; part (2) holds, part (1) does not yet
+        changed: [3436d28]
+        rerun: >
+          p01-0045 pass; P01.no_guessed_relation pass (re-scored after fixing the check's
+          pattern, which had a YAML escape bug). p10-0046 FAIL P10.no_reopen_implied (turns 1, 2):
+          "please check with the Borgaon block office … for the next application period", "Ask
+          the Borgaon block office when the next application period starts", "Keep your papers
+          ready so you can apply quickly when it opens". It does say "I don't know when the window
+          will open again".
+        proposed_followup: >
+          Give the model the sentence to use, as F5 did for the password: the closed-window
+          replies end "Nothing can be filed now, and I have no information about any future
+          window." The instruction adds: do not mention a next window or period, do not suggest
+          asking anyone about it, and do not advise preparing for one.
       - id: F8
         persona: p15
         check: P15.row, P15.readback (hard)

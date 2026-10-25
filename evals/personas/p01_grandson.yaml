@@ -116,4 +116,4 @@ checks:
     kind: transcript
     desc: never guesses the relationship (he said aita, grandmother) (F7)
     fn: text_matches
-    args: {pattern: "\b(mother|mom|aunt|auntie|wife|sister|daughter)('s)?\b", absent: true}
+    args: {pattern: "\\b(mother|mom|aunt|auntie|wife|sister|daughter)('s)?\\b", absent: true}

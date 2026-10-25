@@ -23,6 +23,9 @@ class FilesLoad(unittest.TestCase):
             self.assertIsInstance(p["number"], int, pid)
             for c in p.get("checks", []):
                 self.assertIn(c["kind"], ("sql", "gateway", "transcript", "judge", "probe"), c["id"])
+                # a YAML double-quoted "\b" is a backspace, not a regex word boundary
+                for ch in ("\x07", "\x08", "\x0c"):
+                    self.assertNotIn(ch, repr(c).encode().decode("unicode_escape"), c["id"])
 
 
 if __name__ == "__main__":

@@ -63,4 +63,4 @@ checks:
     kind: transcript
     desc: never implies the window will reopen or suggests coming back later (F7)
     fn: text_matches
-    args: {pattern: "(until|when|once|after) (it|the window|applications?) (re-?opens?|opens? again|is open again)|come back (later|when|once|after)|next (window|round) (opens|starts)", absent: true}
+    args: {pattern: "(until|when|once|after) (it|the window|applications?) (re-?opens?|opens?|is open)\\b|come back (later|when|once|after)|next (application )?(window|period|round)|applications? reopen", absent: true}

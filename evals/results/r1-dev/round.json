@@ -1827,10 +1827,112 @@
    },
    "started": "2026-10-25T14:08:40+05:30",
    "ended": "2026-10-25T14:12:34+05:30"
+  },
+  {
+   "persona": "p01",
+   "run": 1,
+   "run_counter": 45,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p01-0045.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 12,
+    "tool_calls": 7,
+    "cost_usd_equiv": 0.0103,
+    "duration_s": 94,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.85,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.12,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T14:13:44+05:30",
+     "probe_cost_usd_equiv": 0.00060709
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.86,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.12,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T14:15:21+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T14:13:40+05:30",
+   "ended": "2026-10-25T14:15:18+05:30"
+  },
+  {
+   "persona": "p10",
+   "run": 1,
+   "run_counter": 46,
+   "outcome": "fail",
+   "failed_hard": [
+    "P10.no_reopen_implied"
+   ],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p10-0046.json",
+   "totals": {
+    "persona_messages": 2,
+    "client_turns": 3,
+    "tool_calls": 1,
+    "cost_usd_equiv": 0.0052,
+    "duration_s": 48,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.86,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.12,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T14:15:30+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.88,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.12,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T14:16:23+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.02,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T14:15:25+05:30",
+   "ended": "2026-10-25T14:16:19+05:30"
   }
  ],
- "ended": "2026-10-25T14:12:42+05:30",
- "commit": "1c36920",
+ "ended": "2026-10-25T14:16:31+05:30",
+ "commit": "3436d28",
  "dirty": true,
  "claude_code": "2.1.310",
  "models": {
@@ -1843,17 +1945,17 @@
  },
  "runs_per_persona": 1,
  "parallel": 2,
- "fresh_stack": false,
+ "fresh_stack": true,
  "partial": true,
  "summary": {
-  "runs": 37,
-  "valid_runs": 33,
-  "passed": 21,
-  "pass_rate": 0.636,
+  "runs": 39,
+  "valid_runs": 35,
+  "passed": 22,
+  "pass_rate": 0.629,
   "invalid": 3,
   "errors": 1,
-  "cost_usd_equiv": 0.3689,
-  "duration_s": 4046,
+  "cost_usd_equiv": 0.3844,
+  "duration_s": 4188,
   "paused_s": 0
  },
  "pauses": [],
@@ -1872,15 +1974,15 @@
   },
   "last_after": {
    "five_hour": {
-    "utilization": 0.84,
+    "utilization": 0.88,
     "resets_at": "2026-10-25T15:20:00+05:30"
    },
    "seven_day": {
     "utilization": 0.12,
     "resets_at": "2026-11-01T06:30:00+05:30"
    },
-   "at": "2026-10-25T14:12:37+05:30",
-   "probe_cost_usd_equiv": 0.00060709
+   "at": "2026-10-25T14:16:23+05:30",
+   "probe_cost_usd_equiv": 0.0006062900000000001
   }
  },
  "batches": [
@@ -2395,6 +2497,38 @@
      "resets_at": "2026-11-01T06:30:00+05:30"
     },
     "at": "2026-10-25T14:12:42+05:30",
+    "probe_cost_usd_equiv": 0.00060669
+   }
+  },
+  {
+   "personas": [
+    "p01",
+    "p10"
+   ],
+   "started": "2026-10-25T14:13:16+05:30",
+   "ended": "2026-10-25T14:16:31+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.85,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.12,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T14:13:39+05:30",
+    "probe_cost_usd_equiv": 0.00060709
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.88,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.12,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T14:16:31+05:30",
     "probe_cost_usd_equiv": 0.00060669
    }
   }
