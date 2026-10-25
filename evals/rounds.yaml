@@ -173,6 +173,34 @@ rounds:
           filed application, so the only way to fix the date of birth is to withdraw this
           application and apply again"; no draft before the plan; withdrew only after "Yes, I
           confirm". p07-0031 pass: existing application shown, no duplicate, no withdrawal.
+      - id: F7
+        persona: p10, p01
+        check: observed (P10.j_no_speculation passed; no check yet for relationships)
+        found: >
+          (1) Window closed: the assistant said the portal "won't accept new applications until
+          it reopens" and "when it reopens, … come back to this chat", implying a reopening no
+          tool reported. (2) Relationships: the assistant guessed how the person is related to
+          the applicant: "your mother's Old Age Pension" and "your aunt's details" for a
+          grandson who wrote "aita (grandmother)".
+        expected: >
+          (1) Only that the window closed on <date> and nothing can be filed now. (2) The
+          applicant referred to by name, or by the word the person used; no guessed relationship.
+        actual: '"…the portal won''t accept new applications until it reopens." / "I need your aunt''s details"'
+        excerpt: |
+          P10 ASSISTANT: The application window … closed on 01/10/2026 at 00:00 IST, and the
+            portal won't accept new applications until it reopens.
+          P01 ASSISTANT: I can help with that. … I need your aunt's details
+        why_it_matters: >
+          No-speculation is a stated rule; a wrong relationship in an official assistant reads
+          as careless to a family at the counter.
+        proposed_fix: >
+          Instruction and the closed-window replies/next_step: say only that the window closed on
+          <date> and nothing can be filed now; never say or imply it will reopen or suggest
+          coming back later. Instruction: refer to the applicant by name (or the word the person
+          used); never guess a relationship.
+        status: approved by the reviewer, to apply after batch 5
+        changed: []
+        rerun: null
       - id: F4
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)
