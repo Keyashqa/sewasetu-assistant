@@ -79,9 +79,10 @@ of birth written as DDMMYYYY": say it in those words, never as digits. Never wor
 digits yourself, also when summarising several applications.
 - State only scheme facts these tools return. Never speculate about future application \
 windows, rule changes or anything no tool told you.
-- When the window has closed, say only that it closed on the date the tool gives and that \
-nothing can be filed now. Never say or imply that it will reopen, and never suggest coming \
-back later.
+- When the window has closed, give the tool's closed-window sentence exactly as written \
+("Applications closed on <date>. Nothing can be filed now, and I have no information about any \
+future application window."). Never say or imply that it will reopen, and never suggest asking \
+anyone about a future window, preparing for one, or coming back later.
 - Refer to the applicant by name, or by the word the person used ("my aita", "my neighbour"). \
 Never guess how the person is related to the applicant.
 
@@ -150,9 +151,8 @@ async def get_scheme_info() -> dict:
             "Age proof: %s." % replies.either([d if "ID" in d else d.lower()
                                                for d in s["documents_accepted"]]),
             "Decision within %d days; approved automatically if none." % s["sla_days"],
-            ("Applications close %s." if w["open"] else
-             "Applications closed on %s. Nothing can be filed now.")
-            % w["deadline_ist"]),
+            "Applications close %s." % w["deadline_ist"] if w["open"] else
+            fmt.closed_sentence(w)),
         "amount": "Rs %d per month" % s["amount_inr"],
         "min_age": s["min_age"],
         "residency": s["residency"],
@@ -199,7 +199,7 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
         said.append("Not eligible yet — age %d; the pension starts at %d.\nEligible from %s."
                     % (e["age"], services.portal.MIN_AGE, e["turns_60_on"]))
     if "window_closed" in e["reasons"]:
-        said.append("Applications closed on %s. Nothing can be filed now." % e["window"]["deadline_ist"])
+        said.append(fmt.closed_sentence(e["window"]))
     if "active_application" in e["reasons"]:
         said.append(replies.existing(e["existing"]) + "\nTo apply for someone else, "
                     "**use their own mobile number**.")
@@ -227,8 +227,9 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
                             "get_number_verification_link, then applicant_mobile.")
     elif "window_closed" in e["reasons"]:
         out["message"] = " ".join(messages)
-        out["next_step"] = ("Nothing can be filed now. Tell the person only that applications "
-                            "closed on the date given; do not say or imply that they will reopen.")
+        out["next_step"] = ("Nothing can be filed now. Give the person the reply's closed-window "
+                            "sentence exactly as written; never suggest asking about or preparing "
+                            "for a future window.")
     else:
         out["message"] = " ".join(messages)
         out["next_step"] = "Nothing can be filed now. Explain this to the person."
@@ -590,7 +591,7 @@ async def submit_application(confirm_declaration: bool,
     elif s in ("incomplete", "no_document"):
         reply = replies.still_needed(r.get("missing") or [services.DOC_MISSING])
     elif s == "invalid" and r["errors"] == ["the application window has closed"]:
-        reply = "Applications closed on %s. Nothing can be filed now." % r["window"]["deadline_ist"]
+        reply = fmt.closed_sentence(r["window"])
     elif s == "invalid":
         reply = "The portal refused it: %s." % "; ".join(r["errors"])
     elif s == "duplicate":

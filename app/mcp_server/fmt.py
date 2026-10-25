@@ -12,22 +12,30 @@ STATUS_MEANING = {
 }
 
 
+# the one sentence for a closed window, to be copied as given (finding F7)
+CLOSED_SENTENCE = ("Applications closed on %s. Nothing can be filed now, and I have no "
+                   "information about any future application window.")
+
+
+def closed_sentence(win):
+    return CLOSED_SENTENCE % win["deadline_ist"]
+
+
 def window_text(win):
     """{open, closes, time_left} for a window_status() dict."""
     out = {"open": win["open"], "closes": win["deadline_ist"]}
     if win["open"]:
         out["time_left"] = win["time_left"]
     else:
-        out["note"] = "The application window closed on %s. Nothing can be filed now." \
-                      % win["deadline_ist"]
+        out["note"] = closed_sentence(win)
     return out
 
 
 def window_closed_message(win):
     return ("The application window has closed (it closed on %s). No application can be "
-            "filed through the portal now, by the assistant or at the counter. No tool knows "
-            "whether or when it will reopen: do not say or imply that it will."
-            % win["deadline_ist"])
+            "filed through the portal now, by the assistant or at the counter. Tell the person "
+            "exactly: \"%s\" Copy it as given; never suggest asking about or preparing for a "
+            "future window." % (win["deadline_ist"], closed_sentence(win)))
 
 
 def existing_application_message(existing):
