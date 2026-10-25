@@ -98,9 +98,19 @@ def read_back(fields, contact):
     if fields.get("ifsc"):
         bank.append("IFSC %s" % fields["ifsc"])
     bank += ["Age proof uploaded", "Contact %s" % contact]
+    # one line naming the optional fields still empty, so they are offered once more before
+    # filing (finding F2); never blocking
+    not_given = [label for key, label in (("gender", "gender"), ("marital_status", "marital status"),
+                                          ("ifsc", "IFSC")) if not fields.get(key)]
+    if fields.get("marital_status") == "Widowed" and not fields.get("husband_name"):
+        not_given.append("husband's name")
+    if not_given:
+        last = ("Optional, not given: %s. Add them if you know them, or reply **yes** to submit."
+                % ", ".join(not_given))
+    else:
+        last = "Reply **yes** to submit."
     return lines("**Please confirm**", " · ".join(x for x in who if x), " · ".join(bank),
-                 "These details are correct and the applicant agrees to apply. "
-                 "Reply **yes** to submit.")
+                 "These details are correct and the applicant agrees to apply.", last)
 
 
 def upload_link(url, expires):

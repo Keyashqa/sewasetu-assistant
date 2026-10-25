@@ -188,7 +188,10 @@ def checks():
                        ("read-back", "**Please confirm**"),
                        ("submitted", "**Submitted — ")):
         check("template: %s" % name, samples.get(name, "").startswith(want), samples.get(name))
-    check("read-back: declaration and yes", "Reply **yes** to submit." in samples["read-back"]
+    # "Reply **yes** to submit." or, when optional fields are missing (finding F2),
+    # "Optional, not given: … or reply **yes** to submit."
+    check("read-back: declaration and yes", "reply **yes** to submit." in samples["read-back"].lower()
+          and "agrees to apply" in samples["read-back"]
           and "Age proof uploaded" in samples["read-back"])
     check("officer approved: SMS line", samples["officer approved"].startswith("**Approved — ")
           and "SMS sent to" in samples["officer approved"], samples["officer approved"])

@@ -99,6 +99,9 @@ def _run(fn, *args, **kwargs):
     return anyio.to_thread.run_sync(lambda: fn(*args, **kwargs))
 
 
+# default of the optional save fields: "left out". An explicit null clears the field.
+NOT_GIVEN = "(not given)"
+
 PASSWORD_TEXT = ("your password is the applicant's date of birth written as DDMMYYYY. Say it "
                  "in those words; never write the password's digits out.")
 
@@ -360,7 +363,9 @@ def _ifsc_problem(ifsc):
         "full_name, date_of_birth (DD/MM/YYYY, day first), village, block (filled in "
         "automatically for known villages), bank_account (9-18 digits). Optional: gender "
         "(Male/Female/Other), marital_status (Married/Unmarried/Widowed), husband_name (only "
-        "if widowed), ifsc (11 characters, e.g. SBIN0003077). Ask for at most two required "
+        "if widowed), ifsc (11 characters, e.g. SBIN0003077). To clear an optional field, send "
+        "it as null; leave it out to keep it. A value the portal would refuse is not saved; "
+        "the reply says so and the earlier value stays. Ask for at most two required "
         "details at a time when the person's replies are short or unsure; if they give several "
         "at once, save them all. Ask once for the optional ones, alongside a required one; never "
         "insist on them and never hold the application for them. Send only details the applicant "
@@ -370,23 +375,27 @@ def _ifsc_problem(ifsc):
                                 destructiveHint=False, idempotentHint=True))
 async def save_application_details(full_name: str | None = None,
                                    date_of_birth: str | None = None,
-                                   gender: str | None = None,
-                                   marital_status: str | None = None,
-                                   husband_name: str | None = None,
+                                   gender: str | None = NOT_GIVEN,
+                                   marital_status: str | None = NOT_GIVEN,
+                                   husband_name: str | None = NOT_GIVEN,
                                    village: str | None = None,
                                    block: str | None = None,
                                    bank_account: str | None = None,
-                                   ifsc: str | None = None,
+                                   ifsc: str | None = NOT_GIVEN,
                                    applicant_mobile: str | None = None) -> dict:
     p = current_principal()
     mobile, err = await _applicant(p, applicant_mobile)
     if err:
         return err
     given = {k: v for k, v in (("full_name", full_name), ("date_of_birth", date_of_birth),
-                               ("gender", gender), ("marital_status", marital_status),
-                               ("husband_name", husband_name), ("village", village),
-                               ("block", block), ("bank_account", bank_account),
-                               ("ifsc", ifsc)) if v is not None}
+                               ("village", village), ("block", block),
+                               ("bank_account", bank_account)) if v is not None}
+    # optional fields: left out keeps them, an explicit null clears them (no empty strings,
+    # which small models send badly: finding F8)
+    for k, v in (("gender", gender), ("marital_status", marital_status),
+                 ("husband_name", husband_name), ("ifsc", ifsc)):
+        if v != NOT_GIVEN:
+            given[k] = "" if v is None else v
     if not given:
         return {"reply": "Nothing to save yet.",
                 "error": "No fields were given. Send at least one field the applicant told you."}

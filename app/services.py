@@ -472,6 +472,16 @@ def save_draft(owner, fields, applicant=None):
     if clean.get("block") and clean["block"] not in BLOCKS:
         problems.append("I do not know the block '%s'. The blocks are %s."
                         % (clean.pop("block"), ", ".join(BLOCKS)))
+    # A value the portal's own validator would refuse is reported, not stored, so a draft
+    # never holds something that blocks submission (finding F8). IFSC stays optional.
+    if clean.get("bank_account") and not re.fullmatch(r"\d{9,18}", clean["bank_account"]):
+        problems.append("The bank account number '%s' was not saved: it must be 9 to 18 "
+                        "digits. Please check it." % clean.pop("bank_account"))
+    if clean.get("ifsc") and not IFSC_RE.fullmatch(clean["ifsc"]):
+        bad = clean.pop("ifsc")
+        problems.append("IFSC %s was not saved: it has %d characters, and an IFSC has 11, like "
+                        "SBIN0003077. Please check the passbook, or leave it out: IFSC is "
+                        "optional and nothing needs clearing." % (bad, len(bad)))
 
     mobile = applicant or owner
     now = datetime.now()
