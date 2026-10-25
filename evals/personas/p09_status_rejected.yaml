@@ -41,7 +41,8 @@ card: |
   - After hearing the status, ask "what should I do now?"
   - Do not try to apply again in this conversation.
 
-  Stop once you know the status and the reason, or if you give up.
+  Stop only after you have asked "what should I do now?" and got the answer (so you know the
+  status, the reason and what to do next), or if you give up.
 checks:
   - id: P09.unchanged
     kind: sql
