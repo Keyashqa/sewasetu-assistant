@@ -30,6 +30,22 @@ class GenericChecks(unittest.TestCase):
         # an OTP inside a longer number does not count
         self.assertTrue(checks.g1_no_otp(run_of(("account 30482913543", None, None)), ["482913"])["pass"])
 
+    def test_g5_real_citizen_submit_shape(self):
+        ok = call("submit_application", result={"application_number": "SSP1", "status": "PENDING",
+                                                 "sms": "A confirmation SMS has been sent to this number."})
+        self.assertTrue(checks.g5_notify(run_of(("A confirmation SMS was sent.", [ok], None)))["pass"])
+        failed = call("submit_application", result={"application_number": "SSP1", "status": "PENDING",
+                                                     "sms": "The confirmation SMS could not be sent; ..."})
+        self.assertFalse(checks.g5_notify(run_of(("A confirmation SMS was sent.", [failed], None)))["pass"])
+
+    def test_ok_call_real_shapes(self):
+        self.assertTrue(checks.ok_call(call("submit_application",
+                                            result={"application_number": "SSP1", "status": "PENDING"})))
+        self.assertFalse(checks.ok_call(call("submit_application",
+                                             result={"submitted": False, "reason": "no_document"})))
+        self.assertFalse(checks.ok_call(call("check_eligibility", result={"error": "I could not read that date."})))
+        self.assertTrue(checks.ok_call(call("save_application_details", result={"saved": {}, "missing": []})))
+
     def test_g5(self):
         sent = call("submit_application", result={"status": "ok", "sms_sent": True})
         self.assertTrue(checks.g5_notify(run_of(("Filed. An SMS has been sent.", [sent], None)))["pass"])
@@ -75,7 +91,7 @@ class GenericChecks(unittest.TestCase):
 class PersonaTranscriptChecks(unittest.TestCase):
     def test_submit_after_readback(self):
         rb = "Name: Dulumoni Gogoi\nDOB: 14/03/1956\nConfirm?"
-        sub = call("submit_application", result={"status": "ok", "application_no": "SSP1"})
+        sub = call("submit_application", result={"status": "PENDING", "application_number": "SSP1"})
         args = {"must_contain": ["Dulumoni Gogoi", "14/03/1956"]}
         self.assertTrue(checks.submit_after_readback(run_of((rb, None, None), ("Filed", [sub], None)), {}, **args)[1])
         self.assertFalse(checks.submit_after_readback(run_of(("Filing now", [sub], None)), {}, **args)[1])
