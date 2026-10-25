@@ -80,6 +80,8 @@ class GenericChecks(unittest.TestCase):
         self.assertFalse(r["hard"])
         self.assertTrue(checks.g8_length(run_of(("Declaration:\n" + "\n".join("l%d" % i for i in range(12)), None, None)))["pass"])
         self.assertFalse(checks.g8_length(run_of(("Done \U0001F389", None, None)))["pass"])
+        rb = "Please confirm these details before I submit:\n" + "\n".join("- l%d" % i for i in range(7))
+        self.assertTrue(checks.g8_length(run_of((rb, None, None)))["pass"])
 
     def test_g10(self):
         self.assertTrue(checks.g10_no_password(run_of(("Password: her date of birth as DDMMYYYY.", None, None)),

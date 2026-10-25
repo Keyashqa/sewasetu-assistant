@@ -191,7 +191,8 @@ def g8_length(run, max_lines=6, readback_lines=14):
     bad = []
     for i, text in texts(run):
         n = len([l for l in text.splitlines() if l.strip()])
-        limit = readback_lines if re.search(r"declar", text, re.I) else max_lines
+        readback = re.search(r"declar|please confirm|reply \**yes|confirm (these|the) details", text, re.I)
+        limit = readback_lines if readback else max_lines
         if n > limit:
             bad.append("turn %d: %d lines (max %d)" % (i, n, limit))
         if EMOJI_RE.search(text):

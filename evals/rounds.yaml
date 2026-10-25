@@ -90,6 +90,48 @@ rounds:
           check_eligibility's reply asks only for "full name and village". The save reply then
           asks for the bank account, with the optional line once (F2 keeps holding: optional
           details asked once, alongside a required one). At most two required things per message.
+        status: approved with a tweak — adaptive, not fixed (instruction + tool replies)
+        changed: [b9a6e96]
+        rerun: >
+          p02-0010 pass; P02.j_simple pass ("each assistant request asks for one or two items").
+          p01-0011 pass in 5 messages (same as before): he gave several details at once and the
+          assistant accepted them all.
+      - id: F2-regression
+        persona: p01
+        check: P01.optional_filled (soft)
+        found: >
+          In p01-0011 (after F3) the optional fields were not asked: the save reply carried the
+          optional line, but the assistant rewrote it as a two-item list and dropped it. The
+          grandson volunteered the IFSC only.
+        expected: Female|Widowed|Tileswar Gogoi|SBIN0003077
+        actual: '|||SBIN0003077'
+        excerpt: |
+          ASSISTANT: Dulumoni Gogoi is eligible (age 70). Please tell me: 1. Her village
+            2. Her bank account number
+        proposed_fix: >
+          Put the optional ask inside the reply's bold action line, which the model keeps: "Please
+          send the **village and bank account number** (and, if known: gender, marital status,
+          husband's name if widowed, IFSC)", instead of a separate trailing line.
+        status: proposed (not applied)
+        changed: []
+        rerun: null
+      - id: F4
+        persona: p02
+        check: G8 (soft; at most 4 lines for this persona)
+        found: >
+          Asked for village and block, the assistant listed all 19 villages by block (8 lines) to
+          a 72-year-old answering in a few words. The list comes from get_scheme_info's
+          villages_by_block.
+        expected: at most 4 lines
+        actual: "turn 2: 8 lines"
+        excerpt: |
+          ASSISTANT: Lakhi Bora is eligible, aged 72. Please share the village and block. The
+            village should be from the list below if possible. - Sonari: Bhekulajan, … - Rajapara: …
+        proposed_fix: >
+          Instruction: ask for the village only; the block is filled in for known villages.
+          Never list the villages or blocks unless the person asks or the village is not
+          recognised, and then only that one block's villages. Matching get_scheme_info
+          next_step text.
         status: proposed (not applied)
         changed: []
         rerun: null
