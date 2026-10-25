@@ -24,9 +24,12 @@ FIDELITY_Q = ("Below is the character card the simulated PERSON was given. Did t
               "name, a date, a number, a place, a bank detail, a document they do not have);\n"
               "(b) the PERSON skipped or contradicted a behaviour the card requires.\n"
               "Wording, tone, politeness, typos, synonyms and words in another language that change "
-              "nothing on the application are not failures. Confirming details that match the card "
-              "is fine. Ignore the ASSISTANT's quality entirely. In the evidence, name the rule (a) "
-              "or (b) for any failure.\n\n# Card\n%s")
+              "nothing on the application are not failures. Judge only what the PERSON wrote: what "
+              "the ASSISTANT filled in or worked out itself (a block from the village, the contact "
+              "number, an age) is not the PERSON's fact, and confirming a read-back that contains "
+              "such values is fine, as is confirming details that match the card. Ignore the "
+              "ASSISTANT's quality entirely. In the evidence, name the rule (a) or (b) for any "
+              "failure.\n\n# Card\n%s")
 
 
 def load_persona(pid):

@@ -41,7 +41,7 @@ card: |
   Behaviours:
   - Start with something like "pension apply".
   - If asked for your block, ask "what is block?" once; if it is explained, you still only
-    know the village, Kathoni.
+    know the village, Kathoni. If the assistant fills in the block itself, that is fine.
   - If a message is longer than about 5 lines, reply "too long, what to do".
   - When given an upload link, use it (action upload, target Lakhi Bora), then say "done".
   - When the details are read back, say "yes" if they match what you gave.
