@@ -199,14 +199,38 @@ Verified on this machine:
 - `--bare` would be the cleanest isolation, but it requires `ANTHROPIC_API_KEY`, so it is not
   used.
 
-Still to verify in step 1:
-- MCP over HTTP with a static header.
-- `--allowedTools mcp__<server>` (server-wide allow).
-- `--permission-mode dontAsk`.
-- `stream-json` requiring `--verbose`.
-- The prompt read from stdin.
-- `--system-prompt-file`.
-- `claude purge`.
+Verified in step 1 (25/10/2026, 2.1.310, local stack at `f35f3c1`):
+- MCP over HTTP with a static `Authorization` header works. Init shows
+  `mcp_servers: [{name, status: "connected", source: "dynamic"}]`.
+- The tools are **not deferred**: init `tools` lists exactly the 8 citizen (6 officer)
+  `mcp__sewasetu-*` names and nothing else, so `ENABLE_TOOL_SEARCH` is not needed.
+  `--allowedTools mcp__<server>`, `--permission-mode dontAsk` and `--permission-prompts none`
+  let every tool run without a prompt.
+- The prompt read from stdin, `stream-json --verbose`, `--session-id` then `--resume`, and a
+  rewritten `mcp.json` with a refreshed token all work. The resumed turn remembered turn 1.
+- `--system-prompt-file`, `--json-schema` (`structured_output`, 2 turns) and
+  `--no-session-persistence` work for the simulator. No project directory is created.
+- **Deviation: plugins.** Init lists three built-in plugins (`cc-plugin-agents-md`,
+  `cc-plugin-telemetry`, `cc-plugin-plugin-authoring`, all `path: "builtin"`).
+  `slash_commands` and `skills` are empty and the plugins add no tools. The isolation check
+  allows built-in plugins that add nothing and fails on any other plugin. An evaluator's
+  stock Claude Code has the same built-ins.
+- **Deviation: costs are cumulative per session.** `total_cost_usd` and `modelUsage` in a
+  resumed turn's `result` cover the whole session, so per-turn usage is the difference from
+  the previous turn. The `result`'s `usage` block is per turn.
+- **Usage limits:** every call emits a `rate_limit_event` with `status`, `resetsAt`,
+  `rateLimitType` and `unifiedWindows.{five_hour,seven_day}.{utilization,resetsAt,status}`.
+  This is §3.4's primary signal. The error text is composed at run time ("You've hit your …
+  limit", "usage limit reached", "resets …") and is only the fallback.
+  `evals/tests/test_claude_cli.py` covers both. The harness also pauses *before* a call when
+  a window is at 97% or more.
+- Each client run's auto-memory directory is `~/.claude/projects/<mangled tmp path>/memory/`,
+  fresh per run. `claude purge <tmp> -y` deletes that project's transcripts and memory and
+  nothing else.
+- Measured: a Haiku client turn with one tool call takes 3.5–4.7 s at ~$0.002 equivalent
+  (~17k context, mostly cached). A Haiku simulator call takes 2.9 s at ~$0.0005.
+- Windows: decode subprocess output as UTF-8 explicitly. The console shows `·` as `�`, but
+  the bytes are correct.
 
 ### 3.1 Client under test (one invocation per persona message)
 
@@ -232,7 +256,7 @@ The officer runs the same command with `sewasetu-officer` and `/mcp/officer`.
 - **Isolation, enforced and asserted on every turn** from the stream-json `system/init` event:
   - `tools` equals exactly the server's tool names (8 citizen / 6 officer) and nothing else.
   - `mcp_servers` is one entry with status `connected`.
-  - No plugins or slash commands.
+  - No slash commands or skills, and no plugins other than `path: "builtin"` ones.
   - Any `tool_use` outside `mcp__sewasetu-*` fails the run as `isolation_breach`.
   - User settings (hooks, plugins), project settings and CLAUDE.md are excluded by
     `--setting-sources ""` and the empty cwd. The auto-memory directory is per-project, and
@@ -298,14 +322,14 @@ claude -p --model <claude-haiku-5-5 for -dev | claude-sonnet-5-5 published> --ma
 All three roles (client, simulator, judge) share the subscription's 5-hour and weekly limits.
 Every `claude -p` call goes through `claude_cli.py`:
 
-- **Detect.** A call counts as usage-limited when it exits non-zero, or its result event has
-  `is_error: true`, and the text matches the limit pattern. The pattern is a regex fixed in
-  step 1 from the real message (e.g. "usage limit reached", "hit your limit", "resets …",
-  `Claude AI usage limit reached|<epoch>`). Any other error is an ordinary error and is not
-  retried.
-- **Pause.** Parse the reset time from the message (an epoch or "resets 3pm (Asia/Calcutta)").
-  Sleep until the reset plus 60 s. If no time can be parsed, probe every 15 min with a
-  one-word Haiku call. Pauses are capped at 6 h each; a weekly limit beyond that ends the
+- **Detect.** A call is usage-limited when its `rate_limit_event` has `status: "rejected"`.
+  As a fallback, the call failed (non-zero exit or `is_error`) and either the status is 429
+  or the text matches the limit pattern (step 1). Any other error is an ordinary error and is
+  not retried.
+- **Pause.** Sleep until the rejected window's `resetsAt` plus 60 s. If no reset time is
+  known, probe every 15 min with a one-word Haiku call. The harness also pauses *before* a
+  call when a window's utilization is at 97% or more, so a conversation is not cut mid-turn.
+  Pauses are capped at 6 h each; a weekly limit beyond that ends the
   round as `partial`, with the reason recorded.
 - **Retry the same call.** The client turn is retried with the same `--resume` session id
   and message. The harness first checks the session file for whether the failed turn was
