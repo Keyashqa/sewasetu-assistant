@@ -233,7 +233,10 @@ def create_application(cur, mobile, cleaned, actor=None):
 
 @app.route("/")
 def index():
-    return render_template("index.html", hours_left=deadline_remaining())
+    # the closing date shown next to the countdown comes from the same setting, so a
+    # SCHEME_DEADLINE override (app.ini unchanged) cannot leave the page saying another date
+    return render_template("index.html", hours_left=deadline_remaining(),
+                           closes=SCHEME_DEADLINE.strftime("%d/%m/%Y at %H:%M IST"))
 
 
 @app.route("/about")

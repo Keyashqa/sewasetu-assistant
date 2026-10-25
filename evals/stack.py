@@ -16,7 +16,13 @@ _counter_lock = threading.Lock()
 
 
 def compose(*args, env=None, check=True, capture=True, input=None):
-    e = dict(os.environ, **(env or {}))
+    """env values of None remove the variable, so compose falls back to .env."""
+    e = dict(os.environ)
+    for k, v in (env or {}).items():
+        if v is None:
+            e.pop(k, None)
+        else:
+            e[k] = v
     p = subprocess.run(["docker", "compose", *args], cwd=REPO, env=e, input=input,
                        capture_output=capture, text=True, encoding="utf-8", errors="replace")
     if check and p.returncode != 0:
@@ -103,10 +109,10 @@ def reset():
 
 
 def set_deadline(value):
-    """Recreate app + mcp with SCHEME_DEADLINE (None = the app.ini value). --no-deps keeps
-    the SMS gateway's in-memory inbox."""
+    """Recreate app + mcp with SCHEME_DEADLINE (None = back to the .env value, or app.ini if
+    .env has none). --no-deps keeps the SMS gateway's in-memory inbox."""
     compose("up", "-d", "--force-recreate", "--no-deps", "app", "mcp",
-            env={"SCHEME_DEADLINE": value or ""})
+            env={"SCHEME_DEADLINE": value})
     end = time.time() + 120
     while time.time() < end:
         try:

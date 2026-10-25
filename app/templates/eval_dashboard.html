@@ -58,6 +58,7 @@ are logged before the fix. Harness and persona-card mistakes are fixed without a
   {% if f.rerun %}<p><span class="muted">Re-run:</span> {{ f.rerun }}</p>{% endif %}
   {% if f.followup_rerun %}<p><span class="muted">Follow-up:</span> {{ f.followup_rerun }}</p>{% endif %}
   {% if f.open %}<p><span class="badge invalid">open</span> {{ f.open }}</p>{% endif %}
+  {% if f.known_limit %}<p><span class="badge invalid">known limit</span> {{ f.known_limit }}</p>{% endif %}
 </div>
 {% endfor %}
 {% endfor %}
@@ -78,7 +79,9 @@ are logged before the fix. Harness and persona-card mistakes are fixed without a
   <li><b>Their hands.</b> Uploads and number verification happen on the portal's real pages, using only links the assistant showed in the chat. OTPs arrive on the simulated SMS gateway and are typed on the page; they never enter the chat (except where a persona deliberately pastes one, to test the assistant's refusal).</li>
   <li><b>Checks are mostly the database.</b> SQL against the portal after the conversation (status, details, audit trail, documents by hash, nothing else changed), the SMS inbox, and transcript checks (no OTPs, no password digits, no month-first dates, links shown verbatim, decisions only on the officer's instruction, audit notes in the officer's words). A model judges only a few listed items, with its evidence shown.</li>
   <li><b>Sign-in.</b> The harness signs each person in through the portal's real OAuth pages (OTP or the officer login) and hands the client a short-lived token. Claude Code's own sign-in to the deployed servers was checked by hand in Phase 0.</li>
-  <li><b>Where it ran.</b> A fresh local copy of the portal (the full seed, the deemed-approval job off so the 700 pending cases stay pending) on the same code as the deployment. Nothing is ever run against the live portal. P10 alone runs with the application window closed.</li>
+  <li><b>Where it ran.</b> A fresh local copy of the portal (the full seed, the deemed-approval job off so the 700 pending cases stay pending) on the same code and configuration as the deployment. Nothing is ever run against the live portal. P10 alone runs with the application window closed.</li>
+  <li><b>Application window.</b> The deployment's window is extended to 31/12/2026 23:59 IST for the evaluation period (<code>SCHEME_DEADLINE</code> in the deployment's environment; the portal's own <code>app.ini</code> deadline, 31/10/2026, is unchanged). Eval rounds run with the same setting.</li>
+  <li><b>Known limit.</b> When the window is closed (P10), the assistant gives the exact closed-window sentence, but sometimes adds a line about a future window (finding F7).</li>
   <li><b>1 run per persona.</b> One run shows that a behaviour happened, not how often; small models vary from run to run. Development runs use a small model as the simulated person; the headline round uses a larger one.</li>
   <li><b>Not tested here.</b> An evaluator's assistant may have extra tools (shell, web) ours does not; real phones and real SMS; several officers.</li>
   <li><b>Soft checks</b> (reply length, emojis, optional details collected, some plain-language judgements) are reported but do not decide pass or fail.</li>

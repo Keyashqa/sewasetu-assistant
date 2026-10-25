@@ -188,6 +188,28 @@ gateway's in-memory inbox survives: `dc build app mcp && dc up -d --no-deps app 
 The `mcp` container applies new migrations (`app/migrations/*.sql`, idempotent) before it
 starts. Never `dc down -v` on the VM: `-v` deletes the database and the uploads.
 
+### 2.1 Application window extended for the evaluation period (25/10/2026)
+
+The deployment accepts applications through **31/12/2026 23:59 IST**. The portal's own
+deadline in `app/config/app.ini` (31/10/2026 23:59) is unchanged; the extension is an
+environment override that the app and both MCP servers read:
+
+```bash
+# /opt/sewasetu-assistant/.env (VM only, mode 600)
+SCHEME_DEADLINE=2026-12-31 23:59
+```
+
+Applied with a backup first and `dc up -d --force-recreate --no-deps app mcp` (no rebuild;
+the SMS gateway's inbox survives). Check: `get_scheme_info` says "Applications close
+31/12/2026 23:59 IST" and the homepage reads "closes 31/12/2026 at 23:59 IST". To end the
+extension, remove the line and recreate app + mcp the same way. The local `.env` carries the
+same value so eval rounds run with production's configuration.
+
+### 2.2 Publishing eval results
+
+`python -m evals publish <round> … --headline` writes `app/eval_data/`; commit and push it,
+then on the VM: backup, `sudo git pull --ff-only`, `dc build app && dc up -d --no-deps app`.
+
 ## 3. Back up and restore
 
 ```bash

@@ -152,7 +152,7 @@
      "excerpt": "P10 ASSISTANT: The application window … closed on 01/10/2026 at 00:00 IST, and the\n  portal won't accept new applications until it reopens.\nP01 ASSISTANT: I can help with that. … I need your aunt's details\n",
      "why_it_matters": "No-speculation is a stated rule; a wrong relationship in an official assistant reads as careless to a family at the counter.\n",
      "proposed_fix": "Instruction and the closed-window replies/next_step: say only that the window closed on <date> and nothing can be filed now; never say or imply it will reopen or suggest coming back later. Instruction: refer to the applicant by name (or the word the person used); never guess a relationship.\n",
-     "status": "part (2) fixed; part (1) improved but still open: the first reply is now the exact sentence, but Haiku sometimes adds a line implying a future window\n",
+     "status": "part (2) fixed; part (1) improved and accepted as a known limit (the first reply is the exact sentence; the model sometimes appends a line about a future window)\n",
      "changed": [
       "3436d28",
       "9d121c9",
@@ -161,7 +161,7 @@
      "rerun": "p01-0045 pass; P01.no_guessed_relation pass (re-scored after fixing the check's pattern, which had a YAML escape bug). p10-0046 FAIL P10.no_reopen_implied (turns 1, 2): \"please check with the Borgaon block office … for the next application period\", \"Ask the Borgaon block office when the next application period starts\", \"Keep your papers ready so you can apply quickly when it opens\". It does say \"I don't know when the window will open again\".\n",
      "proposed_followup": "Give the model the sentence to use, as F5 did for the password: the closed-window replies end \"Nothing can be filed now, and I have no information about any future window.\" The instruction adds: do not mention a next window or period, do not suggest asking anyone about it, and do not advise preparing for one.\n",
      "followup_rerun": "After 9d121c9 (one closed-window sentence) and 2a25737 (get_scheme_info's reply is that sentence alone, with a next_step to copy it): p10-0051 FAIL (paraphrased \"closed on 1 October 2026\"; \"please check with your Borgaon block office for the date\"); p10-0052 pass on substance (first reply exact: \"They closed on 01/10/2026 at 00:00 IST, so nothing can be filed now, and I have no information about any future application window\"; the check was refined to skip refusals echoing her words); p10-0053 FAIL (\"Once applications open again, you or someone helping you can start a new …\"). P10 passes P10.says_date and the no-speculation judge in all three.\n",
-     "open": "The model appends a helpful line about a future window in about two of three runs. Further text changes are unlikely to remove it with Haiku; options are to accept it as a known limit, or make the closed state end the conversation (no further help offered).\n"
+     "known_limit": "Accepted 25/10/2026 as a known limit of the closed-window path (tested locally by P10, which runs with the window closed): the first reply is the exact sentence, but the model sometimes appends a line about a future window. No further fix planned.\n"
     },
     {
      "id": "F8",

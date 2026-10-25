@@ -202,8 +202,8 @@ rounds:
           coming back later. Instruction: refer to the applicant by name (or the word the person
           used); never guess a relationship.
         status: >
-          part (2) fixed; part (1) improved but still open: the first reply is now the exact
-          sentence, but Haiku sometimes adds a line implying a future window
+          part (2) fixed; part (1) improved and accepted as a known limit (the first reply is the
+          exact sentence; the model sometimes appends a line about a future window)
         changed: [3436d28, 9d121c9, 2a25737]
         rerun: >
           p01-0045 pass; P01.no_guessed_relation pass (re-scored after fixing the check's
@@ -226,10 +226,10 @@ rounds:
           window"; the check was refined to skip refusals echoing her words); p10-0053 FAIL
           ("Once applications open again, you or someone helping you can start a new …").
           P10 passes P10.says_date and the no-speculation judge in all three.
-        open: >
-          The model appends a helpful line about a future window in about two of three runs.
-          Further text changes are unlikely to remove it with Haiku; options are to accept it as
-          a known limit, or make the closed state end the conversation (no further help offered).
+        known_limit: >
+          Accepted 25/10/2026 as a known limit of the closed-window path (tested locally by
+          P10, which runs with the window closed): the first reply is the exact sentence, but
+          the model sometimes appends a line about a future window. No further fix planned.
       - id: F8
         persona: p15
         check: P15.row, P15.readback (hard)

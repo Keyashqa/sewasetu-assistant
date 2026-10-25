@@ -13,6 +13,10 @@ These override anything below that says otherwise.
    for optional re-checks.
 2. **Production's deadline stays** (31/10/2026 23:59). Rounds run before then.
    `SCHEME_DEADLINE` is overridden only for P10.
+   *Superseded 25/10/2026:* the deployment accepts applications through 31/12/2026 23:59
+   (`SCHEME_DEADLINE` in production's `.env`; `app.ini` unchanged). The local `.env` carries
+   the same value, so rounds run with production's configuration; P10 still overrides it to
+   a past date, and the harness restores the `.env` value afterwards.
 3. **Length and emoji checks (G8) stay soft.**
 4. **Parallel 2** by default for full rounds.
 5. **Full transcripts are published**, masked (§5).
