@@ -14,9 +14,11 @@ NEEDED = {"full_name": "full name", "date_of_birth": "date of birth", "village":
           services.DOC_MISSING: "age proof"}
 MAX_LIST = 4                       # list lines in one reply, plus one "and N more" line
 OPTIONAL_FIELDS = ("gender", "marital_status", "husband_name", "ifsc")
-# asked once, alongside the required details; never insisted on, never blocking
-OPTIONAL_ASK = ("If known, also: gender, marital status, husband's name (if widowed) and IFSC "
-                "(optional).")
+# asked once, alongside a required detail; never insisted on, never blocking
+OPTIONAL_LIST = "gender, marital status, husband's name if widowed, IFSC — optional"
+# the status-portal password, described: never its digits (findings F1, F5)
+PASSWORD_LINE = ("Portal login: the mobile number, and the applicant's date of birth written as "
+                 "DDMMYYYY as the password.")
 
 STYLE = """\
 How to reply:
@@ -54,8 +56,13 @@ def either(items):
     return items[0] if len(items) == 1 else "%s or %s" % (", ".join(items[:-1]), items[-1])
 
 
-def still_needed(missing):
-    return "Still needed: %s." % ", ".join(NEEDED.get(m, m) for m in missing)
+def still_needed(missing, optional=False):
+    """With optional, the optional ask rides in the same bold line: models keep the action
+    line when they rewrite a reply, and drop trailing ones (finding F2)."""
+    text = ", ".join(NEEDED.get(m, m) for m in missing)
+    if optional:
+        return "**Still needed: %s** (and, if known: %s)." % (text, OPTIONAL_LIST)
+    return "Still needed: %s." % text
 
 
 def status_line(no, name, status, deemed=None, reason=None):
@@ -119,7 +126,8 @@ def submitted(no, deemed, mobile, sms_sent):
     return lines("**Submitted — %s (Pending)**" % no,
                  "Decision within 15 days; approved automatically on %s if none." % day(deemed),
                  "SMS sent to %s." % mobile if sms_sent
-                 else "The confirmation SMS could not be sent; the application is filed.")
+                 else "The confirmation SMS could not be sent; the application is filed.",
+                 PASSWORD_LINE)
 
 
 def existing(e):

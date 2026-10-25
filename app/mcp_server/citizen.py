@@ -39,6 +39,9 @@ two required details at a time. When they give several details at once, accept t
 do not slow them down.
 - Ask once for the optional details (gender, marital status, husband's name if widowed, \
 IFSC), alongside a required one. Never insist on them and never hold the application for them.
+- Ask for the village; the block is filled in automatically for a known village. Never list \
+villages or blocks unless the person asks, and then only the villages of the block they name. \
+When the village is not recognised, ask which block it is in: the block is required.
 
 Applying for more than one person (helpers, CSC operators):
 - By default everything is filed on the signed-in number. For one applicant nothing extra is \
@@ -69,7 +72,8 @@ tells you.
 document through the link.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
 - Never write out a password or an OTP. The status portal password is "the applicant's date \
-of birth written as DDMMYYYY": say it in those words, never as digits.
+of birth written as DDMMYYYY": say it in those words, never as digits. Never work out the \
+digits yourself, also when summarising several applications.
 - State only scheme facts these tools return. Never speculate about future application \
 windows, rule changes or anything no tool told you.
 
@@ -375,7 +379,12 @@ async def save_application_details(full_name: str | None = None,
                 "error": "No fields were given. Send at least one field the applicant told you."}
     r = await _run(services.save_draft, p.mobile, given, applicant=mobile)
     saved_ifsc = r["saved"].get("ifsc") or ""
-    problems = [_ifsc_problem(saved_ifsc) if pr.startswith("IFSC must be") else pr
+    # an unknown village: ask for its block, without listing every village (finding F4)
+    unknown_village = ("The village '%s' is not in the known list. Ask which block it is in, "
+                       "then send the village again together with the block; do not suggest or "
+                       "list other villages." % (village or "").strip())
+    problems = [_ifsc_problem(saved_ifsc) if pr.startswith("IFSC must be") else
+                unknown_village if pr.startswith("I do not know the village") else pr
                 for pr in r["problems"]]
     out = {**_for(mobile, p), "saved": r["saved"], "missing": r["missing"],
            "problems": problems, "corrections": r["corrections"], "warnings": r["warnings"],
@@ -386,14 +395,15 @@ async def save_application_details(full_name: str | None = None,
         out["reply"] = replies.lines("**Please check:**", *[
             "IFSC %s has %d characters; it must be 11, like SBIN0003077. Please check the "
             "passbook, or leave it out (IFSC is optional)." % (saved_ifsc, len(saved_ifsc))
-            if pr.startswith("IFSC must be") else pr for pr in r["problems"][:3]])
+            if pr.startswith("IFSC must be") else
+            "I don't know the village %s. **Which block is it in?**" % (village or "").strip()
+            if pr.startswith("I do not know the village") else pr for pr in r["problems"][:3]])
     elif r["missing"]:
         # asking for required details: ask once for the optional ones as well, unless some
         # were already given
         asking = [m for m in r["missing"] if m != services.DOC_MISSING]
-        optional = (replies.OPTIONAL_ASK if asking and
-                    not any(r["saved"].get(f) for f in replies.OPTIONAL_FIELDS) else None)
-        out["reply"] = replies.lines(replies.still_needed(r["missing"]), note, optional)
+        optional = bool(asking) and not any(r["saved"].get(f) for f in replies.OPTIONAL_FIELDS)
+        out["reply"] = replies.lines(replies.still_needed(r["missing"], optional), note)
     else:
         out["reply"] = replies.read_back(r["saved"], mobile)
     out = {"reply": out.pop("reply"), **out}
