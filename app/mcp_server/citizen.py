@@ -33,6 +33,13 @@ consents. Do not refuse because the mobile, or the person typing, is not the app
 applicant needs a different mobile number (their own or any family member's), verified as \
 below, or the block office.
 
+Asking for details:
+- Match the person's pace. When their replies are short or they seem unsure, ask for at most \
+two required details at a time. When they give several details at once, accept them all and \
+do not slow them down.
+- Ask once for the optional details (gender, marital status, husband's name if widowed, \
+IFSC), alongside a required one. Never insist on them and never hold the application for them.
+
 Applying for more than one person (helpers, CSC operators):
 - By default everything is filed on the signed-in number. For one applicant nothing extra is \
 needed: leave applicant_mobile out.
@@ -182,8 +189,7 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
                     "**use their own mobile number**.")
     out["reply"] = replies.lines(
         "Eligible — age %d." % e["age"],
-        "Please send the applicant's **full name, village and bank account number**.",
-        replies.OPTIONAL_ASK) if e["eligible"] else "\n".join(said)
+        "Please send the applicant's **full name and village**.") if e["eligible"] else "\n".join(said)
     if "under_age" in e["reasons"]:
         messages.append("Age is %d. The pension is for people %d and above. They become "
                         "eligible on %s." % (e["age"], services.portal.MIN_AGE,
@@ -193,10 +199,11 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
     if "active_application" in e["reasons"]:
         messages.append(fmt.existing_application_message(e["existing"]))
     if e["eligible"]:
-        out["next_step"] = ("Collect the details and call save_application_details. In the same "
-                            "message, ask once for the optional ones too (gender, marital "
-                            "status, husband's name if widowed, IFSC); never insist on them. "
-                            "The age proof is uploaded later with get_document_upload_link.")
+        out["next_step"] = ("Collect the details and call save_application_details: at most two "
+                            "at a time if the person's replies are short or unsure; if they give "
+                            "several at once, save them all. The save reply asks once for the "
+                            "optional ones. The age proof is uploaded later with "
+                            "get_document_upload_link.")
     elif e["reasons"] == ["active_application"]:
         out["message"] = " ".join(messages)
         out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
@@ -336,9 +343,10 @@ def _ifsc_problem(ifsc):
         "full_name, date_of_birth (DD/MM/YYYY, day first), village, block (filled in "
         "automatically for known villages), bank_account (9-18 digits). Optional: gender "
         "(Male/Female/Other), marital_status (Married/Unmarried/Widowed), husband_name (only "
-        "if widowed), ifsc (11 characters, e.g. SBIN0003077). When you ask for the required "
-        "details, ask once in the same message for the optional ones too; never insist on them "
-        "and never hold the application for them. Send only details the applicant "
+        "if widowed), ifsc (11 characters, e.g. SBIN0003077). Ask for at most two required "
+        "details at a time when the person's replies are short or unsure; if they give several "
+        "at once, save them all. Ask once for the optional ones, alongside a required one; never "
+        "insist on them and never hold the application for them. Send only details the applicant "
         "or their helper actually gave; never guess a value. " + APPLICANT_MOBILE_DOC + " "
         'Example: {"full_name":"Sewali Gogoi","date_of_birth":"10/04/1957","village":"Kathoni"}'),
     annotations=ToolAnnotations(title="Save applicant details", readOnlyHint=False,
@@ -392,8 +400,9 @@ async def save_application_details(full_name: str | None = None,
     if problems:
         out["next_step"] = "Ask about each problem, then save again."
     elif [m for m in r["missing"] if m != services.DOC_MISSING]:
-        out["next_step"] = ("Ask for the missing details (and, once, the optional ones if the "
-                            "reply lists them; never insist).")
+        out["next_step"] = ("Ask for the missing details: at most two at a time if the person's "
+                            "replies are short or unsure. Ask once for the optional ones if the "
+                            "reply lists them; never insist.")
     elif services.DOC_MISSING in r["missing"]:
         out["next_step"] = "Details are complete. Call get_document_upload_link for the age proof."
     else:
