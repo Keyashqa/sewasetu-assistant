@@ -79,7 +79,7 @@ rounds:
           for three required details plus four optional ones in one message (check_eligibility's
           reply after F2). She answered two; the bank account needed a second ask.
         expected: one or two things at a time, in plain words
-        actual: judge fail: "asked for one thing at a time in some turns, but not consistently"
+        actual: 'judge fail: "asked for one thing at a time in some turns, but not consistently"'
         excerpt: |
           ASSISTANT: The applicant is eligible, aged 72. Please send the applicant's full name,
             village and bank account number. If known, also send gender, marital status,
