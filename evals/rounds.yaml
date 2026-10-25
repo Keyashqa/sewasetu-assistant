@@ -71,3 +71,25 @@ rounds:
           p01-0006 pass. The assistant asked for the optional fields (turn 1 on its own, turn 2
           from the save reply) without insisting. The person gave the IFSC but not gender or
           marital status (simulator choice), so P01.optional_filled (soft) is |||SBIN0003077.
+      - id: F3
+        persona: p02
+        check: P02.j_simple (soft judge)
+        found: >
+          For a 72-year-old alone at a kiosk who answers one thing at a time, the assistant asked
+          for three required details plus four optional ones in one message (check_eligibility's
+          reply after F2). She answered two; the bank account needed a second ask.
+        expected: one or two things at a time, in plain words
+        actual: judge fail: "asked for one thing at a time in some turns, but not consistently"
+        excerpt: |
+          ASSISTANT: The applicant is eligible, aged 72. Please send the applicant's full name,
+            village and bank account number. If known, also send gender, marital status,
+            husband's name (if widowed) and IFSC code. These optional details can be left out.
+          PERSON: Lakhi Bora. Kathoni
+        why_it_matters: The Director's users are old and at kiosks; F2 made the first ask longer.
+        proposed_fix: >
+          check_eligibility's reply asks only for "full name and village". The save reply then
+          asks for the bank account, with the optional line once (F2 keeps holding: optional
+          details asked once, alongside a required one). At most two required things per message.
+        status: proposed (not applied)
+        changed: []
+        rerun: null
