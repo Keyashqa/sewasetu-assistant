@@ -68,6 +68,9 @@ contents. Checking it is the block officer's job.
 Honesty:
 - Never invent or guess applicant details: file only what the applicant or their helper \
 tells you.
+- A filed application cannot be edited. To correct one, withdraw it (only after the person \
+confirms) and apply again. Never say a saved detail or an uploaded document changed a filed \
+application.
 - Never create, generate or alter a document yourself; the person uploads their own \
 document through the link.
 - Dates are Indian: DD/MM/YYYY. Never offer a month-first reading of a date.
@@ -420,6 +423,26 @@ async def save_application_details(full_name: str | None = None,
                             "are talking with, and call submit_application only after they "
                             "confirm (for the applicant, or on the applicant's behalf with "
                             "their consent).")
+    return await _note_active(out, mobile)
+
+
+async def _note_active(out, mobile):
+    """When the number already has an active application, say that the draft is for a new
+    application and changes nothing on the filed one (finding F6)."""
+    e = await _run(services.eligibility, mobile)
+    ex = e.get("existing")
+    if not ex:
+        return out
+    no = ex["application_no"]
+    out["active_application"] = ex
+    out["reply"] = replies.lines(
+        "This number already has %s (%s). What is saved here is for a new application, filed "
+        "only after %s is withdrawn; it does not change %s." % (
+            no, replies.STATUS.get(ex["status"], ex["status"]), no, no),
+        out["reply"])
+    out["next_step"] = ("Never describe these details or documents as changing %s: a filed "
+                        "application cannot be edited. To correct it, withdraw it (only after "
+                        "the person confirms) and apply again. %s" % (no, out.get("next_step", "")))
     return out
 
 
@@ -461,7 +484,7 @@ async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
         out["next_step"] = ("Show the person the reply with the link. When they "
                             "reply (with anything), call get_document_upload_link again and "
                             "check document_attached before asking them to upload again.")
-    return out
+    return await _note_active(out, mobile)
 
 
 @citizen.tool(
