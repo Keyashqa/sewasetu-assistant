@@ -110,7 +110,7 @@ then `git pull` plus an app rebuild (DEPLOY §2), with no new volume or mount.
    scheduler stays off, so the 700 PENDING seed rows survive.
 3. Wait until `/` returns 200, the MCP endpoints return 401 with `resource_metadata`, and
    `SELECT count(*) … PENDING` = 700.
-4. Sanity: no seed row and no `portal_users` row has a mobile in the eval range (§2a).
+4. Sanity: each run's reserved mobiles are unused (§2a, checked per run).
    Snapshot the seed baseline (status counts for `id <= 100000`).
 5. DCR once: `POST /oauth/register`
    `{client_name:"Sewa Setu eval harness", redirect_uris:["http://127.0.0.1:53682/callback"],
@@ -120,9 +120,15 @@ then `git pull` plus an app rebuild (DEPLOY §2), with no new volume or mount.
 
 **2a. Mobiles.** `98 PP RRRR SS`: `PP` is the persona (01–16), `RRRR` is a global run counter
 kept in `evals/results/.counter` (monotonic across rounds), `SS` is the slot (00 = the
-signed-in person, 01/02 = other people). Example: P04, run 7, slot 1 is `9804000701`. Runs never
-collide and nothing is deleted. Step 4 aborts if the seed already uses the prefix (then
-switch to another).
+signed-in person, 01/02 = other people; 50 = an officer fixture's applicant). Example: P04,
+run 7, slot 1 is `9804000701`. Nothing is deleted.
+
+*Step 2 finding:* the seed's 100k mobiles cover every prefix from `60` to `99`, and every
+3- and 4-digit prefix in that range too, so no prefix is free. The portal would accept a
+`5…` number, but no real mobile starts with 5. Instead, `stack.reserve_mobiles()` checks
+each **exact** number against `applications`, `portal_users`, `otps`, `agent_drafts`,
+`document_uploads` and `helper_filings` (applicant and helper) before a run. On a
+collision it takes the next counter value. G4 matches exact mobiles, so it is unaffected.
 
 **Per run:**
 1. **Setup.** If the persona needs fixtures, run `docker compose exec -T app python
