@@ -1207,10 +1207,268 @@
    },
    "started": "2026-10-25T13:49:17+05:30",
    "ended": "2026-10-25T13:50:50+05:30"
+  },
+  {
+   "persona": "p10",
+   "run": 1,
+   "run_counter": 34,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p10-0034.json",
+   "totals": {
+    "persona_messages": 2,
+    "client_turns": 3,
+    "tool_calls": 1,
+    "cost_usd_equiv": 0.0053,
+    "duration_s": 49,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.76,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:55:11+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.76,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:56:04+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:55:06+05:30",
+   "ended": "2026-10-25T13:56:00+05:30"
+  },
+  {
+   "persona": "p11",
+   "run": 1,
+   "run_counter": 32,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p11-0032.json",
+   "totals": {
+    "persona_messages": 8,
+    "client_turns": 16,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0129,
+    "duration_s": 129,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.74,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:52:49+05:30",
+     "probe_cost_usd_equiv": 0.00060649
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.76,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:55:01+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "delta": {
+     "five_hour": 0.02,
+     "seven_day": 0.01
+    }
+   },
+   "started": "2026-10-25T13:52:43+05:30",
+   "ended": "2026-10-25T13:54:57+05:30"
+  },
+  {
+   "persona": "p13",
+   "run": 1,
+   "run_counter": 33,
+   "outcome": "fail",
+   "failed_hard": [
+    "P13.status",
+    "P13.note",
+    "P13.sms"
+   ],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p13-0033.json",
+   "totals": {
+    "persona_messages": 3,
+    "client_turns": 5,
+    "tool_calls": 2,
+    "cost_usd_equiv": 0.0059,
+    "duration_s": 55,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.74,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:52:47+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.75,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.1,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:53:46+05:30",
+     "probe_cost_usd_equiv": 0.00060669
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:52:43+05:30",
+   "ended": "2026-10-25T13:53:42+05:30"
+  },
+  {
+   "persona": "p13",
+   "run": 1,
+   "run_counter": 36,
+   "outcome": "fail",
+   "failed_hard": [
+    "P13.status",
+    "P13.note",
+    "P13.sms"
+   ],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p13-0036.json",
+   "totals": {
+    "persona_messages": 3,
+    "client_turns": 7,
+    "tool_calls": 4,
+    "cost_usd_equiv": 0.0071,
+    "duration_s": 59,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.77,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:56:54+05:30",
+     "probe_cost_usd_equiv": 0.00060589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.77,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:57:55+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:56:50+05:30",
+   "ended": "2026-10-25T13:57:53+05:30"
+  },
+  {
+   "persona": "p13",
+   "run": 1,
+   "run_counter": 37,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\r1-dev\\runs\\p13-0037.json",
+   "totals": {
+    "persona_messages": 3,
+    "client_turns": 7,
+    "tool_calls": 4,
+    "cost_usd_equiv": 0.0062,
+    "duration_s": 54,
+    "paused_s": 0
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.77,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:58:32+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.77,
+      "resets_at": "2026-10-25T15:20:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.11,
+      "resets_at": "2026-11-01T06:30:00+05:30"
+     },
+     "at": "2026-10-25T13:59:29+05:30",
+     "probe_cost_usd_equiv": 0.0006062900000000001
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-10-25T13:58:28+05:30",
+   "ended": "2026-10-25T13:59:26+05:30"
   }
  ],
- "ended": "2026-10-25T13:50:56+05:30",
- "commit": "bd77a7b",
+ "ended": "2026-10-25T13:59:33+05:30",
+ "commit": "9d6162c",
  "dirty": true,
  "claude_code": "2.1.310",
  "models": {
@@ -1222,18 +1480,18 @@
   "max_turns_per_message": 6
  },
  "runs_per_persona": 1,
- "parallel": 2,
- "fresh_stack": false,
+ "parallel": 1,
+ "fresh_stack": true,
  "partial": true,
  "summary": {
-  "runs": 25,
-  "valid_runs": 21,
-  "passed": 16,
-  "pass_rate": 0.762,
+  "runs": 30,
+  "valid_runs": 26,
+  "passed": 19,
+  "pass_rate": 0.731,
   "invalid": 3,
   "errors": 1,
-  "cost_usd_equiv": 0.2628,
-  "duration_s": 3054,
+  "cost_usd_equiv": 0.3002,
+  "duration_s": 3400,
   "paused_s": 0
  },
  "pauses": [],
@@ -1252,15 +1510,15 @@
   },
   "last_after": {
    "five_hour": {
-    "utilization": 0.72,
+    "utilization": 0.77,
     "resets_at": "2026-10-25T15:20:00+05:30"
    },
    "seven_day": {
-    "utilization": 0.1,
+    "utilization": 0.11,
     "resets_at": "2026-11-01T06:30:00+05:30"
    },
-   "at": "2026-10-25T13:50:53+05:30",
-   "probe_cost_usd_equiv": 0.0006054900000000001
+   "at": "2026-10-25T13:59:29+05:30",
+   "probe_cost_usd_equiv": 0.0006062900000000001
   }
  },
  "batches": [
@@ -1584,6 +1842,101 @@
     },
     "at": "2026-10-25T13:50:56+05:30",
     "probe_cost_usd_equiv": 0.0006062900000000001
+   }
+  },
+  {
+   "personas": [
+    "p11",
+    "p13",
+    "p10"
+   ],
+   "started": "2026-10-25T13:52:21+05:30",
+   "ended": "2026-10-25T13:56:11+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.74,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.1,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:52:43+05:30",
+    "probe_cost_usd_equiv": 0.00060709
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.76,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.11,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:56:11+05:30",
+    "probe_cost_usd_equiv": 0.00060709
+   }
+  },
+  {
+   "personas": [
+    "p13"
+   ],
+   "started": "2026-10-25T13:56:43+05:30",
+   "ended": "2026-10-25T13:57:58+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.77,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.11,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:56:49+05:30",
+    "probe_cost_usd_equiv": 0.0006060900000000001
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.77,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.11,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:57:58+05:30",
+    "probe_cost_usd_equiv": 0.0006068900000000001
+   }
+  },
+  {
+   "personas": [
+    "p13"
+   ],
+   "started": "2026-10-25T13:58:07+05:30",
+   "ended": "2026-10-25T13:59:33+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.77,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.11,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:58:28+05:30",
+    "probe_cost_usd_equiv": 0.00060669
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.77,
+     "resets_at": "2026-10-25T15:20:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.11,
+     "resets_at": "2026-11-01T06:30:00+05:30"
+    },
+    "at": "2026-10-25T13:59:33+05:30",
+    "probe_cost_usd_equiv": 0.00060709
    }
   }
  ]
