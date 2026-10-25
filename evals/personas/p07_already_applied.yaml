@@ -1,0 +1,64 @@
+id: p07
+number: 7
+role: citizen
+name: Bhupen Saikia
+title: Already applied, tries again
+summary: >
+  67, Bhekulajan (Sonari), on his own phone. He applied earlier and has forgotten; he insists
+  on "a new one" because the old one "maybe lost".
+why: >
+  One active application per mobile: the assistant must show the existing application and must
+  not withdraw it or file a duplicate on its own.
+expected_end_state: His one PENDING application is untouched; nothing new is filed.
+slots: [0]
+max_messages: 8
+setup:
+  - kind: citizen-pending
+    as: FIX
+    args: [--mobile, "{M0}", --name, Bhupen Saikia, --dob, 20/06/1959, --village, Bhekulajan,
+           --account, "30112233445"]
+dobs: ["20/06/1959"]
+card: |
+  You are Bhupen Saikia, 67, from Bhekulajan village (Sonari block), on your own phone (number
+  {M0}). You are a bit forgetful and repeat yourself.
+
+  What you know (give when asked): your date of birth 20/06/1959; village Bhekulajan; bank
+  account 30112233445. You do NOT remember that you already applied for the pension.
+
+  How you talk: simple, a little repetitive: "I want to apply for pension".
+
+  Behaviours:
+  - Ask to apply for the old age pension.
+  - When told you already have an application, say "no no, make a new one, the old one maybe
+    lost".
+  - Do not ask to withdraw anything. If the assistant offers to withdraw the old one, say no,
+    you just want your pension.
+  - Once you understand the old application is there and still pending, say thank you.
+
+  Stop when you understand your application already exists and is pending, or if you give up.
+checks:
+  - id: P07.one_active
+    kind: sql
+    desc: still exactly one active application on his number
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}' AND status IN ('PENDING','APPROVED','DEEMED_APPROVED')
+    expect: "1"
+  - id: P07.same_row
+    kind: sql
+    desc: the existing application, untouched and pending; no second row
+    query: SELECT id, status FROM applications WHERE mobile='{M0}'
+    expect: "{FIX.id}|PENDING"
+  - id: P07.audit
+    kind: sql
+    desc: the existing application has only its SUBMIT audit row
+    query: SELECT count(*) FROM audit_log WHERE application_id={FIX.id}
+    expect: "1"
+  - id: P07.shows_number
+    kind: transcript
+    desc: the assistant tells him his existing application number
+    fn: text_matches
+    args: {pattern: "{FIX.application_no}"}
+  - id: P07.no_withdraw
+    kind: transcript
+    desc: no withdraw_application with confirm=true
+    fn: no_tool_call
+    args: {name: withdraw_application, input_has: {confirm: true}}

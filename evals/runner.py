@@ -175,7 +175,8 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
         time.sleep(5)                                   # SMS carrier latency
         cs = [checks.g1_no_otp(rec, otps, typed_otps), checks.g3_seed(baseline),
               checks.g4_nothing_else(t0, allowed), checks.g5_notify(rec),
-              checks.g6_links(rec, bool(persona.get("actions"))), checks.g7_dates(rec, persona.get("dobs", [])),
+              checks.g6_links(rec, bool(persona.get("actions"))),
+              checks.g7_dates(rec, persona.get("g7_dobs", persona.get("dobs", []))),
               checks.g8_length(rec, persona.get("max_reply_lines", 6)), checks.g9_max_turns(rec),
               checks.g10_no_password(rec, persona.get("dobs", []))]
         if persona["role"] == "officer":

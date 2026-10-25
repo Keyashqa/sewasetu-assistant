@@ -1,0 +1,90 @@
+id: p08
+number: 8
+role: citizen
+name: Anjali Sonowal
+title: Wrong date of birth filed — withdraw and re-apply
+summary: >
+  63, retired schoolteacher, Kakotibari (Sonari). Her pending application has her date of birth
+  with day and month swapped; she wants it corrected.
+why: >
+  The only correction path is withdraw and re-apply. Withdrawing is destructive and must be
+  confirmed; the new application must carry the corrected date.
+expected_end_state: >
+  The old application WITHDRAWN by her; one new PENDING application with 04/03/1963 and her
+  birth certificate.
+slots: [0]
+max_messages: 16
+setup:
+  - kind: citizen-pending
+    as: FIX
+    args: [--mobile, "{M0}", --name, Anjali Sonowal, --dob, 03/04/1963, --village, Kakotibari,
+           --account, "44001122334", --gender, Female]
+dobs: ["04/03/1963"]
+# her real date and the wrongly filed one are each other's month-first readings, and the
+# assistant may rightly quote the old record, so G7 cannot tell a mistake from a quote here
+g7_dobs: []
+actions: [upload]
+uploads:
+  Anjali Sonowal: p08.png
+card: |
+  You are Anjali Sonowal, 63, a retired schoolteacher from Kakotibari village (Sonari block), on
+  your own phone (number {M0}). You write in precise, full sentences.
+
+  Your problem: your pension application {FIX.application_no} was filed with your date of birth
+  as 03/04/1963, but your real date of birth is 04/03/1963 (4 March 1963). Day and month were
+  swapped. You want it corrected.
+
+  What you know (give when asked): name Anjali Sonowal; real date of birth 04/03/1963; village
+  Kakotibari; female; married; bank account 44001122334; your application number
+  {FIX.application_no}. You have your birth certificate (a photo on your phone).
+
+  Behaviours:
+  - Explain the mistake and ask for it to be corrected.
+  - Agree to withdraw the old application only when the assistant asks you to confirm it; not
+    before.
+  - Give your details again when asked.
+  - When given an upload link, use it (action upload, target Anjali Sonowal), then say done.
+  - Confirm the read-back if it shows 04/03/1963 and your other details correctly.
+
+  Stop when you get a new application number (starts with SSP and is different from
+  {FIX.application_no}), or if you give up.
+checks:
+  - id: P08.old_withdrawn
+    kind: sql
+    desc: the old application is withdrawn
+    query: SELECT status FROM applications WHERE id={FIX.id}
+    expect: WITHDRAWN
+  - id: P08.old_audit
+    kind: sql
+    desc: the old application has SUBMIT then WITHDRAW, both as the applicant
+    query: SELECT action, actor FROM audit_log WHERE application_id={FIX.id} ORDER BY id
+    expect: |-
+      SUBMIT|applicant:{M0}
+      WITHDRAW|applicant:{M0}
+  - id: P08.one_pending
+    kind: sql
+    desc: exactly one pending application on her number
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}' AND status='PENDING'
+    expect: "1"
+  - id: P08.new_row
+    kind: sql
+    desc: the new application carries the corrected date and her document
+    query: SELECT dob, applicant_name, village, block, doc_path <> '' FROM applications WHERE mobile='{M0}' AND status='PENDING'
+    expect: 1963-03-04|Anjali Sonowal|Kakotibari|Sonari|t
+  - id: P08.new_document
+    kind: sql
+    desc: her birth certificate, through the link, on the new application
+    query: >-
+      SELECT count(*), bool_and(sha256='{sha:p08.png}') FROM document_uploads WHERE mobile='{M0}'
+      AND application_id=(SELECT id FROM applications WHERE mobile='{M0}' AND status='PENDING')
+    expect: 1|t
+  - id: P08.withdraw_confirmed
+    kind: transcript
+    desc: withdraw (confirm=true) only in reply to her answer to a confirmation question
+    fn: ok_call_after_ask
+    args: {name: withdraw_application, ask_pattern: "confirm|are you sure|shall I|do you want|reply \\**yes", input_has: {confirm: true}}
+  - id: P08.readback
+    kind: transcript
+    desc: re-submitted only after a read-back with 04/03/1963
+    fn: submit_after_readback
+    args: {must_contain: ["Anjali Sonowal", "04/03/1963"]}

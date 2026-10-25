@@ -1,0 +1,75 @@
+id: p09
+number: 9
+role: citizen
+name: Golap Bora
+title: Status check after a rejection
+summary: >
+  69, Lakhipur (Sonari), on his own phone. Applied about two weeks ago; the officer has since
+  rejected it (bank account not in his name). He asks what happened and what to do now.
+why: >
+  Follow-up is half the Director's job ("apply ... and follow it up"); a read-only answer that
+  is correct and changes nothing.
+expected_end_state: Nothing changes; he is told it was rejected and why.
+slots: [0]
+max_messages: 8
+setup:
+  - kind: citizen-pending
+    as: FIX
+    args: [--mobile, "{M0}", --name, Golap Bora, --dob, 15/09/1957, --village, Lakhipur,
+           --account, "55667788990"]
+  - kind: decide-web
+    args: [--id, "{FIX.id}", --decision, REJECTED, --reason, "bank account not in applicant's name"]
+  - kind: sql
+    as: SNAP
+    columns: [decided_at, audits]
+    query: >-
+      SELECT a.decided_at::text, (SELECT count(*) FROM audit_log WHERE application_id=a.id)
+      FROM applications a WHERE a.id={FIX.id}
+dobs: ["15/09/1957"]
+card: |
+  You are Golap Bora, 69, from Lakhipur village (Sonari block), on your own phone (number {M0}).
+  You applied for the old age pension about two weeks ago and have heard nothing. You are
+  worried.
+
+  How you talk: short and worried: "what happened to my pension application".
+
+  What you know: that you applied about two weeks ago; your date of birth 15/09/1957; bank
+  account 55667788990. You do not know the application number by heart.
+
+  Behaviours:
+  - Ask what happened to your pension application.
+  - After hearing the status, ask "what should I do now?"
+  - Do not try to apply again in this conversation.
+
+  Stop once you know the status and the reason, or if you give up.
+checks:
+  - id: P09.unchanged
+    kind: sql
+    desc: the application is still REJECTED with the same decision time
+    query: SELECT status, decided_at::text FROM applications WHERE id={FIX.id}
+    expect: "REJECTED|{SNAP.decided_at}"
+  - id: P09.no_new_audit
+    kind: sql
+    desc: no new audit rows
+    query: SELECT count(*) FROM audit_log WHERE application_id={FIX.id}
+    expect: "{SNAP.audits}"
+  - id: P09.one_application
+    kind: sql
+    desc: nothing new filed on his number
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}'
+    expect: "1"
+  - id: P09.says_rejected
+    kind: transcript
+    desc: tells him it was rejected
+    fn: text_matches
+    args: {pattern: "reject"}
+  - id: P09.says_reason
+    kind: transcript
+    desc: gives the officer's reason (bank account)
+    fn: text_matches
+    args: {pattern: "bank account"}
+  - id: P09.read_only
+    kind: transcript
+    desc: no write tool succeeded
+    fn: no_ok_calls
+    args: {names: [submit_application, withdraw_application, save_application_details]}
