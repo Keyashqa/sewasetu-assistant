@@ -140,6 +140,35 @@ rounds:
         changed: [b9746c1]
         rerun: >
           p04-0018 pass (5 messages, down from 8): G10 pass; the closing summary uses the template's password line, no digits.
+      - id: F6
+        persona: p08
+        check: observed in p08-0023 (the run itself failed on a persona-card issue)
+        found: >
+          While her application SSP26968983 was pending, the assistant saved her corrected date
+          of birth and her birth certificate into a draft for a new application, then described
+          them as if they were on the filed application: the upload "has arrived" and the status
+          check "shows an age proof attached" (that was the old document). The tools allowed
+          draft writes on a number with an active application without saying so.
+        expected: >
+          Say plainly that a filed application cannot be edited; the only way to correct it is
+          to withdraw it (confirmed) and apply again; nothing saved now changes the filed one.
+        actual: '"I have saved your corrected date of birth as 04/03/1963, but I cannot confirm that it changed application SSP26968983."'
+        excerpt: |
+          ASSISTANT: Your birth certificate has arrived. The upload tool shows it is attached,
+            and the status check for SSP26968983 shows an age proof attached and the application
+            still Pending.
+        why_it_matters: She leaves believing her paper may have reached the filed application.
+        proposed_fix: >
+          When the signed-in (or applicant) number already has an active application,
+          save_application_details and get_document_upload_link say so in the reply ("This
+          number already has SSP… (Pending). Details and documents here are for a new application,
+          which can be filed only after that one is withdrawn; they do not change SSP…") and
+          next_step says never to describe them as changing the filed application. The
+          instruction gets one line: a filed application cannot be edited; to correct it,
+          withdraw (with confirmation) and apply again.
+        status: proposed (not applied)
+        changed: []
+        rerun: null
       - id: F4
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)

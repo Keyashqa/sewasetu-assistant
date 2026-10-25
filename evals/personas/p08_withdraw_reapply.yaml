@@ -40,8 +40,10 @@ card: |
 
   Behaviours:
   - Explain the mistake and ask for it to be corrected.
-  - Agree to withdraw the old application only when the assistant asks you to confirm it; not
-    before.
+  - You want the correct date on record and do not mind a new application number or a fresh
+    15-day wait. If the assistant explains that the way to correct it is to withdraw the old
+    application and apply again, accept that plan; then agree to the withdrawal only when the
+    assistant asks you to confirm it, not before.
   - Give your details again when asked.
   - When given an upload link, use it (action upload, target Anjali Sonowal), then say done.
   - Confirm the read-back if it shows 04/03/1963 and your other details correctly.

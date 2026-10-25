@@ -4,7 +4,7 @@ role: citizen
 name: Golap Bora
 title: Status check after a rejection
 summary: >
-  69, Lakhipur (Sonari), on his own phone. Applied about two weeks ago; the officer has since
+  69, Lakhipur (Sonari), on his own phone. Applied a while ago; the officer has since
   rejected it (bank account not in his name). He asks what happened and what to do now.
 why: >
   Follow-up is half the Director's job ("apply ... and follow it up"); a read-only answer that
@@ -28,12 +28,12 @@ setup:
 dobs: ["15/09/1957"]
 card: |
   You are Golap Bora, 69, from Lakhipur village (Sonari block), on your own phone (number {M0}).
-  You applied for the old age pension about two weeks ago and have heard nothing. You are
-  worried.
+  You applied for the old age pension a while ago (you don't remember the exact day) and have
+  not checked since. You are worried.
 
   How you talk: short and worried: "what happened to my pension application".
 
-  What you know: that you applied about two weeks ago; your date of birth 15/09/1957; bank
+  What you know (give only when asked): that you applied; your date of birth 15/09/1957; bank
   account 55667788990. You do not know the application number by heart.
 
   Behaviours:
