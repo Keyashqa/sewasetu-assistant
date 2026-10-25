@@ -180,8 +180,10 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
     if "active_application" in e["reasons"]:
         said.append(replies.existing(e["existing"]) + "\nTo apply for someone else, "
                     "**use their own mobile number**.")
-    out["reply"] = ("Eligible — age %d.\nPlease send the applicant's **full name, village and "
-                    "bank account number**." % e["age"]) if e["eligible"] else "\n".join(said)
+    out["reply"] = replies.lines(
+        "Eligible — age %d." % e["age"],
+        "Please send the applicant's **full name, village and bank account number**.",
+        replies.OPTIONAL_ASK) if e["eligible"] else "\n".join(said)
     if "under_age" in e["reasons"]:
         messages.append("Age is %d. The pension is for people %d and above. They become "
                         "eligible on %s." % (e["age"], services.portal.MIN_AGE,
@@ -191,8 +193,10 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
     if "active_application" in e["reasons"]:
         messages.append(fmt.existing_application_message(e["existing"]))
     if e["eligible"]:
-        out["next_step"] = ("Collect the details and call save_application_details. The age "
-                            "proof is uploaded later with get_document_upload_link.")
+        out["next_step"] = ("Collect the details and call save_application_details. In the same "
+                            "message, ask once for the optional ones too (gender, marital "
+                            "status, husband's name if widowed, IFSC); never insist on them. "
+                            "The age proof is uploaded later with get_document_upload_link.")
     elif e["reasons"] == ["active_application"]:
         out["message"] = " ".join(messages)
         out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
@@ -332,7 +336,9 @@ def _ifsc_problem(ifsc):
         "full_name, date_of_birth (DD/MM/YYYY, day first), village, block (filled in "
         "automatically for known villages), bank_account (9-18 digits). Optional: gender "
         "(Male/Female/Other), marital_status (Married/Unmarried/Widowed), husband_name (only "
-        "if widowed), ifsc (11 characters, e.g. SBIN0003077). Send only details the applicant "
+        "if widowed), ifsc (11 characters, e.g. SBIN0003077). When you ask for the required "
+        "details, ask once in the same message for the optional ones too; never insist on them "
+        "and never hold the application for them. Send only details the applicant "
         "or their helper actually gave; never guess a value. " + APPLICANT_MOBILE_DOC + " "
         'Example: {"full_name":"Sewali Gogoi","date_of_birth":"10/04/1957","village":"Kathoni"}'),
     annotations=ToolAnnotations(title="Save applicant details", readOnlyHint=False,
@@ -374,14 +380,20 @@ async def save_application_details(full_name: str | None = None,
             "passbook, or leave it out (IFSC is optional)." % (saved_ifsc, len(saved_ifsc))
             if pr.startswith("IFSC must be") else pr for pr in r["problems"][:3]])
     elif r["missing"]:
-        out["reply"] = replies.lines(replies.still_needed(r["missing"]), note)
+        # asking for required details: ask once for the optional ones as well, unless some
+        # were already given
+        asking = [m for m in r["missing"] if m != services.DOC_MISSING]
+        optional = (replies.OPTIONAL_ASK if asking and
+                    not any(r["saved"].get(f) for f in replies.OPTIONAL_FIELDS) else None)
+        out["reply"] = replies.lines(replies.still_needed(r["missing"]), note, optional)
     else:
         out["reply"] = replies.read_back(r["saved"], mobile)
     out = {"reply": out.pop("reply"), **out}
     if problems:
         out["next_step"] = "Ask about each problem, then save again."
     elif [m for m in r["missing"] if m != services.DOC_MISSING]:
-        out["next_step"] = "Ask for the missing details."
+        out["next_step"] = ("Ask for the missing details (and, once, the optional ones if the "
+                            "reply lists them; never insist).")
     elif services.DOC_MISSING in r["missing"]:
         out["next_step"] = "Details are complete. Call get_document_upload_link for the age proof."
     else:

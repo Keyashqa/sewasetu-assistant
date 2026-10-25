@@ -13,6 +13,10 @@ NEEDED = {"full_name": "full name", "date_of_birth": "date of birth", "village":
           "block": "block", "bank_account": "bank account number",
           services.DOC_MISSING: "age proof"}
 MAX_LIST = 4                       # list lines in one reply, plus one "and N more" line
+OPTIONAL_FIELDS = ("gender", "marital_status", "husband_name", "ifsc")
+# asked once, alongside the required details; never insisted on, never blocking
+OPTIONAL_ASK = ("If known, also: gender, marital status, husband's name (if widowed) and IFSC "
+                "(optional).")
 
 STYLE = """\
 How to reply:
