@@ -115,7 +115,7 @@ rounds:
         status: applied
         changed: [b9746c1]
         rerun: >
-          p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020 asked it only alongside the upload link).
+          p01-0021 pass (5 messages): optional fields now collected (P01.optional_filled |Widowed|Tileswar Gogoi|SBIN0003077; gender not given). The model still sometimes drops the ask in its own list (p01-0020; p15-0039: 'Your village / Your bank account number' only).
       - id: F5
         persona: p04
         check: G10 (hard)
@@ -199,6 +199,35 @@ rounds:
           coming back later. Instruction: refer to the applicant by name (or the word the person
           used); never guess a relationship.
         status: approved by the reviewer, to apply after batch 5
+        changed: []
+        rerun: null
+      - id: F8
+        persona: p15
+        check: P15.row, P15.readback (hard)
+        found: >
+          A 12-character IFSC read off the passbook (the seed's most common defect) is stored in
+          the draft even though the portal will refuse it. The only way out is to clear it by
+          sending ifsc as an empty string; Haiku sent malformed input ({"ifsc": }) eleven times,
+          the submit was refused, and the conversation hit the 12-message cap with nothing filed.
+        expected: PENDING|1958-11-05| (filed without the IFSC once he says "leave it")
+        actual: nothing filed; 11 malformed save_application_details calls
+        excerpt: |
+          PERSON: I don't know the right one, leave it.
+          ASSISTANT: I haven't been able to clear the IFSC code yet. My attempts to update the
+            record failed because the request was malformed on my side …
+          PERSON: Can you submit with the bank account 60708090102 and leave out the IFSC?
+          ASSISTANT: I can't submit it yet. The portal needs the IFSC field cleared, and I still
+            can't clear it …
+        why_it_matters: >
+          16.6% of the seed's IFSCs have this defect, so real passbooks will produce it; an
+          optional field must never block a filing.
+        proposed_fix: >
+          Treat an IFSC that fails the portal's format like other unreadable values: do not store
+          it, report the problem ("12 characters; it must be 11 — check the passbook, or leave it
+          out"), and keep the draft submittable without it. No clearing step is then needed. (An
+          explicit clear_fields parameter is the alternative, but small models handle empty
+          strings badly, as seen here.)
+        status: proposed (not applied)
         changed: []
         rerun: null
       - id: F4
