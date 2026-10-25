@@ -92,7 +92,13 @@ def reset():
     assert_local()
     compose("down", "-v")
     compose("up", "-d", "--build", *SERVICES)
-    wait_healthy()
+    try:
+        wait_healthy(600)
+    except TimeoutError:
+        # app workers that booted before Postgres finished loading the seed can hang; one
+        # restart of app + mcp clears it (seen once, 25/10/2026)
+        compose("restart", "app", "mcp")
+        wait_healthy(300)
     return baseline()
 
 
