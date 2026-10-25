@@ -81,6 +81,17 @@ def verify_number(url, mobile, send_only=False):
     if r.status_code != 200:
         return ({"action": "verify_number", "link": url, "http": r.status_code,
                  "observation": "You opened the link. The page said: " + page_message(r.text)}, [])
+    if 'name="otp"' in r.text and not send_only:
+        # the page already sent a code to this phone (e.g. P06's send-only step): type the
+        # OTP that phone received, as a person would, instead of asking for another
+        got = [m for m in gateway.messages(mobile) if m["delivered"] and gateway.OTP_RE.search(m["text"] or "")]
+        if got:
+            otp = gateway.OTP_RE.search(got[-1]["text"]).group(1)
+            r = requests.post(url, data={"action": "check", "otp": otp}, timeout=15)
+            return ({"action": "verify_number", "link": url, "http": r.status_code,
+                     "observation": "You opened the link; it was waiting for the OTP already sent "
+                                    "to that phone. You typed it on the page. The page said: "
+                                    + page_message(r.text)}, [otp])
     after = gateway.last_id(mobile)
     r = requests.post(url, data={"action": "send", "mobile": mobile}, timeout=15)
     sent_msg = page_message(r.text)

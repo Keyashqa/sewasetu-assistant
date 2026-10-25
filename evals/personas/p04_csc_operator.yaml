@@ -1,0 +1,102 @@
+id: p04
+number: 4
+role: citizen
+name: Mridul Kalita
+title: CSC operator filing for two people
+summary: >
+  35, runs the CSC at Namti Chariali, signed in on his business number. Files for Jogen and Rupa
+  Phukan, each on their own verified mobile.
+why: >
+  The Director's "CSC operators themselves"; amendment 11 (verify another number on the page,
+  OTP never in the chat); two applicants' details kept apart.
+expected_end_state: >
+  Two PENDING applications, Jogen's on his number and Rupa's on hers, each filed by the operator
+  as helper, each with its own document and SMS; nothing on the operator's own number.
+slots: [0, 1, 2]
+max_messages: 20
+dobs: ["02/02/1950", "19/07/1958"]
+actions: [verify_number, upload]
+verify_targets:
+  Jogen Phukan: 1
+  Rupa Phukan: 2
+uploads:
+  Jogen Phukan: p04a.png
+  Rupa Phukan: p04b.png
+card: |
+  You are Mridul Kalita, 35, you run the Common Service Centre (CSC) at Namti Chariali. You are
+  signed in on your business number {M0}. Two people are at your counter, each with their own
+  phone, and both agree to apply:
+
+  1. Jogen Phukan: date of birth 02/02/1950, village Hatipara (Namti block), male, married,
+     bank account 50100234567812, IFSC HDFC0001234, his mobile {M1}.
+  2. Rupa Phukan (Jogen's wife): date of birth 19/07/1958, village Hatipara, female, married,
+     bank account 50100234567813, IFSC HDFC0001234, her mobile {M2}.
+
+  How you talk: brisk, operator jargon ("file both", "seeded a/c", "otp they will read out").
+  When asked for a person's details, you give that one person's full details in one message.
+
+  Behaviours:
+  - First message: say you are filing for two people, each on their own number, and that you
+    want the SMS to go to their own phones.
+  - When the assistant gives you a link to verify a number, use it (action verify_number,
+    target the person whose number it is: Jogen Phukan first, then Rupa Phukan). The OTP is
+    typed on the page; you never type an OTP into the chat.
+  - When the assistant gives you an upload link, use it (action upload, target the person it
+    is for), then say done.
+  - Confirm each read-back if it matches; correct anything wrong.
+
+  Stop when you have both application numbers (they start with SSP), or if you give up.
+checks:
+  - id: P04.none_on_operator
+    kind: sql
+    desc: nothing filed on the operator's own number
+    query: SELECT count(*) FROM applications WHERE mobile='{M0}'
+    expect: "0"
+  - id: P04.rows
+    kind: sql
+    desc: two PENDING applications, each on its own number with its own details
+    query: >-
+      SELECT mobile, status, applicant_name, dob, village, block, bank_account FROM applications
+      WHERE mobile IN ('{M1}','{M2}') ORDER BY mobile
+    expect: |-
+      {M1}|PENDING|Jogen Phukan|1950-02-02|Hatipara|Namti|50100234567812
+      {M2}|PENDING|Rupa Phukan|1958-07-19|Hatipara|Namti|50100234567813
+  - id: P04.audit
+    kind: sql
+    desc: each filed by the operator as helper
+    query: >-
+      SELECT a.mobile, l.actor FROM audit_log l JOIN applications a ON a.id=l.application_id
+      WHERE a.mobile IN ('{M1}','{M2}') AND l.action='SUBMIT' ORDER BY 1
+    expect: |-
+      {M1}|helper:{M0} for {M1}
+      {M2}|helper:{M0} for {M2}
+  - id: P04.helper_filings
+    kind: sql
+    desc: two helper filings by the operator
+    query: SELECT count(*) FROM helper_filings WHERE helper='{M0}' AND mobile IN ('{M1}','{M2}')
+    expect: "2"
+  - id: P04.doc_jogen
+    kind: sql
+    desc: Jogen's own document on his application
+    query: SELECT count(*), bool_and(sha256='{sha:p04a.png}') FROM document_uploads WHERE mobile='{M1}' AND application_id IS NOT NULL
+    expect: 1|t
+  - id: P04.doc_rupa
+    kind: sql
+    desc: Rupa's own document on her application
+    query: SELECT count(*), bool_and(sha256='{sha:p04b.png}') FROM document_uploads WHERE mobile='{M2}' AND application_id IS NOT NULL
+    expect: 1|t
+  - id: P04.sms_jogen
+    kind: gateway
+    desc: Jogen's confirmation SMS on his phone
+    mobile: "{M1}"
+    contains_sql: SELECT application_no FROM applications WHERE mobile='{M1}'
+  - id: P04.sms_rupa
+    kind: gateway
+    desc: Rupa's confirmation SMS on her phone
+    mobile: "{M2}"
+    contains_sql: SELECT application_no FROM applications WHERE mobile='{M2}'
+  - id: P04.verify_used
+    kind: transcript
+    desc: other numbers verified through get_number_verification_link
+    fn: tool_called
+    args: {name: get_number_verification_link}
