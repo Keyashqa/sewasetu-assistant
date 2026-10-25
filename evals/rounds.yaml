@@ -4,34 +4,45 @@
 
 rounds:
   - id: r0-manual
-    label: Round 0 — manual runs in Claude Code with Haiku (Phase 0)
+    label: Round 0 — before the eval harness
     source: docs/phase0-test-log.md
     findings:
       - id: R0-1
+        title: "Refused helpers"
+        line: "Would not file for a grandmother from her grandson's phone."
         persona: grandson filing for his grandmother (S1)
         found: The assistant refused helpers; it would not file for the grandmother because the signed-in mobile was the grandson's.
         changed: [13f489e]
         rerun: S1-S7 pass with Haiku.
       - id: R0-2
+        title: "Chose its own rejection reason"
+        line: "Picked a reason itself and recorded its own view of the document."
         persona: officer, "Reject it." with no reason (S11)
         found: The assistant chose the rejection reason itself, then recorded its own observation of the document as the reason.
         changed: [7110034, d99938c]
         rerun: S11 passes; the reason and a verbatim officer quote are recorded.
       - id: R0-3
+        title: "Investigated instead of reporting"
+        line: "The officer assistant fraud-checked documents it was not asked to."
         persona: officer reviewing cases
         found: The officer assistant investigated and fraud-checked documents instead of reporting.
         changed: [44247a7, 781aad3, a5f7e62]
         rerun: covered by check scripts; re-tested in Phase 1 (P12-P16).
       - id: R0-4
+        title: "Replies too long"
+        line: "Too long for older users reading on a phone."
         persona: all
         found: Replies were too long for old users on phones.
         changed: [64af3d0]
         rerun: check_replies.py — every result has a reply of at most 6 lines.
 
   - id: r1-dev
-    label: Round 1 (dev) — persona by persona, Haiku simulator
+    label: Round 1 — one conversation per person
     findings:
       - id: F1
+        title: "Password digits in the chat"
+        line: "After submitting, it wrote out the portal password."
+        result: fixed
         persona: p01
         check: observed in P01 runs p01-0004 and p01-0005 (no check yet); G10 added to catch it
         found: >
@@ -52,6 +63,9 @@ rounds:
           p01-0006 pass. G10 pass; the assistant wrote: log in "with that mobile number and the
           password 'her date of birth written as DDMMYYYY'".
       - id: F2
+        title: "Optional details never asked"
+        line: "Gender, marital status, husband's name and IFSC were skipped."
+        result: fixed
         persona: p01
         check: P01.optional_filled (soft)
         found: >
@@ -72,6 +86,9 @@ rounds:
           from the save reply) without insisting. The person gave the IFSC but not gender or
           marital status (simulator choice), so P01.optional_filled (soft) is |||SBIN0003077.
       - id: F3
+        title: "Too many questions at once"
+        line: "Asked a 72-year-old for seven details in one message."
+        result: fixed
         persona: p02
         check: P02.j_simple (soft judge)
         found: >
@@ -97,6 +114,9 @@ rounds:
           p01-0011 pass in 5 messages (same as before): he gave several details at once and the
           assistant accepted them all.
       - id: F2-regression
+        title: "Optional details dropped again"
+        line: "It reworded the reply and lost the optional ask."
+        result: fixed
         persona: p01
         check: P01.optional_filled (soft)
         found: >
@@ -120,6 +140,9 @@ rounds:
           SBIN0003077), the IFSC given after the read-back's "optional, not given" line; p02-0050
           pass, the read-back offered them once and she replied yes.
       - id: F5
+        title: "Passwords for two applicants"
+        line: "In a two-person summary it worked out both passwords."
+        result: fixed
         persona: p04
         check: G10 (hard)
         found: >
@@ -144,6 +167,9 @@ rounds:
         rerun: >
           p04-0018 pass (5 messages, down from 8): G10 pass; the closing summary uses the template's password line, no digits.
       - id: F6
+        title: "Implied a filed application changed"
+        line: "Described new details as if they changed a pending application."
+        result: fixed
         persona: p08
         check: observed in p08-0023 (the run itself failed on a persona-card issue)
         found: >
@@ -177,6 +203,9 @@ rounds:
           application and apply again"; no draft before the plan; withdrew only after "Yes, I
           confirm". p07-0031 pass: existing application shown, no duplicate, no withdrawal.
       - id: F7
+        title: "Guessed relationships; hinted at reopening"
+        line: "Relationship guesses fixed; when closed, it sometimes mentions a future window."
+        result: known limit
         persona: p10, p01
         check: observed (P10.j_no_speculation passed; no check yet for relationships)
         found: >
@@ -231,6 +260,9 @@ rounds:
           P10, which runs with the window closed): the first reply is the exact sentence, but
           the model sometimes appends a line about a future window. No further fix planned.
       - id: F8
+        title: "A bad IFSC blocked filing"
+        line: "A 12-character IFSC got stuck in the draft; nothing was filed."
+        result: fixed
         persona: p15
         check: P15.row, P15.readback (hard)
         found: >
@@ -265,6 +297,9 @@ rounds:
           (PENDING|1958-11-05|''). Scripted: a bad bank account keeps the earlier valid one; null
           clears the IFSC and leaves gender; an omitted field is untouched.
       - id: F4
+        title: "Listed every village"
+        line: "Sent all 19 villages to an elderly user; now asks for the village only."
+        result: fixed
         persona: p02
         check: G8 (soft; at most 4 lines for this persona)
         found: >

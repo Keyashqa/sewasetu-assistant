@@ -60,7 +60,9 @@ def index():
 def round_view(rid):
     r = _round(rid)
     personas = {p["id"]: p for p in (_load("personas.json") or [])}
-    return render_template("eval_round.html", r=r, personas=personas)
+    return render_template("eval_round.html", r=r, personas=personas,
+                           findings=_load("findings.json") or {"rounds": []},
+                           rounds=(_load("index.json") or {}).get("rounds", []))
 
 
 @eval_dashboard.get("/eval-dashboard/<rid>/<pid>")
@@ -73,6 +75,13 @@ def persona_view(rid, pid):
         abort(404)
     persona = next((p for p in (_load("personas.json") or []) if p["id"] == pid), {"id": pid})
     return render_template("eval_persona.html", r=r, run=run, p=persona)
+
+
+@eval_dashboard.app_template_filter("dmy")
+def _dmy(iso):
+    """2026-10-25T15:52:25+05:30 -> 25/10/2026 (never month-first)."""
+    y, m, d = (iso or "")[:10].split("-") if len(iso or "") >= 10 else ("", "", "")
+    return "%s/%s/%s" % (d, m, y) if y else ""
 
 
 @eval_dashboard.app_template_filter("pjson")

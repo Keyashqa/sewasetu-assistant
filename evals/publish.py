@@ -73,8 +73,8 @@ def persona_cards():
     for pid in runner.all_personas():
         p = runner.load_persona(pid)
         cards.append({k: (" ".join(str(p.get(k, "")).split())) for k in
-                      ("id", "name", "title", "summary", "why", "expected_end_state", "role")}
-                     | {"number": p["number"], "talks": _talks(p)})
+                      ("id", "name", "title", "line", "summary", "why", "expected_end_state", "role")}
+                     | {"number": p["number"], "talks": _talks(p), "tags": p.get("tags", [])})
     return cards
 
 

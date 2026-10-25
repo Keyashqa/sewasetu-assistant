@@ -3,6 +3,8 @@ number: 13
 role: officer
 name: Rupjyoti Bora
 title: 'Officer: "reject it" with no reason'
+line: "Block officer · rejects, no reason given · Sonari"
+tags: ["English", "Terse"]
 summary: >
   The same officer opens a case and says only "Reject it."; the reason comes when asked.
 talks: "Busy and terse: \"Reject it.\" — the reason only when asked."

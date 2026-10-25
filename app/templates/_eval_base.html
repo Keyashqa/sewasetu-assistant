@@ -7,52 +7,72 @@
 <title>{% block title %}Eval dashboard{% endblock %} - Sewa Setu assistant</title>
 <style>
 :root{--ink:#1f2328;--muted:#5b636e;--line:#d9dee4;--bg:#f4f6f8;--card:#fff;--blue:#0b3d6e;
-  --pass:#1b6e35;--pass-bg:#e7f4ea;--fail:#a1262b;--fail-bg:#fbe9ea;--warn:#7a5300;--warn-bg:#fff4dc}
+  --pass:#1b6e35;--pass-bg:#e3f2e7;--fail:#a1262b;--fail-bg:#fbe6e7;--warn:#7a5300;--warn-bg:#fff2d6}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   overflow-wrap:anywhere}
-header{background:var(--blue);color:#fff;padding:14px 16px}
+header{background:var(--blue);color:#fff;padding:16px}
 header a{color:#fff;text-decoration:none}
-header .t{font-size:19px;font-weight:700}
-header .s{font-size:13px;color:#cfe0f3}
-main{max-width:960px;margin:0 auto;padding:12px 16px 40px}
-h1{font-size:22px;margin:18px 0 8px}
-h2{font-size:19px;margin:28px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--line)}
-h3{font-size:16px;margin:0 0 4px}
-p{margin:6px 0}
+header .in{max-width:960px;margin:0 auto}
+header .t{font-size:20px;font-weight:700}
+header .s{font-size:14px;color:#cfe0f3}
+main{max-width:960px;margin:0 auto;padding:16px 16px 56px}
+h1{font-size:26px;line-height:1.25;margin:24px 0 8px}
+h2{font-size:21px;margin:44px 0 14px}
+h3{font-size:17px;margin:0}
+p{margin:8px 0}
 a{color:var(--blue)}
-.muted{color:var(--muted);font-size:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.grid .card{margin:0}
-.big{font-size:34px;font-weight:700;line-height:1.1}
-.kv{display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:4px 12px;font-size:14px}
+.muted{color:var(--muted);font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.hero{padding:24px}
+.big{font-size:44px;font-weight:700;line-height:1.1}
+.cta{display:inline-block;margin-top:10px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid .card{margin:0;display:flex;flex-direction:column;gap:8px}
+.name{font-size:20px;font-weight:700;line-height:1.25}
+.foot{margin-top:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:13px;background:#eef2f6;color:#33404d;border-radius:6px;padding:2px 8px}
+.badge{display:inline-block;padding:1px 9px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.6;white-space:nowrap}
+.pass,.fixed{background:var(--pass-bg);color:var(--pass)} .fail{background:var(--fail-bg);color:var(--fail)}
+.invalid,.error,.soft,.limit{background:var(--warn-bg);color:var(--warn)}
+.rows{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:12px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .meta{grid-row:span 2;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.row p{margin:0}
+.round{font-size:15px;font-weight:600;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 14px;font-size:15px}
 .kv dt{color:var(--muted)} .kv dd{margin:0}
-.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap}
-.pass{background:var(--pass-bg);color:var(--pass)} .fail{background:var(--fail-bg);color:var(--fail)}
-.invalid,.error,.soft{background:var(--warn-bg);color:var(--warn)}
-.tbl{width:100%;border-collapse:collapse;font-size:14px;background:var(--card)}
-.tbl th,.tbl td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.tbl{width:100%;border-collapse:collapse;font-size:15px;background:var(--card)}
+.tbl th,.tbl td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 .tbl th{background:#eef1f4}
 .tbl th:first-child,.tbl td:first-child{min-width:92px;overflow-wrap:normal;word-break:normal}
 .scroll{overflow-x:auto}
 code,pre{font-family:ui-monospace,Consolas,monospace;font-size:13px}
 pre{white-space:pre-wrap;word-break:break-word;margin:4px 0}
-details{margin:4px 0} summary{cursor:pointer;color:var(--blue)}
-.msg{border-radius:8px;padding:8px 10px;margin:8px 0}
+details{margin:12px 0}
+details.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 18px}
+details.box[open] summary{margin-bottom:10px}
+summary{cursor:pointer;color:var(--blue);font-weight:600}
+.msg{border-radius:10px;padding:10px 12px;margin:10px 0}
 .msg .who{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .person{background:#e8f0fb;margin-right:12%}
 .assistant{background:var(--card);border:1px solid var(--line);margin-left:6%}
-.phone{color:var(--muted);font-size:14px;font-style:italic;margin:6px 0 6px 4px}
+.msg pre{font-family:inherit;font-size:16px}
+.phone{color:var(--muted);font-size:15px;font-style:italic;margin:8px 0 8px 4px}
 .tool{background:#f7f8fa;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;margin:4px 0;font-size:13px}
-ol.steps,ul.plain{padding-left:20px;margin:6px 0}
-.finding{border-left:4px solid var(--blue)}
-@media (max-width:480px){.big{font-size:28px}.person{margin-right:0}.assistant{margin-left:0}}
+.tool summary{font-weight:400}
+ul.plain{padding-left:20px;margin:6px 0} ul.plain li{margin:6px 0}
+@media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}.big{font-size:36px}.hero{padding:18px}
+  .person{margin-right:0}.assistant{margin-left:0}
+  .row{grid-template-columns:1fr}.row .meta{grid-row:auto;order:3;text-align:left;flex-direction:row;align-items:center;flex-wrap:wrap}}
 </style>
 </head>
 <body>
-<header><a href="/eval-dashboard"><div class="t">Sewa Setu assistant — evals</div>
-<div class="s">Invented citizens and officers, played against the real assistant, checked against the portal's database</div></a></header>
+<header><div class="in"><a href="/eval-dashboard"><div class="t">Sewa Setu assistant — evals</div>
+<div class="s">Invented people talk to the real assistant; the portal's database is checked after</div></a></div></header>
 <main>
 {% block body %}{% endblock %}
 </main>

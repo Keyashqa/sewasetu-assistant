@@ -3,6 +3,8 @@ number: 12
 role: officer
 name: Rupjyoti Bora
 title: "Officer: what's waiting, open a case, approve"
+line: "Block officer · approves a case · Sonari"
+tags: ["English", "Terse"]
 summary: >
   Block Development Officer, Sonari, signed in as admin. Asks what is waiting, opens one
   case by name, approves it with a note in her own words.

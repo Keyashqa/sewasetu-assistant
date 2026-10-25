@@ -2,11 +2,13 @@
  "rounds": [
   {
    "id": "r0-manual",
-   "label": "Round 0 — manual runs in Claude Code with Haiku (Phase 0)",
+   "label": "Round 0 — before the eval harness",
    "source": "docs/phase0-test-log.md",
    "findings": [
     {
      "id": "R0-1",
+     "title": "Refused helpers",
+     "line": "Would not file for a grandmother from her grandson's phone.",
      "persona": "grandson filing for his grandmother (S1)",
      "found": "The assistant refused helpers; it would not file for the grandmother because the signed-in mobile was the grandson's.",
      "changed": [
@@ -16,6 +18,8 @@
     },
     {
      "id": "R0-2",
+     "title": "Chose its own rejection reason",
+     "line": "Picked a reason itself and recorded its own view of the document.",
      "persona": "officer, \"Reject it.\" with no reason (S11)",
      "found": "The assistant chose the rejection reason itself, then recorded its own observation of the document as the reason.",
      "changed": [
@@ -26,6 +30,8 @@
     },
     {
      "id": "R0-3",
+     "title": "Investigated instead of reporting",
+     "line": "The officer assistant fraud-checked documents it was not asked to.",
      "persona": "officer reviewing cases",
      "found": "The officer assistant investigated and fraud-checked documents instead of reporting.",
      "changed": [
@@ -37,6 +43,8 @@
     },
     {
      "id": "R0-4",
+     "title": "Replies too long",
+     "line": "Too long for older users reading on a phone.",
      "persona": "all",
      "found": "Replies were too long for old users on phones.",
      "changed": [
@@ -48,10 +56,13 @@
   },
   {
    "id": "r1-dev",
-   "label": "Round 1 (dev) — persona by persona, Haiku simulator",
+   "label": "Round 1 — one conversation per person",
    "findings": [
     {
      "id": "F1",
+     "title": "Password digits in the chat",
+     "line": "After submitting, it wrote out the portal password.",
+     "result": "fixed",
      "persona": "p01",
      "check": "observed in P01 runs p01-0004 and p01-0005 (no check yet); G10 added to catch it",
      "found": "After submitting, the assistant printed the status-portal password digits in the chat. The submit_application result's how_to_check gave them.\n",
@@ -66,6 +77,9 @@
     },
     {
      "id": "F2",
+     "title": "Optional details never asked",
+     "line": "Gender, marital status, husband's name and IFSC were skipped.",
+     "result": "fixed",
      "persona": "p01",
      "check": "P01.optional_filled (soft)",
      "found": "Gender, marital status, husband's name and IFSC were never asked, though the grandson knew them all; the application was filed without them.\n",
@@ -80,6 +94,9 @@
     },
     {
      "id": "F3",
+     "title": "Too many questions at once",
+     "line": "Asked a 72-year-old for seven details in one message.",
+     "result": "fixed",
      "persona": "p02",
      "check": "P02.j_simple (soft judge)",
      "found": "For a 72-year-old alone at a kiosk who answers one thing at a time, the assistant asked for three required details plus four optional ones in one message (check_eligibility's reply after F2). She answered two; the bank account needed a second ask.\n",
@@ -96,6 +113,9 @@
     },
     {
      "id": "F2-regression",
+     "title": "Optional details dropped again",
+     "line": "It reworded the reply and lost the optional ask.",
+     "result": "fixed",
      "persona": "p01",
      "check": "P01.optional_filled (soft)",
      "found": "In p01-0011 (after F3) the optional fields were not asked: the save reply carried the optional line, but the assistant rewrote it as a two-item list and dropped it. The grandson volunteered the IFSC only.\n",
@@ -112,6 +132,9 @@
     },
     {
      "id": "F5",
+     "title": "Passwords for two applicants",
+     "line": "In a two-person summary it worked out both passwords.",
+     "result": "fixed",
      "persona": "p04",
      "check": "G10 (hard)",
      "found": "F1 regression on the two-applicant path. In the closing summary of two filings, the assistant computed each applicant's portal password from the date of birth and wrote the digits. No tool returned them; the instruction and how_to_check say not to.\n",
@@ -128,6 +151,9 @@
     },
     {
      "id": "F6",
+     "title": "Implied a filed application changed",
+     "line": "Described new details as if they changed a pending application.",
+     "result": "fixed",
      "persona": "p08",
      "check": "observed in p08-0023 (the run itself failed on a persona-card issue)",
      "found": "While her application SSP26968983 was pending, the assistant saved her corrected date of birth and her birth certificate into a draft for a new application, then described them as if they were on the filed application: the upload \"has arrived\" and the status check \"shows an age proof attached\" (that was the old document). The tools allowed draft writes on a number with an active application without saying so.\n",
@@ -144,6 +170,9 @@
     },
     {
      "id": "F7",
+     "title": "Guessed relationships; hinted at reopening",
+     "line": "Relationship guesses fixed; when closed, it sometimes mentions a future window.",
+     "result": "known limit",
      "persona": "p10, p01",
      "check": "observed (P10.j_no_speculation passed; no check yet for relationships)",
      "found": "(1) Window closed: the assistant said the portal \"won't accept new applications until it reopens\" and \"when it reopens, … come back to this chat\", implying a reopening no tool reported. (2) Relationships: the assistant guessed how the person is related to the applicant: \"your mother's Old Age Pension\" and \"your aunt's details\" for a grandson who wrote \"aita (grandmother)\".\n",
@@ -165,6 +194,9 @@
     },
     {
      "id": "F8",
+     "title": "A bad IFSC blocked filing",
+     "line": "A 12-character IFSC got stuck in the draft; nothing was filed.",
+     "result": "fixed",
      "persona": "p15",
      "check": "P15.row, P15.readback (hard)",
      "found": "A 12-character IFSC read off the passbook (the seed's most common defect) is stored in the draft even though the portal will refuse it. The only way out is to clear it by sending ifsc as an empty string; Haiku sent malformed input ({\"ifsc\": }) eleven times, the submit was refused, and the conversation hit the 12-message cap with nothing filed.\n",
@@ -181,6 +213,9 @@
     },
     {
      "id": "F4",
+     "title": "Listed every village",
+     "line": "Sent all 19 villages to an elderly user; now asks for the village only.",
+     "result": "fixed",
      "persona": "p02",
      "check": "G8 (soft; at most 4 lines for this persona)",
      "found": "Asked for village and block, the assistant listed all 19 villages by block (8 lines) to a 72-year-old answering in a few words. The list comes from get_scheme_info's villages_by_block.\n",

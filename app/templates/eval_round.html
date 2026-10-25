@@ -1,17 +1,44 @@
 {% extends "_eval_base.html" %}
-{% block title %}{{ r.label }}{% endblock %}
+{% block title %}Detailed report{% endblock %}
 {% block body %}
 <p class="muted"><a href="/eval-dashboard">← dashboard</a></p>
-<h1>{{ r.label }}</h1>
+<h1>Detailed report</h1>
 <p><span class="badge {{ 'pass' if r.passed == r.valid else 'fail' }}">{{ r.passed }} / {{ r.valid }} passed</span>
-  <span class="muted">· 1 run per persona · client <code>{{ r.client }}</code> · simulator {{ r.simulator|join(", ") }}</span></p>
+  <span class="muted">· {{ r.label }} · published {{ r.published|dmy }}</span></p>
 
+<details class="box">
+<summary>How this was tested</summary>
+<dl class="kv">
+  <dt>Runs</dt><dd>{{ r.runs_per_persona or 1 }} run per persona ({{ r.runs }} runs){% if r.invalid %} · {{ r.invalid }} invalid run(s) excluded{% endif %}{% if r.errors %} · {{ r.errors }} error(s){% endif %}</dd>
+  <dt>Client under test</dt><dd>Claude Code {{ r.claude_code or "" }} (<code>claude -p</code>), model <code>{{ r.client }}</code>, only the Sewa Setu MCP server, no other tools</dd>
+  <dt>Caps</dt><dd>up to 6 model turns per message; 4–20 messages per conversation depending on the persona (12 by default)</dd>
+  <dt>Simulated person</dt><dd>{% for s in r.simulator %}<code>{{ s }}</code>{% if not loop.last %}, {% endif %}{% endfor %} (also the judge)</dd>
+  <dt>Code</dt><dd>{% for c in r.commits %}<code>{{ c }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.commits|length > 1 %} <span class="muted">(development runs, each on the commit current when it ran)</span>{% endif %}</dd>
+  <dt>Runs between</dt><dd>{{ r.first_run[:16]|replace("T", " ") }} and {{ r.last_run[:16]|replace("T", " ") }} IST</dd>
+  <dt>Published</dt><dd>{{ r.published[:16]|replace("T", " ") }} IST</dd>
+</dl>
+<ul class="plain">
+  <li><b>Real client.</b> Each person's messages go to stock Claude Code in print mode with a small model, the way an evaluator's assistant would. Its only tools are the Sewa Setu MCP server's (8 citizen or 6 officer tools); every turn asserts that nothing else is loaded. No extra system prompt: the only guidance is the server's own instructions and tool texts.</li>
+  <li><b>Simulated people.</b> Another model plays each person from a written card (who they are, what they know, how they talk, what they do), seeing only what that person would see. A judge marks a run invalid if the person broke their card; invalid runs are shown, not counted.</li>
+  <li><b>Their hands.</b> Uploads and number verification happen on the portal's real pages, using only links the assistant showed in the chat. OTPs arrive on the simulated SMS gateway and are typed on the page; they never enter the chat (except where a persona deliberately pastes one, to test the assistant's refusal).</li>
+  <li><b>Checks are mostly the database.</b> SQL against the portal after the conversation (status, details, audit trail, documents by hash, nothing else changed), the SMS inbox, and transcript checks (no OTPs, no password digits, no month-first dates, links shown verbatim, decisions only on the officer's instruction, audit notes in the officer's words). A model judges only a few listed items, with its evidence shown.</li>
+  <li><b>Sign-in.</b> The harness signs each person in through the portal's real OAuth pages (OTP or the officer login) and hands the client a short-lived token. Claude Code's own sign-in to the deployed servers was checked by hand.</li>
+  <li><b>Where it ran.</b> A fresh local copy of the portal (the full seed, the deemed-approval job off so the 700 pending cases stay pending) on the same code and configuration as the deployment. Nothing is ever run against the live portal. P10 alone runs with the application window closed.</li>
+  <li><b>Application window.</b> The deployment's window is extended to 31/12/2026 23:59 IST for the evaluation period (<code>SCHEME_DEADLINE</code> in the deployment's environment; the portal's own <code>app.ini</code> deadline, 31/10/2026, is unchanged). Eval rounds run with the same setting.</li>
+  <li><b>Known limit.</b> When the window is closed (P10), the assistant gives the exact closed-window sentence, but sometimes adds a line about a future window (finding F7).</li>
+  <li><b>1 run per persona.</b> One run shows that a behaviour happened, not how often; small models vary from run to run. Development runs use a small model as the simulated person; the headline round uses a larger one.</li>
+  <li><b>Not tested here.</b> An evaluator's assistant may have extra tools (shell, web) ours does not; real phones and real SMS; several officers.</li>
+  <li><b>Soft checks</b> (reply length, emojis, optional details collected, some plain-language judgements) are reported but do not decide pass or fail.</li>
+</ul>
+</details>
+
+<h2>Every person</h2>
 <div class="scroll">
 <table class="tbl">
-<tr><th>Persona</th><th>Result</th><th>Checks not passed (expected → actual)</th></tr>
+<tr><th>Person</th><th>Result</th><th>Checks not passed (expected → actual)</th></tr>
 {% for x in r.personas %}{% set p = personas.get(x.persona, {}) %}
 <tr>
-  <td><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ x.persona|upper }}</a><br><span class="muted">{{ p.name }}</span></td>
+  <td><a href="/eval-dashboard/{{ r.id }}/{{ x.persona }}">{{ p.name or x.persona|upper }}</a><br><span class="muted">{{ x.persona|upper }} · {{ p.title }}</span></td>
   <td><span class="badge {{ x.outcome }}">{{ x.outcome }}</span><br><span class="muted">{{ x.messages }} msgs · <code>{{ x.commit }}</code></span></td>
   <td>{% for c in x.failed %}<div><span class="badge {{ 'fail' if c.hard else 'soft' }}">{{ 'hard' if c.hard else 'soft' }}</span>
       <b>{{ c.id }}</b> {{ c.desc }}<br><span class="muted">expected</span> {{ c.expected }} <span class="muted">→ actual</span> {{ c.actual }}</div>
@@ -20,4 +47,31 @@
 {% endfor %}
 </table>
 </div>
+
+<h2>Findings in detail</h2>
+<p class="muted">What went wrong, what was expected, and the change. Findings are logged before the fix.</p>
+{% for rnd in findings.rounds %}
+<div class="round">{{ rnd.label }}</div>
+{% for f in rnd.findings %}
+<details class="box">
+  <summary>{{ f.title or f.id }}{% if f.result %} <span class="badge {{ 'limit' if f.result == 'known limit' else 'fixed' }}">{{ f.result|capitalize }}</span>{% endif %}</summary>
+  <p><span class="muted">Found:</span> {{ f.found }}</p>
+  {% if f.expected %}<p><span class="muted">Expected:</span> {{ f.expected }}<br><span class="muted">Actual:</span> {{ f.actual }}</p>{% endif %}
+  {% if f.why_it_matters %}<p><span class="muted">Why it matters:</span> {{ f.why_it_matters }}</p>{% endif %}
+  {% if f.excerpt %}<details><summary>transcript excerpt</summary><pre>{{ f.excerpt }}</pre></details>{% endif %}
+  {% if f.proposed_fix %}<p><span class="muted">Fix:</span> {{ f.proposed_fix }}</p>{% endif %}
+  {% if f.proposed_followup %}<p><span class="muted">Follow-up fix:</span> {{ f.proposed_followup }}</p>{% endif %}
+  <p><span class="muted">Changed:</span> {% if f.changed %}{% for c in f.changed %}<code>{{ c }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% else %}not yet{% endif %}</p>
+  {% if f.known_limit %}<p><span class="badge limit">known limit</span> {{ f.known_limit }}</p>{% endif %}
+</details>
+{% endfor %}
+{% endfor %}
+
+{% if rounds|length > 1 %}
+<h2>Published rounds</h2>
+<table class="tbl"><tr><th>Round</th><th>Passed</th><th>Simulator</th></tr>
+{% for x in rounds|reverse %}<tr><td><a href="/eval-dashboard/{{ x.id }}">{{ x.label }}</a></td>
+<td>{{ x.passed }} / {{ x.valid }}</td><td>{{ x.simulator|join(", ") }}</td></tr>{% endfor %}
+</table>
+{% endif %}
 {% endblock %}
