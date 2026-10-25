@@ -10,7 +10,7 @@ reason: "—"
 # What happened, from the run's recorded DB state: the first rule whose checks' recorded
 # values all match wins; {ID.n} is field n of that check's recorded value.
 happened:
-  - {"if": {"P01.row": "^[A-Z]"}, "say": "Filed — {P01.row.1}"}
+  - {"if": {"P01.row": "^[A-Z]"}, "say": "Filed"}
   - {"if": {"P01.count": "^0$"}, "say": "Not filed"}
 summary: >
   24, typing on a crowded bus for his grandmother Dulumoni Gogoi (70, Namdang, Sonari), on his

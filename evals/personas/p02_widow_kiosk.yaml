@@ -10,7 +10,7 @@ reason: "—"
 # What happened, from the run's recorded DB state: the first rule whose checks' recorded
 # values all match wins; {ID.n} is field n of that check's recorded value.
 happened:
-  - {"if": {"P02.row": "^[A-Z]"}, "say": "Filed — {P02.row.1}"}
+  - {"if": {"P02.row": "^[A-Z]"}, "say": "Filed"}
   - {"if": {"P02.count": "^0$"}, "say": "Not filed"}
 summary: >
   72, widow, Kathoni (Dhemaji Pathar), at the CSC kiosk on her own phone with the operator

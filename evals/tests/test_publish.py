@@ -30,9 +30,10 @@ class Happened(unittest.TestCase):
                 "turns": [{"client": {"tool_calls": [{"name": n, "result": r} for n, r in calls]}}]}
 
     def test_phrase_follows_recorded_status(self):
-        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "PENDING|x"})), "Filed — Pending")
-        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "DEEMED_APPROVED|x"})), "Filed — Deemed approved")
+        self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "PENDING|x"})), "Filed")
         self.assertEqual(publish.happened(self.run_with("p01", {"P01.row": "", "P01.count": "0"})), "Not filed")
+        self.assertEqual(publish.happened(self.run_with("p12", {"P12.status": "APPROVED|admin"})), "Approved")
+        self.assertEqual(publish.happened(self.run_with("p12", {"P12.status": "DEEMED_APPROVED|x"})), "Deemed approved")
 
     def test_tool_result_condition(self):
         blocked = [("approve_application", {"status": "blocked", "approved": False})]

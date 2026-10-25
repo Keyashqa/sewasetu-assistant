@@ -10,8 +10,8 @@ reason: "—"
 # What happened, from the run's recorded DB state: the first rule whose checks' recorded
 # values all match wins; {ID.n} is field n of that check's recorded value.
 happened:
-  - {"if": {"P04.rows": "\\|PENDING\\|[^\n]*\n[^\n]*\\|PENDING\\|"}, "say": "Both filed — Pending"}
-  - {"if": {"P04.rows": "\\|PENDING\\|"}, "say": "One filed — Pending"}
+  - {"if": {"P04.rows": "\\|PENDING\\|[^\n]*\n[^\n]*\\|PENDING\\|"}, "say": "Both filed"}
+  - {"if": {"P04.rows": "\\|PENDING\\|"}, "say": "One filed"}
   - {"if": {"P04.rows": "^$"}, "say": "Not filed"}
 summary: >
   35, runs the CSC at Namti Chariali, signed in on his business number. Files for Jogen and Rupa

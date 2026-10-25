@@ -10,7 +10,7 @@ reason: "—"
 # What happened, from the run's recorded DB state: the first rule whose checks' recorded
 # values all match wins; {ID.n} is field n of that check's recorded value.
 happened:
-  - {"if": {"P15.row": "^[A-Z]"}, "say": "Filed — {P15.row.1}"}
+  - {"if": {"P15.row": "^[A-Z]"}, "say": "Filed"}
 summary: >
   68, Bhekulajan (Sonari). Reads everything off his passbook: a date written 5/11/1958, the
   passbook's 12-character IFSC (the seed's most common defect), and asks about next year.
