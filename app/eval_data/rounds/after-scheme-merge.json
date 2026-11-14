@@ -1,0 +1,259 @@
+{
+ "id": "after-scheme-merge",
+ "source": "after-scheme-merge",
+ "label": "After the interview: 7 citizen tools",
+ "published": "2026-11-15T00:51:44+05:30",
+ "runs": 12,
+ "valid": 12,
+ "passed": 12,
+ "invalid": 0,
+ "errors": 0,
+ "runs_per_persona": 1,
+ "commits": [
+  "ecdd80b"
+ ],
+ "simulator": [
+  "claude-haiku-5-5"
+ ],
+ "citizen_tools": 7,
+ "client": "claude-haiku-5-5",
+ "claude_code": "2.1.325",
+ "first_run": "2026-11-15T00:40:40+05:30",
+ "last_run": "2026-11-15T00:49:38+05:30",
+ "cost_usd_equiv": 0.1319,
+ "pauses": 0,
+ "personas": [
+  {
+   "persona": "p01",
+   "outcome": "pass",
+   "run_counter": 118,
+   "commit": "ecdd80b",
+   "messages": 4,
+   "happened": "Filed",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 8 lines (max 6)",
+      "turn 2: 10 lines (max 6)",
+      "turn 4: 7 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p02",
+   "outcome": "pass",
+   "run_counter": 119,
+   "commit": "ecdd80b",
+   "messages": 7,
+   "happened": "Filed",
+   "failed": [
+    {
+     "id": "P02.j_simple",
+     "kind": "judge",
+     "hard": false,
+     "desc": "one or two things at a time, in plain words",
+     "expected": "pass",
+     "actual": "fail",
+     "pass": false,
+     "evidence": "Most turns asked for one or two things: \"what is the applicant's date of birth?\" (one item), \"Please send the applicant's full name and village.\" (two), and \"Next, please send the village and the bank account number.\" (two). The final review turn breaks this: \"Gender, marital status and IFSC code are optional. If you know them, send them now. Otherwise, reply **yes** to submit the application as it is.\" That asks for three fields at once, on top of a review list of five details and a declaration. The wording also uses terms an elderly, phone-unfamiliar user may not know, such as \"IFSC code\", \"declaration\", \"verify\", \"portal\", \"SMS\", \"IST\", and \"DDMMYYYY\". So the one-or-two-at-a-time, plain-words requirement is not met throughout."
+    }
+   ]
+  },
+  {
+   "persona": "p03",
+   "outcome": "pass",
+   "run_counter": 120,
+   "commit": "ecdd80b",
+   "messages": 4,
+   "happened": "Not filed",
+   "failed": []
+  },
+  {
+   "persona": "p04",
+   "outcome": "pass",
+   "run_counter": 121,
+   "commit": "ecdd80b",
+   "messages": 10,
+   "happened": "Both filed",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 15 lines (max 6)",
+      "turn 2: 11 lines (max 6)",
+      "turn 4: 7 lines (max 6)",
+      "turn 10: 7 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p05",
+   "outcome": "pass",
+   "run_counter": 122,
+   "commit": "ecdd80b",
+   "messages": 5,
+   "happened": "Not filed — details kept as a draft",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 3: 9 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p06",
+   "outcome": "pass",
+   "run_counter": 123,
+   "commit": "ecdd80b",
+   "messages": 8,
+   "happened": "Filed",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 9 lines (max 6)",
+      "turn 5: 10 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p07",
+   "outcome": "pass",
+   "run_counter": 124,
+   "commit": "ecdd80b",
+   "messages": 4,
+   "happened": "Existing application kept",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 2: 9 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p08",
+   "outcome": "pass",
+   "run_counter": 125,
+   "commit": "ecdd80b",
+   "messages": 4,
+   "happened": "Old withdrawn, new filed",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 4: 8 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p09",
+   "outcome": "pass",
+   "run_counter": 126,
+   "commit": "ecdd80b",
+   "messages": 3,
+   "happened": "Still rejected, nothing new",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 12 lines (max 6)",
+      "turn 2: 9 lines (max 6)",
+      "turn 3: 12 lines (max 6)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p10",
+   "outcome": "pass",
+   "run_counter": 129,
+   "commit": "ecdd80b",
+   "messages": 2,
+   "happened": "Not filed",
+   "failed": []
+  },
+  {
+   "persona": "p11",
+   "outcome": "pass",
+   "run_counter": 127,
+   "commit": "ecdd80b",
+   "messages": 7,
+   "happened": "Filed",
+   "failed": [
+    {
+     "id": "G8",
+     "kind": "transcript",
+     "hard": false,
+     "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+     "expected": "all within",
+     "actual": [
+      "turn 1: 17 lines (max 14)"
+     ],
+     "pass": false,
+     "evidence": null
+    }
+   ]
+  },
+  {
+   "persona": "p15",
+   "outcome": "pass",
+   "run_counter": 128,
+   "commit": "ecdd80b",
+   "messages": 6,
+   "happened": "Filed",
+   "failed": []
+  }
+ ],
+ "pass_rate": 1.0
+}

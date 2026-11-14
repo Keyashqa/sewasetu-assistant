@@ -2,7 +2,7 @@
  "rounds": [
   {
    "id": "dev-persona-by-persona",
-   "label": "Persona-by-persona development runs (Haiku simulator)",
+   "label": "Submitted version, 8 citizen tools",
    "published": "2026-10-25T19:25:21+05:30",
    "runs": 16,
    "valid": 16,
@@ -26,7 +26,77 @@
     "claude-haiku-5-5"
    ],
    "client": "claude-haiku-5-5"
+  },
+  {
+   "id": "after-scheme-merge",
+   "label": "After the interview: 7 citizen tools",
+   "published": "2026-11-15T00:51:44+05:30",
+   "runs": 12,
+   "valid": 12,
+   "passed": 12,
+   "pass_rate": 1.0,
+   "commits": [
+    "ecdd80b"
+   ],
+   "simulator": [
+    "claude-haiku-5-5"
+   ],
+   "client": "claude-haiku-5-5"
   }
  ],
- "headline": "dev-persona-by-persona"
+ "headline": "dev-persona-by-persona",
+ "comparison": {
+  "before": "baseline-8-tools",
+  "after": "after-scheme-merge",
+  "before_label": "Before: 8 citizen tools",
+  "after_label": "After: 7 citizen tools",
+  "note": [
+   "What was merged: get_scheme_info and check_eligibility became one tool, check_scheme_and_eligibility (the date of birth is optional). The citizen server now has 7 tools; the officer server is unchanged.",
+   "Before and after, on the same 12 invented citizens: 12 of 14 passed before, 12 of 12 after. The citizen server's cost before any call fell from 4,787 to 4,721 tokens.",
+   "What we learned: we also merged the two link tools, and the small model then lost the verification link after a person pasted an OTP, so we kept them separate. A merge saves little (a few percent of the tool definitions, 1–2% of a conversation); conversation length matters far more. The merged check needed \"call it first, on its own\" wording, or the assistant saved details before seeing a refusal."
+  ],
+  "method": "Local runs with the same settings both times: Claude Code with claude-haiku-5-5, a Haiku simulated person, the 12 citizen people (the 'before' round adds 3 runs of the grandson). Runs where the simulated person broke their card are not counted. Token figures come from one run per person, so they are indicative only.",
+  "rows": [
+   [
+    "Conversations passed",
+    "12/14",
+    "12/12"
+   ],
+   [
+    "Tool calls per application filed (median)",
+    "8",
+    "8"
+   ],
+   [
+    "Tool calls per conversation",
+    "6.6",
+    "6.1"
+   ],
+   [
+    "Wasted calls (errors, repeats)",
+    "0 of 92",
+    "0 of 73"
+   ],
+   [
+    "Assistant tokens per conversation",
+    "126,645",
+    "128,049"
+   ],
+   [
+    "Assistant tokens per application filed",
+    "137,082",
+    "156,139"
+   ],
+   [
+    "Assistant steps per conversation",
+    "12.2",
+    "11.4"
+   ],
+   [
+    "Citizen server: tokens before any call",
+    "4,787",
+    "4,721"
+   ]
+  ]
+ }
 }
