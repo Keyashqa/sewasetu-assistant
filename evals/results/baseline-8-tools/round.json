@@ -1,0 +1,906 @@
+{
+ "round": "baseline-8-tools",
+ "started": "2026-11-14T22:28:11+05:30",
+ "runs": [
+  {
+   "persona": "p01",
+   "run": 1,
+   "run_counter": 61,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p01-0061.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 13,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0111,
+    "duration_s": 89,
+    "paused_s": 0,
+    "client_tokens": 132920
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.22,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:29:09+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.22,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:30:42+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:29:06+05:30",
+   "ended": "2026-11-14T22:30:39+05:30"
+  },
+  {
+   "persona": "p02",
+   "run": 1,
+   "run_counter": 62,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p02-0062.json",
+   "totals": {
+    "persona_messages": 7,
+    "client_turns": 15,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0118,
+    "duration_s": 94,
+    "paused_s": 0,
+    "client_tokens": 163729
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.21,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:29:09+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.22,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:30:46+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:29:06+05:30",
+   "ended": "2026-11-14T22:30:44+05:30"
+  },
+  {
+   "persona": "p03",
+   "run": 1,
+   "run_counter": 63,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p03-0063.json",
+   "totals": {
+    "persona_messages": 4,
+    "client_turns": 6,
+    "tool_calls": 2,
+    "cost_usd_equiv": 0.007,
+    "duration_s": 59,
+    "paused_s": 0,
+    "client_tokens": 58495
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.22,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:30:45+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:31:47+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:30:42+05:30",
+   "ended": "2026-11-14T22:31:44+05:30"
+  },
+  {
+   "persona": "p04",
+   "run": 1,
+   "run_counter": 64,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p04-0064.json",
+   "totals": {
+    "persona_messages": 7,
+    "client_turns": 20,
+    "tool_calls": 13,
+    "cost_usd_equiv": 0.017,
+    "duration_s": 141,
+    "paused_s": 0,
+    "client_tokens": 240878
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.22,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:30:50+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:33:14+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:30:47+05:30",
+   "ended": "2026-11-14T22:33:11+05:30"
+  },
+  {
+   "persona": "p05",
+   "run": 1,
+   "run_counter": 65,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p05-0065.json",
+   "totals": {
+    "persona_messages": 6,
+    "client_turns": 10,
+    "tool_calls": 4,
+    "cost_usd_equiv": 0.0128,
+    "duration_s": 111,
+    "paused_s": 0,
+    "client_tokens": 99065
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:31:55+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:33:49+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:31:47+05:30",
+   "ended": "2026-11-14T22:33:46+05:30"
+  },
+  {
+   "persona": "p06",
+   "run": 1,
+   "run_counter": 66,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p06-0066.json",
+   "totals": {
+    "persona_messages": 7,
+    "client_turns": 16,
+    "tool_calls": 9,
+    "cost_usd_equiv": 0.0129,
+    "duration_s": 98,
+    "paused_s": 0,
+    "client_tokens": 155964
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:33:17+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:34:59+05:30",
+     "probe_cost_usd_equiv": 0.00062629
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:33:15+05:30",
+   "ended": "2026-11-14T22:34:55+05:30"
+  },
+  {
+   "persona": "p07",
+   "run": 1,
+   "run_counter": 67,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p07-0067.json",
+   "totals": {
+    "persona_messages": 4,
+    "client_turns": 7,
+    "tool_calls": 3,
+    "cost_usd_equiv": 0.0064,
+    "duration_s": 58,
+    "paused_s": 0,
+    "client_tokens": 69757
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:33:52+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:34:53+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:33:50+05:30",
+   "ended": "2026-11-14T22:34:50+05:30"
+  },
+  {
+   "persona": "p08",
+   "run": 1,
+   "run_counter": 68,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p08-0068.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 13,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0107,
+    "duration_s": 84,
+    "paused_s": 0,
+    "client_tokens": 121395
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:34:56+05:30",
+     "probe_cost_usd_equiv": 0.00062509
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:36:23+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:34:53+05:30",
+   "ended": "2026-11-14T22:36:20+05:30"
+  },
+  {
+   "persona": "p09",
+   "run": 1,
+   "run_counter": 69,
+   "outcome": "invalid",
+   "failed_hard": [
+    "P09.read_only"
+   ],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p09-0069.json",
+   "totals": {
+    "persona_messages": 7,
+    "client_turns": 12,
+    "tool_calls": 5,
+    "cost_usd_equiv": 0.0131,
+    "duration_s": 111,
+    "paused_s": 0,
+    "client_tokens": 110287
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:35:02+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:36:56+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:34:59+05:30",
+   "ended": "2026-11-14T22:36:53+05:30"
+  },
+  {
+   "persona": "p10",
+   "run": 1,
+   "run_counter": 72,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p10-0072.json",
+   "totals": {
+    "persona_messages": 3,
+    "client_turns": 4,
+    "tool_calls": 1,
+    "cost_usd_equiv": 0.0056,
+    "duration_s": 51,
+    "paused_s": 0,
+    "client_tokens": 37806
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:38:32+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:39:25+05:30",
+     "probe_cost_usd_equiv": 0.00062629
+    },
+    "delta": {
+     "five_hour": 0.01,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:38:29+05:30",
+   "ended": "2026-11-14T22:39:22+05:30"
+  },
+  {
+   "persona": "p11",
+   "run": 1,
+   "run_counter": 70,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p11-0070.json",
+   "totals": {
+    "persona_messages": 7,
+    "client_turns": 15,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0132,
+    "duration_s": 99,
+    "paused_s": 0,
+    "client_tokens": 171410
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:36:27+05:30",
+     "probe_cost_usd_equiv": 0.00062629
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:38:09+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:36:24+05:30",
+   "ended": "2026-11-14T22:38:06+05:30"
+  },
+  {
+   "persona": "p15",
+   "run": 1,
+   "run_counter": 71,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p15-0071.json",
+   "totals": {
+    "persona_messages": 5,
+    "client_turns": 12,
+    "tool_calls": 7,
+    "cost_usd_equiv": 0.0103,
+    "duration_s": 82,
+    "paused_s": 0,
+    "client_tokens": 104710
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:36:59+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.23,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:38:23+05:30",
+     "probe_cost_usd_equiv": 0.00062509
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:36:56+05:30",
+   "ended": "2026-11-14T22:38:20+05:30"
+  },
+  {
+   "persona": "p01",
+   "run": 1,
+   "run_counter": 73,
+   "outcome": "fail",
+   "failed_hard": [
+    "P01.no_guessed_relation"
+   ],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p01-0073.json",
+   "totals": {
+    "persona_messages": 6,
+    "client_turns": 13,
+    "tool_calls": 7,
+    "cost_usd_equiv": 0.0112,
+    "duration_s": 86,
+    "paused_s": 0,
+    "client_tokens": 129509
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:39:40+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:41:09+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:39:37+05:30",
+   "ended": "2026-11-14T22:41:06+05:30"
+  },
+  {
+   "persona": "p01",
+   "run": 2,
+   "run_counter": 74,
+   "outcome": "fail",
+   "failed_hard": [
+    "P01.no_guessed_relation"
+   ],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p01-0074.json",
+   "totals": {
+    "persona_messages": 6,
+    "client_turns": 14,
+    "tool_calls": 8,
+    "cost_usd_equiv": 0.0127,
+    "duration_s": 95,
+    "paused_s": 0,
+    "client_tokens": 146983
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:39:40+05:30",
+     "probe_cost_usd_equiv": 0.00062609
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:41:18+05:30",
+     "probe_cost_usd_equiv": 0.00062589
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:39:37+05:30",
+   "ended": "2026-11-14T22:41:15+05:30"
+  },
+  {
+   "persona": "p01",
+   "run": 3,
+   "run_counter": 75,
+   "outcome": "pass",
+   "failed_hard": [],
+   "error": null,
+   "path": "evals\\results\\baseline-8-tools\\runs\\p01-0075.json",
+   "totals": {
+    "persona_messages": 6,
+    "client_turns": 13,
+    "tool_calls": 7,
+    "cost_usd_equiv": 0.0112,
+    "duration_s": 85,
+    "paused_s": 0,
+    "client_tokens": 140408
+   },
+   "pauses": [],
+   "utilization": {
+    "before": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:41:12+05:30",
+     "probe_cost_usd_equiv": 0.00062629
+    },
+    "after": {
+     "five_hour": {
+      "utilization": 0.24,
+      "resets_at": "2026-11-15T02:30:00+05:30"
+     },
+     "seven_day": {
+      "utilization": 0.82,
+      "resets_at": "2026-11-15T06:30:00+05:30"
+     },
+     "at": "2026-11-14T22:42:40+05:30",
+     "probe_cost_usd_equiv": 0.00062549
+    },
+    "delta": {
+     "five_hour": 0.0,
+     "seven_day": 0.0
+    }
+   },
+   "started": "2026-11-14T22:41:10+05:30",
+   "ended": "2026-11-14T22:42:37+05:30"
+  }
+ ],
+ "batches": [
+  {
+   "personas": [
+    "p01",
+    "p02",
+    "p03",
+    "p04",
+    "p05",
+    "p06",
+    "p07",
+    "p08",
+    "p09",
+    "p10",
+    "p11",
+    "p15"
+   ],
+   "started": "2026-11-14T22:28:11+05:30",
+   "ended": "2026-11-14T22:39:33+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.21,
+     "resets_at": "2026-11-15T02:30:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.82,
+     "resets_at": "2026-11-15T06:30:00+05:30"
+    },
+    "at": "2026-11-14T22:29:06+05:30",
+    "probe_cost_usd_equiv": 0.00062549
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resets_at": "2026-11-15T02:30:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.82,
+     "resets_at": "2026-11-15T06:30:00+05:30"
+    },
+    "at": "2026-11-14T22:39:33+05:30",
+    "probe_cost_usd_equiv": 0.00062589
+   }
+  },
+  {
+   "personas": [
+    "p01"
+   ],
+   "started": "2026-11-14T22:39:34+05:30",
+   "ended": "2026-11-14T22:42:42+05:30",
+   "before": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resets_at": "2026-11-15T02:30:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.82,
+     "resets_at": "2026-11-15T06:30:00+05:30"
+    },
+    "at": "2026-11-14T22:39:37+05:30",
+    "probe_cost_usd_equiv": 0.00062549
+   },
+   "after": {
+    "five_hour": {
+     "utilization": 0.24,
+     "resets_at": "2026-11-15T02:30:00+05:30"
+    },
+    "seven_day": {
+     "utilization": 0.82,
+     "resets_at": "2026-11-15T06:30:00+05:30"
+    },
+    "at": "2026-11-14T22:42:42+05:30",
+    "probe_cost_usd_equiv": 0.00062629
+   }
+  }
+ ],
+ "ended": "2026-11-14T22:42:42+05:30",
+ "commit": "ecdd80b",
+ "dirty": true,
+ "claude_code": "2.1.325",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "caps": {
+  "max_turns_per_message": 6
+ },
+ "runs_per_persona": 3,
+ "parallel": 2,
+ "fresh_stack": false,
+ "partial": false,
+ "summary": {
+  "runs": 15,
+  "valid_runs": 14,
+  "passed": 12,
+  "pass_rate": 0.857,
+  "invalid": 1,
+  "errors": 0,
+  "cost_usd_equiv": 0.167,
+  "duration_s": 1343,
+  "paused_s": 0
+ },
+ "pauses": [],
+ "utilization": {
+  "first_before": {
+   "five_hour": {
+    "utilization": 0.22,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.82,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:29:09+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "last_after": {
+   "five_hour": {
+    "utilization": 0.24,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.82,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:42:40+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  }
+ }
+}

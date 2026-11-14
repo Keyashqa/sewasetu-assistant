@@ -3,6 +3,7 @@
 {% block body %}
 {% if head %}
 <div class="card hero">
+  {% if head.label %}<p class="muted" style="margin:0 0 4px">{{ head.label }}</p>{% endif %}
   <div class="big">{{ head.passed }} / {{ head.valid }} passed</div>
   <p>{{ head.runs }} invented people, {{ head.runs_per_persona or 1 }} conversation each{% if head.invalid %} · {{ head.invalid }} invalid{% endif %}{% if head.errors %} · {{ head.errors }} error(s){% endif %}</p>
   <p class="muted">Published {{ head.published|dmy }}</p>
@@ -10,6 +11,22 @@
 </div>
 {% else %}
 <p class="card">No round has been published yet.</p>
+{% endif %}
+
+{% set cmp = idx.comparison %}
+{% if cmp %}
+<h2 id="after-interview">What changed after the interview</h2>
+<div class="card">
+  {% for para in cmp.note %}<p>{{ para }}</p>{% endfor %}
+  <div style="overflow-x:auto">
+  <table class="cmp">
+    <tr><th></th><th>{{ cmp.before_label }}</th><th>{{ cmp.after_label }}</th></tr>
+    {% for row in cmp.rows %}<tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>{% endfor %}
+  </table>
+  </div>
+  <p class="muted">{{ cmp.method }}</p>
+  <a class="cta" href="/eval-dashboard/{{ cmp.after }}">See the conversations after the change</a>
+</div>
 {% endif %}
 
 <h2>The people</h2>

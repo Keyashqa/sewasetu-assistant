@@ -1,0 +1,19 @@
+{
+ "model": "claude-haiku-5-5",
+ "message": "Reply with the single word OK.",
+ "baseline_context": 3734,
+ "citizen": {
+  "tools": 8,
+  "context": 8521,
+  "real": 4787,
+  "estimate": 3979,
+  "estimate_error_pct": -16.9
+ },
+ "officer": {
+  "tools": 6,
+  "context": 7644,
+  "real": 3910,
+  "estimate": 2797,
+  "estimate_error_pct": -28.5
+ }
+}

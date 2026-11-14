@@ -6,6 +6,8 @@ Identity rule: every tool reads the signed-in principal in its async body and pa
 the mobile into services explicitly. No tool takes a mobile number as input.
 """
 
+from typing import Literal
+
 import anyio
 from mcp.types import ToolAnnotations
 
@@ -46,20 +48,20 @@ When the village is not recognised, ask which block it is in: the block is requi
 Applying for more than one person (helpers, CSC operators):
 - By default everything is filed on the signed-in number. For one applicant nothing extra is \
 needed: leave applicant_mobile out.
-- Use get_number_verification_link only when the person wants to file for someone else on \
+- Use get_link(purpose='verify_number') only when the person wants to file for someone else on \
 another mobile number, or the signed-in number already has an active application. The person \
 opens the link, enters that mobile number and types the OTP sent to that phone on the page.
 - Never ask for, accept or repeat an OTP in the chat. If someone types one here, tell them it \
 is not needed in the chat and to enter it on the page.
 - When the person replies after you gave the link (with anything), call \
-get_number_verification_link again and check verified_numbers before asking them to verify \
-again. Once the number is there, pass it as applicant_mobile to check_eligibility, \
-save_application_details, get_document_upload_link and submit_application for that \
+get_link(purpose='verify_number') again and check verified_numbers before asking them to verify \
+again. Once the number is there, pass it as applicant_mobile to check_scheme_and_eligibility, \
+save_application_details, get_link(purpose='age_proof') and submit_application for that \
 applicant, every time. Keep each applicant's details separate.
 - withdraw_application only withdraws the signed-in number's own application.
 
 The age proof:
-- The person uploads it themselves: give them the link from get_document_upload_link. When \
+- The person uploads it themselves: give them the link from get_link(purpose='age_proof'). When \
 they reply after that (with anything), call it again and check document_attached before \
 asking them to upload again.
 - Never verify, judge or comment on the document, and never ask about its authenticity or \
@@ -113,7 +115,7 @@ PASSWORD_TEXT = ("your password is the applicant's date of birth written as DDMM
 
 APPLICANT_MOBILE_DOC = (
     "applicant_mobile (optional): leave it out to use the signed-in number. Otherwise a "
-    "10-digit number verified with get_number_verification_link in this sign-in.")
+    "10-digit number verified with get_link(purpose='verify_number') in this sign-in.")
 
 
 async def _applicant(p, applicant_mobile):
@@ -128,7 +130,7 @@ async def _applicant(p, applicant_mobile):
                                "out to use the signed-in number."}
     return None, {"reply": "The number %s is not verified yet." % r["mobile"],
                   "error": "The number %s has not been verified in this sign-in, so nothing "
-                           "can be done for it yet. Call get_number_verification_link and "
+                           "can be done for it yet. Call get_link(purpose='verify_number') and "
                            "send the person the link: they enter that number there and type "
                            "the OTP from that phone on the page (never in this chat). When "
                            "they reply, check verified_numbers with that tool and try again." % r["mobile"]}
@@ -139,14 +141,7 @@ def _for(mobile, p):
     return {} if mobile == p.mobile else {"applicant_mobile": mobile}
 
 
-@citizen.tool(
-    description=(
-        "Facts about the Purvanchal Old Age Pension: the amount, who qualifies, which "
-        "documents are needed, how long a decision takes, and whether the application "
-        "window is open right now. Call this first when the person asks what the scheme is, "
-        "who can get it, or what papers are needed. No input."),
-    annotations=ToolAnnotations(title="Scheme information", readOnlyHint=True))
-async def get_scheme_info() -> dict:
+async def _scheme_info() -> dict:
     s = await _run(services.scheme_info)
     w = s["window"]
     if w["open"]:
@@ -181,16 +176,7 @@ async def get_scheme_info() -> dict:
     return out
 
 
-@citizen.tool(
-    description=(
-        "Checks whether the applicant can apply: age 60 or above from the applicant's date of "
-        "birth, the window still open, and whether this mobile number already has an active "
-        "application. The person asking may be the applicant or someone helping them; use the "
-        "applicant's date of birth. Call before collecting details. Input: date_of_birth as "
-        "DD/MM/YYYY (Indian order, day first), for example 10/04/1957. Other formats are "
-        "accepted and corrected. " + APPLICANT_MOBILE_DOC),
-    annotations=ToolAnnotations(title="Check eligibility", readOnlyHint=True))
-async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = None) -> dict:
+async def _eligibility(date_of_birth: str, applicant_mobile: str | None = None) -> dict:
     p = current_principal()
     mobile, err = await _applicant(p, applicant_mobile)
     if err:
@@ -234,12 +220,12 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
                             "at a time if the person's replies are short or unsure; if they give "
                             "several at once, save them all. The save reply asks once for the "
                             "optional ones. The age proof is uploaded later with "
-                            "get_document_upload_link.")
+                            "get_link(purpose='age_proof').")
     elif e["reasons"] == ["active_application"]:
         out["message"] = " ".join(messages)
         out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
                             "applicant, file on another mobile number: "
-                            "get_number_verification_link, then applicant_mobile.")
+                            "get_link(purpose='verify_number'), then applicant_mobile.")
     elif "window_closed" in e["reasons"]:
         out["message"] = " ".join(messages)
         out["next_step"] = ("Nothing can be filed now. Give the person the reply's closed-window "
@@ -297,8 +283,8 @@ def _own_application(a):
                       "kept_until": draft["expires_at"]}
     if not a["found"]:
         out = {"found": False,
-               "message": "No application on this mobile number yet. Call check_eligibility "
-                          "to start one."}
+               "message": "No application on this mobile number yet. Call check_scheme_and_eligibility "
+                          "with the applicant's date of birth to start one."}
         if draft_note:
             out["draft_in_progress"] = draft_note
             out["message"] = ("No application has been filed on this mobile number yet, but "
@@ -452,7 +438,7 @@ async def save_application_details(full_name: str | None = None,
                             "replies are short or unsure. Ask once for the optional ones if the "
                             "reply lists them; never insist.")
     elif services.DOC_MISSING in r["missing"]:
-        out["next_step"] = "Details are complete. Call get_document_upload_link for the age proof."
+        out["next_step"] = "Details are complete. Call get_link(purpose='age_proof') for the age proof."
     else:
         out["next_step"] = ("Read all the details and the declaration back to the person you "
                             "are talking with, and call submit_application only after they "
@@ -481,22 +467,7 @@ async def _note_active(out, mobile):
     return out
 
 
-@citizen.tool(
-    description=(
-        "Gives a link where the person uploads the applicant's age proof (birth certificate, "
-        "school leaving certificate or Voter ID) from their phone. Show them the reply with "
-        "the link. When the person replies after that (with anything), call this tool "
-        "again and check document_attached before asking them to upload again; a document "
-        "is required before submit_application. "
-        "Calling it again gives the same link. " + APPLICANT_MOBILE_DOC + "\n\n"
-        "Never create, generate or alter a document yourself; the person uploads their own "
-        "document through the link. Do not ask about, verify or comment on the document: the "
-        "block officer checks it.\n\n"
-        "Only if the person explicitly gives a local file path and asks you to upload it, you "
-        "may upload that exact file to the link (multipart form field \"document\")."),
-    annotations=ToolAnnotations(title="Get an upload link", readOnlyHint=False,
-                                destructiveHint=False, idempotentHint=True))
-async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
+async def _upload_link(applicant_mobile: str | None = None) -> dict:
     p = current_principal()
     mobile, err = await _applicant(p, applicant_mobile)
     if err:
@@ -517,7 +488,7 @@ async def get_document_upload_link(applicant_mobile: str | None = None) -> dict:
                             "confirm. Uploading again through the same link replaces it.")
     else:
         out["next_step"] = ("Show the person the reply with the link. When they "
-                            "reply (with anything), call get_document_upload_link again and "
+                            "reply (with anything), call get_link(purpose='age_proof') again and "
                             "check document_attached before asking them to upload again.")
     return await _note_active(out, mobile)
 
@@ -584,7 +555,7 @@ async def submit_application(confirm_declaration: bool,
                "save_application_details." % ", ".join(r["missing"]))
     elif s == "no_document":
         msg = ("The age proof is not uploaded yet. Give the person the link from "
-               "get_document_upload_link. When they reply, check document_attached with that "
+               "get_link(purpose='age_proof'). When they reply, check document_attached with that "
                "tool before asking them to upload again.")
     elif s == "invalid":
         msg = ("The portal refused the application: %s. Correct these with "
@@ -623,23 +594,7 @@ async def submit_application(confirm_declaration: bool,
                if s == "duplicate" else {})}
 
 
-@citizen.tool(
-    description=(
-        "Gives a link where the person verifies another mobile number by OTP, so an "
-        "application can be filed on that number in this chat without signing in again. Use "
-        "it only when the person wants to file for someone else on another mobile number, or "
-        "the signed-in number already has an active application. For a single applicant on "
-        "the signed-in number it is not needed.\n\n"
-        "Show the person the reply with the link, then wait. On the page they enter the "
-        "applicant's mobile number and type the OTP sent to that phone. You never ask for, "
-        "see or relay the OTP; if someone types an OTP in the chat, tell them to enter it on "
-        "the page instead. When the person replies after that (with anything), call this tool "
-        "again and check verified_numbers before asking them to verify again. Once the number "
-        "is there, pass it as applicant_mobile to check_eligibility, "
-        "save_application_details, get_document_upload_link and submit_application. No input."),
-    annotations=ToolAnnotations(title="Verify another mobile number", readOnlyHint=False,
-                                destructiveHint=False, idempotentHint=True))
-async def get_number_verification_link() -> dict:
+async def _verify_link() -> dict:
     p = current_principal()
     link = await _run(services.issue_verify_link, p.mobile, p.session_ends)
     verified = await _run(services.verified_numbers, p.mobile)
@@ -654,3 +609,54 @@ async def get_number_verification_link() -> dict:
                       "in verified_numbers can be used as applicant_mobile until this sign-in "
                       "ends; it does not need verifying again."),
     }
+
+
+# ---------------------------------------------------------------------------
+# Merged tools (TOOL_MERGE.md): each dispatches to the unchanged helpers above, so every
+# result and every portal rule is exactly what the four separate tools returned.
+# ---------------------------------------------------------------------------
+
+@citizen.tool(
+    description=(
+        "The Old Age Pension's facts, and an eligibility check. Without date_of_birth: the "
+        "amount, who qualifies, documents needed, decision time and whether applications are "
+        "open; call this first when someone asks about the scheme. With date_of_birth (the "
+        "applicant's, DD/MM/YYYY, day first, e.g. 10/04/1957; other formats are corrected): "
+        "checks age 60 or above, the window, and whether this mobile number already has an "
+        "active application; call it before collecting details. The person asking may be the "
+        "applicant or someone helping them. " + APPLICANT_MOBILE_DOC + " Used only with "
+        "date_of_birth."),
+    annotations=ToolAnnotations(title="Scheme facts and eligibility", readOnlyHint=True))
+async def check_scheme_and_eligibility(date_of_birth: str | None = None,
+                                       applicant_mobile: str | None = None) -> dict:
+    if date_of_birth is None or not str(date_of_birth).strip():
+        return await _scheme_info()
+    return await _eligibility(date_of_birth, applicant_mobile)
+
+
+@citizen.tool(
+    description=(
+        "A link the person opens on their own phone. purpose=\"age_proof\": upload the "
+        "applicant's age proof (birth certificate, school leaving certificate or Voter ID); a "
+        "document is required before submit_application. purpose=\"verify_number\": verify "
+        "another mobile number by OTP; use it only when the person wants to file for someone "
+        "else on another mobile number, or the signed-in number already has an active "
+        "application. Show the person the reply with the link; calling again gives the same "
+        "link. When the person replies after that (with anything), call this tool again with "
+        "the same purpose and check document_attached (age_proof) or verified_numbers "
+        "(verify_number) before asking them to upload or verify again. A verified number is "
+        "then passed as applicant_mobile to the other tools. " + APPLICANT_MOBILE_DOC +
+        " Used only with age_proof.\n\n"
+        "Never create, generate or alter a document yourself; the person uploads their own "
+        "document through the link. Do not ask about, verify or comment on the document: the "
+        "block officer checks it. You never ask for, see or relay the OTP; if someone types an "
+        "OTP in the chat, tell them to enter it on the page instead.\n\n"
+        "Only if the person explicitly gives a local file path and asks you to upload it, you "
+        "may upload that exact file to the age_proof link (multipart form field \"document\")."),
+    annotations=ToolAnnotations(title="Get a link (age proof or number verification)",
+                                readOnlyHint=False, destructiveHint=False, idempotentHint=True))
+async def get_link(purpose: Literal["age_proof", "verify_number"],
+                   applicant_mobile: str | None = None) -> dict:
+    if purpose == "verify_number":
+        return await _verify_link()
+    return await _upload_link(applicant_mobile)

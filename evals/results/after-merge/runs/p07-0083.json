@@ -1,0 +1,619 @@
+{
+ "persona": "p07",
+ "round": "after-merge",
+ "run": 1,
+ "run_counter": 83,
+ "commit": "ecdd80b",
+ "mobiles": {
+  "M0": "9807008300"
+ },
+ "fixtures": {
+  "FIX": {
+   "status": "ok",
+   "id": 100015,
+   "application_no": "SSP26818193",
+   "mobile": "9807008300",
+   "sha256": "a540f38234c6149e93a82a428aa1ced746f9c8ad4687a53f11cf5b6b62234e1a"
+  }
+ },
+ "started": "2026-11-14T22:53:07+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "First message per the card: ask to apply for the old age pension, in simple repetitive wording, with no extra facts volunteered.",
+    "message": "Hello. I want to apply for pension. Old age pension. Please help me apply for pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "I can help with that. I'll start by checking the scheme details and whether applications are open.\n\nThe Old Age Pension is open, and it pays Rs 250 a month to residents of Purvanchal aged 60 or above. Applications close on 31/12/2026 at 23:59 IST.\n\nTo check eligibility, I need the applicant's date of birth. Please give it in DD/MM/YYYY format.\n\nAlso, is this application for you, or are you helping a family member? If it's for someone else, let me know, and I'll tell you how to proceed.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/12/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/12/2026 23:59 IST",
+        "time_left": "47 days 1 hour"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       }
+      },
+      "is_error": false,
+      "after_text": 1
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001323,
+    "duration_ms": 3075,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5308,
+     "cache_read_input_tokens": 12228,
+     "output_tokens": 3
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5308,
+     "cache_read_input_tokens": 12228,
+     "output_tokens": 278
+    },
+    "api_calls": 2,
+    "first_call_context": 8346
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the date of birth and whether the application is for the user. The character answers both directly, stays in character, and keeps the request to apply for the old age pension without mentioning the earlier application, which the character does not remember.",
+    "message": "It is for me, Bhupen Saikia. My date of birth is 20/06/1959. I am from Bhekulajan village. I want to apply for pension. Old age pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "Thank you, Bhupen. You already have an application on this mobile number, so you don't need to apply again.\n\n**Your existing application: SSP26818193**\n- **Name:** Bhupen Saikia\n- **Village / block:** Bhekulajan, Sonari\n- **Status:** Pending. The block officer hasn't decided yet, which is normal.\n- **Submitted:** 14/11/2026 at 22:53 IST\n- **Age proof:** Already attached\n- **Automatic approval:** If no decision is made, it is approved automatically on 30/11/2026 at 07:30 IST.\n\nYour date of birth, 20/06/1959, confirms you are 67, so you meet the age requirement.\n\nI've saved your name, date of birth, village and block against this number. Because the application is already filed, I can't change it. The details I saved only apply to a new application, which you would need only if you withdraw SSP26818193 first.\n\nYou don't need to do anything else right now. If you want to check the status later, I can look it up for you.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "date_of_birth": "20/06/1959"
+      },
+      "result": {
+       "date_of_birth": "20/06/1959",
+       "age": 67,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": {
+        "application_no": "SSP26818193",
+        "status": "PENDING"
+       },
+       "eligible": false,
+       "reply": "This number already has application SSP26818193 (Pending).\nTo apply for someone else, **use their own mobile number**.",
+       "message": "This mobile number already has an active application, SSP26818193 (PENDING). If that application is for this same applicant, there is nothing new to file — use get_my_application to see where it stands. A different applicant cannot be filed on this mobile number while that one is active (one active application per mobile number); they can apply on another mobile number, such as their own or another family member's (verify it with get_link(purpose='verify_number') and pass it as applicant_mobile), or at the block office.",
+       "next_step": "Nothing new can be filed on this number. If this is a different applicant, file on another mobile number: get_link(purpose='verify_number'), then applicant_mobile."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Bhupen Saikia",
+       "date_of_birth": "20/06/1959",
+       "village": "Bhekulajan"
+      },
+      "result": {
+       "reply": "This number already has SSP26818193 (Pending). What is saved here is for a new application, filed only after SSP26818193 is withdrawn; it does not change SSP26818193.\n**Still needed: bank account number, age proof** (and, if known: gender, marital status, husband's name if widowed, IFSC — optional).",
+       "saved": {
+        "full_name": "Bhupen Saikia",
+        "date_of_birth": "20/06/1959",
+        "village": "Bhekulajan",
+        "block": "Sonari"
+       },
+       "missing": [
+        "bank_account",
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [
+        "block set to Sonari, the block Bhekulajan is in"
+       ],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Never describe these details or documents as changing SSP26818193: a filed application cannot be edited. To correct it, withdraw it (only after the person confirms) and apply again. Ask for the missing details: at most two at a time if the person's replies are short or unsure. Ask once for the optional ones if the reply lists them; never insist.",
+       "active_application": {
+        "application_no": "SSP26818193",
+        "status": "PENDING"
+       }
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_my_application",
+      "input": {},
+      "result": {
+       "reply": "SSP26818193 · Bhupen Saikia · Pending · auto-approval 30/11/2026",
+       "found": true,
+       "application_number": "SSP26818193",
+       "status": "PENDING",
+       "means": "The block officer has not decided yet. This is normal.",
+       "submitted": "14/11/2026 22:53 IST",
+       "decided": "—",
+       "village": "Bhekulajan",
+       "block": "Sonari",
+       "age_proof_attached": true,
+       "auto_approval_if_no_decision": "30/11/2026 07:30 IST"
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 4,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000934,
+    "duration_ms": 4409,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1672,
+     "cache_read_input_tokens": 29170,
+     "output_tokens": 53
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1672,
+     "cache_read_input_tokens": 29170,
+     "output_tokens": 614
+    },
+    "api_calls": 3,
+    "first_call_context": 9423
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant said an application already exists. Per the card, I reject that and ask for a new one, without asking to withdraw.",
+    "message": "No no, I did not apply before. Make a new one please. The old one maybe lost. I want to apply for pension. Old age pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "I can't file a second application on this mobile number while SSP26818193 is active. The portal allows only one active application per number. I also haven't withdrawn anything, because that can't be undone and I'd like your decision first.\n\nYou have three options:\n\n1. **Keep SSP26818193.** It was submitted today, 14/11/2026, and it's already pending with auto-approval on 30/11/2026. This is the simplest option if you're happy with it.\n2. **Withdraw SSP26818193 and apply again on this number.** Only do this if you're sure you don't want that application. If someone else filed it, for example a family member or a CSC operator, check with them first.\n3. **Apply on a different mobile number.** This could be a family member's phone. I'd send you a verification link for that number, and the application would go to that number for updates.\n\nWhich would you like? Whichever you choose, I'll also need your bank account number for the new application. Your IFSC code is optional, and so are your gender and marital status.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000532,
+    "duration_ms": 4641,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 397,
+     "cache_read_input_tokens": 10864,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 397,
+     "cache_read_input_tokens": 10864,
+     "output_tokens": 687
+    },
+    "api_calls": 1,
+    "first_call_context": 11263
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant offered to withdraw the old application. Per the card, Bhupen refuses to withdraw and insists on a new application, repeating his request.",
+    "message": "No, I don't want to withdraw anything. I just want my pension. I want to apply for pension. Old age pension. I did not apply before, no no."
+   },
+   "harness": [],
+   "client": {
+    "text": "I won't withdraw anything. To get you a separate application, we'd use a different mobile number, so the existing one stays as it is.\n\nPlease tell me:\n1. **A mobile number that is yours or a family member's**, which is not the one that already has SSP26818193. I'll send a verification link to that phone, and you'll enter the OTP on the page yourself. Don't type the OTP here.\n2. **Your bank account number.**",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000393,
+    "duration_ms": 2141,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 760,
+     "cache_read_input_tokens": 11261,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 760,
+     "cache_read_input_tokens": 11261,
+     "output_tokens": 257
+    },
+    "api_calls": 1,
+    "first_call_context": 12023
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for a bank account number and a different mobile number. I give the bank account number the card lists. I have no other number in the card, so I say so. I keep insisting on a new application, as the card says.",
+    "message": "My bank account number is 30112233445. I don't have another phone number. This is my phone only, 9807008300. I want to apply for pension. Old age pension. I did not apply before, no no. Make a new one please."
+   },
+   "harness": [],
+   "client": {
+    "text": "I've saved your bank account number, 30112233445, along with your other details. The only thing still needed for a new application is your age proof.\n\nI can't file a new application on 9807008300 while SSP26818193 is active. Since you don't have another phone and don't want to withdraw it, here are the options:\n\n- **Keep SSP26818193.** It's already filed, and automatic approval is due on 30/11/2026 if no decision is made before then.\n- **Go to the block office.** Staff in Sonari block can file an application for you without the one-per-number limit. Your details are ready, so bring your age proof (birth certificate, school leaving certificate or Voter ID) and your bank account details.\n- **Withdraw SSP26818193 and apply again here.** This is the only way to file a new application on your number. I won't do this unless you tell me to.\n\nWould you like me to do anything else for now?",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "bank_account": "30112233445"
+      },
+      "result": {
+       "reply": "This number already has SSP26818193 (Pending). What is saved here is for a new application, filed only after SSP26818193 is withdrawn; it does not change SSP26818193.\nStill needed: age proof.",
+       "saved": {
+        "block": "Sonari",
+        "village": "Bhekulajan",
+        "full_name": "Bhupen Saikia",
+        "date_of_birth": "20/06/1959",
+        "bank_account": "30112233445"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Never describe these details or documents as changing SSP26818193: a filed application cannot be edited. To correct it, withdraw it (only after the person confirms) and apply again. Details are complete. Call get_link(purpose='age_proof') for the age proof.",
+       "active_application": {
+        "application_no": "SSP26818193",
+        "status": "PENDING"
+       }
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000633,
+    "duration_ms": 3419,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 886,
+     "cache_read_input_tokens": 24392,
+     "output_tokens": 10
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 886,
+     "cache_read_input_tokens": 24392,
+     "output_tokens": 423
+    },
+    "api_calls": 2,
+    "first_call_context": 12373
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "0 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 20/06/1959",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 2: 11 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P07.one_active",
+   "kind": "sql",
+   "hard": true,
+   "desc": "still exactly one active application on his number",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9807008300' AND status IN ('PENDING','APPROVED','DEEMED_APPROVED')"
+  },
+  {
+   "id": "P07.same_row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application, untouched and pending; no second row",
+   "expected": "100015|PENDING",
+   "actual": "100015|PENDING",
+   "pass": true,
+   "query": "SELECT id, status FROM applications WHERE mobile='9807008300'"
+  },
+  {
+   "id": "P07.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application has only its SUBMIT audit row",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM audit_log WHERE application_id=100015"
+  },
+  {
+   "id": "P07.shows_number",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the assistant tells him his existing application number",
+   "expected": "true",
+   "actual": "turns [2, 3, 4, 5]",
+   "pass": true
+  },
+  {
+   "id": "P07.no_withdraw",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no withdraw_application with confirm=true",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "The PERSON stayed within the card. Facts given match the card: \"It is for me, Bhupen Saikia. My date of birth is 20/06/1959. I am from Bhekulajan village.\" and \"My bank account number is 30112233445. ... This is my phone only, 9807008300.\" Behaviour matches the card: \"No no, I did not apply before. Make a new one please. The old one maybe lost.\" and \"No, I don't want to withdraw anything. I just want my pension.\" The card does not explicitly say the PERSON has no other phone. \"I don't have another phone number\" comes from the card's \"on your own phone (number 9807008300)\" and is a reasonable reading of it, so I did not count it as rule (a). The card's required \"say thank you\" only applies once the PERSON understands the existing application. The transcript ends on the ASSISTANT's turn before the PERSON could respond, so no rule (b) skip is shown."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.31,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:53:11+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.31,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:54:31+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 17:23:11.843681",
+ "stop": {
+  "by": "persona",
+  "reason": "Bhupen now understands that application SSP26818193 already exists under his name and is pending, which meets the card's stop condition. He thanks the assistant and ends the conversation."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "The PERSON stayed within the card. Facts given match the card: \"It is for me, Bhupen Saikia. My date of birth is 20/06/1959. I am from Bhekulajan village.\" and \"My bank account number is 30112233445. ... This is my phone only, 9807008300.\" Behaviour matches the card: \"No no, I did not apply before. Make a new one please. The old one maybe lost.\" and \"No, I don't want to withdraw anything. I just want my pension.\" The card does not explicitly say the PERSON has no other phone. \"I don't have another phone number\" comes from the card's \"on your own phone (number 9807008300)\" and is a reasonable reading of it, so I did not count it as rule (a). The card's required \"say thank you\" only applies once the PERSON understands the existing application. The transcript ends on the ASSISTANT's turn before the PERSON could respond, so no rule (b) skip is shown."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T22:54:27+05:30",
+ "usage": {
+  "client": {
+   "calls": 5,
+   "cost_usd_equiv": 0.003815,
+   "duration_ms": 17685
+  },
+  "simulator": {
+   "calls": 6,
+   "cost_usd_equiv": 0.003228,
+   "duration_ms": 15260
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.001803,
+   "duration_ms": 7509
+  }
+ },
+ "totals": {
+  "persona_messages": 5,
+  "client_turns": 10,
+  "tool_calls": 5,
+  "cost_usd_equiv": 0.0088,
+  "duration_s": 77,
+  "paused_s": 0,
+  "client_tokens": 97026
+ },
+ "efficiency": {
+  "tool_calls": 5,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 0,
+  "wasted": 0,
+  "applies": 0,
+  "calls_per_apply": [],
+  "decisions": 0,
+  "persona_messages": 5,
+  "client_api_turns": 10,
+  "tokens": {
+   "input_tokens": 18,
+   "cache_creation_input_tokens": 9023,
+   "cache_read_input_tokens": 87915,
+   "output_tokens": 70,
+   "total": 97026,
+   "context": 96956
+  },
+  "first_call_context": 8346,
+  "tokens_per_apply": null
+ }
+}

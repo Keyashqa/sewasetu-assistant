@@ -93,6 +93,12 @@ class WasteTests(unittest.TestCase):
         s = calc.analyze(r, NOW)
         self.assertEqual((s["polls"], s["repeats"], s["wasted"]), (2, 0, 0))
 
+    def test_merged_link_tool_polls_are_not_waste(self):
+        r = rows(("get_link", "age", "ok", None), ("get_link", "age", "ok", None),
+                 ("get_link", "ver", "ok", None), ("get_link", "ver", "ok", None))
+        s = calc.analyze(r, NOW)
+        self.assertEqual((s["polls"], s["repeats"], s["wasted"]), (2, 0, 0))
+
     def test_error_counted_once_even_if_repeated(self):
         r = rows(("check_eligibility", "x", "error", None),
                  ("check_eligibility", "x", "error", None))

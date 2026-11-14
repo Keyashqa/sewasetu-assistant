@@ -79,10 +79,10 @@ async def scenario():
     c = lambda tool, label=None, **kw: call(citizen_mod, citizen(HELPER), tool, label, **kw)
     o = lambda tool, label=None, **kw: call(officer_mod, OFFICER, tool, label, **kw)
 
-    await c("get_scheme_info")
-    await c("check_eligibility", "eligibility: bad date", date_of_birth="31/31/1950")
-    await c("check_eligibility", "eligibility: under 60", date_of_birth="01/01/1990")
-    await c("check_eligibility", "eligibility: eligible", date_of_birth="10/04/1966")
+    await c("check_scheme_and_eligibility", "scheme info")
+    await c("check_scheme_and_eligibility", "eligibility: bad date", date_of_birth="31/31/1950")
+    await c("check_scheme_and_eligibility", "eligibility: under 60", date_of_birth="01/01/1990")
+    await c("check_scheme_and_eligibility", "eligibility: eligible", date_of_birth="10/04/1966")
     await c("get_my_application", "status: nothing yet")
     await c("save_application_details", "save: nothing given")
     await c("save_application_details", "save: unverified number", full_name="X",
@@ -95,17 +95,17 @@ async def scenario():
     await c("submit_application", "submit: incomplete", confirm_declaration=True)
     await c("save_application_details", "save: only document missing",
             bank_account="80157128856", ifsc="SBIN0003077")
-    up = await c("get_document_upload_link", "upload: link")
+    up = await c("get_link", "upload: link", purpose="age_proof")
     samples["upload"] = up["reply"]
     tok = up["upload_url"].rsplit("/", 1)[-1]
     services.attach_draft_document(tok, "age-proof.png", io.BytesIO(PNG))
-    rb = await c("get_document_upload_link", "upload: attached -> read-back")
+    rb = await c("get_link", "upload: attached -> read-back", purpose="age_proof")
     samples["read-back"] = rb["reply"]
     sub = await c("submit_application", "submit: ok", confirm_declaration=True)
     samples["submitted"] = sub["reply"]
     await c("submit_application", "submit: duplicate", confirm_declaration=True)
-    await c("check_eligibility", "eligibility: active application", date_of_birth="10/04/1966")
-    v = await c("get_number_verification_link", "verify: link")
+    await c("check_scheme_and_eligibility", "eligibility: active application", date_of_birth="10/04/1966")
+    v = await c("get_link", "verify: link", purpose="verify_number")
     samples["verify link"] = v["reply"]
     # the helper verifies OTHER on the page (the OTP stays on the portal)
     services.verify_send_code(v["verify_url"].rsplit("/", 1)[-1], OTHER)
@@ -114,12 +114,12 @@ async def scenario():
                     (services._code_hash(v["verify_url"].rsplit("/", 1)[-1], "123456"),
                      v["verify_url"].rsplit("/", 1)[-1]))
     services.verify_check_code(v["verify_url"].rsplit("/", 1)[-1], "123456")
-    await c("get_number_verification_link", "verify: after verification")
+    await c("get_link", "verify: after verification", purpose="verify_number")
     await c("save_application_details", "save for other: read-back pending doc",
             applicant_mobile=OTHER, full_name="Sewalan Gogoi", date_of_birth="01/01/1958",
             gender="Female", marital_status="Widowed", husband_name="Late Ramen Gogoi",
             village="Kathoni", bank_account="123456789012")
-    up2 = await c("get_document_upload_link", applicant_mobile=OTHER)
+    up2 = await c("get_link", "upload for other", purpose="age_proof", applicant_mobile=OTHER)
     services.attach_draft_document(up2["upload_url"].rsplit("/", 1)[-1], "a.png", io.BytesIO(PNG + b"2"))
     await c("save_application_details", "save for other: complete -> read-back",
             applicant_mobile=OTHER, gender="Female")

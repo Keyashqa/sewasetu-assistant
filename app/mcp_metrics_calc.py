@@ -29,9 +29,13 @@ CHARS_PER_TOKEN = 3.5          # estimate; see imp.md §5
 WRITE_TOOLS = frozenset({"save_application_details", "submit_application",
                          "withdraw_application", "approve_application", "reject_application"})
 # Called again by design (the instructions say to check again after the person replies).
-POLL_TOOLS = frozenset({"get_document_upload_link", "get_number_verification_link",
-                        "get_my_application"})
+POLL_TOOLS = frozenset({"get_link", "get_my_application",
+                        # before the merge (TOOL_MERGE.md), for older runs
+                        "get_document_upload_link", "get_number_verification_link"})
 PROCESS_TYPES = ("apply", "decision", "status")
+# Citizen tools retired by the merge (TOOL_MERGE.md); rows logged before it keep these names.
+RETIRED_TOOLS = frozenset({"get_scheme_info", "check_eligibility", "get_document_upload_link",
+                           "get_number_verification_link"})
 
 # A result that is False on one of these keys is a refusal (the portal said no).
 REFUSAL_FLAGS = ("submitted", "approved", "rejected", "withdrawn", "eligible")

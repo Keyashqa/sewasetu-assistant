@@ -94,8 +94,8 @@ def page_checks(client):
 
 async def tool_checks():
     tools = {t.name: t for t in await citizen_mod.citizen.list_tools()}
-    check("citizen server lists 8 tools", len(tools) == 8, sorted(tools))
-    up = tools["get_document_upload_link"].description
+    check("citizen server lists 6 tools", len(tools) == 6, sorted(tools))
+    up = tools["get_link"].description
     sub = tools["submit_application"].description
     ins = citizen_mod.INSTRUCTIONS
     check("upload description: one-line document rule", RULE in up)
@@ -104,8 +104,8 @@ async def tool_checks():
     check("upload description: no curl", "curl" not in up.lower())
     check("upload description: does not judge the document", "Do not ask about, verify or comment" in up)
     check("upload description: on any reply, check document_attached before asking again",
-          "replies after that (with anything), call this tool again and check document_attached "
-          "before asking them to upload again" in up)
+          "replies after that (with anything), call this tool again with the same purpose and "
+          "check document_attached (age_proof)" in up)
     check("submit description: document rule", RULE in sub)
     check("submit description: keeps 'never invent or guess applicant details'",
           "Never invent or guess applicant details" in sub)
@@ -121,7 +121,7 @@ async def tool_checks():
     tok = set_principal(Principal(role="citizen", subject="citizen:" + MOBILE, mobile=MOBILE,
                                   officer=None, kind="access", session_ends=None))
     try:
-        out = await citizen_mod.get_document_upload_link()
+        out = await citizen_mod.get_link(purpose="age_proof")
         check("tool output: no curl_example", "curl_example" not in out, out)
         check("tool output: reply with the link before upload",
               out["upload_url"] in out.get("reply", "") and not out["document_attached"])

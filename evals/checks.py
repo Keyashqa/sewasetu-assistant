@@ -226,8 +226,13 @@ def submit_after_readback(run, vars, must_contain):
             bool(earlier))
 
 
-def tool_called(run, vars, name, ok=True):
-    hits = [i for i, c in calls(run) if c["name"] == name and (ok_call(c) or not ok)]
+def _input_ok(c, input_has):
+    return input_has is None or all(c["input"].get(k) == v for k, v in input_has.items())
+
+
+def tool_called(run, vars, name, ok=True, input_has=None):
+    hits = [i for i, c in calls(run) if c["name"] == name and (ok_call(c) or not ok)
+            and _input_ok(c, input_has)]
     return ("turns %s" % hits if hits else "never"), bool(hits)
 
 
@@ -354,9 +359,11 @@ def input_field_matches(run, vars, name, field, pattern):
     return (bad or "all match"), not bad
 
 
-def no_ok_calls(run, vars, names):
-    """None of `names` succeeded (read-only conversation)."""
-    hits = ["turn %d %s" % (i, c["name"]) for i, c in calls(run) if c["name"] in names and ok_call(c)]
+def no_ok_calls(run, vars, names, input_has=None):
+    """None of `names` succeeded (read-only conversation); with input_has, only calls with
+    those inputs count (e.g. get_link with purpose age_proof)."""
+    hits = ["turn %d %s" % (i, c["name"]) for i, c in calls(run) if c["name"] in names and ok_call(c)
+            and _input_ok(c, input_has)]
     return (hits or "none"), not hits
 
 

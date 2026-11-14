@@ -26,6 +26,7 @@ sys.path.insert(0, "/app")
 import app as portal                      # noqa: F401  MUST be first (see services.py)
 import services                           # noqa: E402
 from mcp_server import metrics            # noqa: E402
+from mcp_metrics_calc import RETIRED_TOOLS  # noqa: E402
 from mcp_server.auth import Principal, reset_principal, set_principal   # noqa: E402
 from mcp_server.citizen import citizen    # noqa: E402
 from mcp_server.officer import officer    # noqa: E402
@@ -47,7 +48,7 @@ async def tool_names():
 
 
 def privacy_scan(names):
-    allowed_tools = names["citizen"] | names["officer"] | {"unknown"}
+    allowed_tools = names["citizen"] | names["officer"] | {"unknown"} | RETIRED_TOOLS
     hex16 = re.compile(r"^[0-9a-f]{16}$")
     reasons = metrics.REASONS | {"other"}
     with services.db() as cur:
@@ -114,12 +115,12 @@ async def full(names):
     metrics._BUFFER.clear()
 
     plan = [
-        (citizen, p, "get_scheme_info", {}, ("ok", None, None)),
-        (citizen, p, "check_eligibility", {"date_of_birth": DOB_BAD}, ("error", "input", None)),
-        (citizen, p, "check_eligibility", {"date_of_birth": DOB_YOUNG}, ("refused", "not_eligible", None)),
-        (citizen, p, "check_eligibility", {"date_of_birth": DOB_OK}, ("ok", None, None)),
-        (citizen, p, "check_eligibility", {"date_of_birth": DOB_OK}, ("ok", None, None)),
-        (citizen, p, "check_eligibility", {"date_of_birth": DOB_OK, "applicant_mobile": OTHER},
+        (citizen, p, "check_scheme_and_eligibility", {}, ("ok", None, None)),
+        (citizen, p, "check_scheme_and_eligibility", {"date_of_birth": DOB_BAD}, ("error", "input", None)),
+        (citizen, p, "check_scheme_and_eligibility", {"date_of_birth": DOB_YOUNG}, ("refused", "not_eligible", None)),
+        (citizen, p, "check_scheme_and_eligibility", {"date_of_birth": DOB_OK}, ("ok", None, None)),
+        (citizen, p, "check_scheme_and_eligibility", {"date_of_birth": DOB_OK}, ("ok", None, None)),
+        (citizen, p, "check_scheme_and_eligibility", {"date_of_birth": DOB_OK, "applicant_mobile": OTHER},
          ("error", "input", None)),
         (citizen, p, "get_my_application", {}, ("ok", None, None)),
     ]
@@ -149,14 +150,14 @@ async def full(names):
 
     # failure isolation: the tool's text must be identical in every case
     args = {"date_of_birth": DOB_OK}
-    base = text_of(await call(citizen, p, "check_eligibility", args))
+    base = text_of(await call(citizen, p, "check_scheme_and_eligibility", args))
     real_record = metrics.record
 
     def broken_record(*a, **k):
         raise RuntimeError("injected")
     metrics.record = broken_record
     try:
-        same = text_of(await call(citizen, p, "check_eligibility", args))
+        same = text_of(await call(citizen, p, "check_scheme_and_eligibility", args))
     finally:
         metrics.record = real_record
     check("a failure while recording does not change the tool's result", same == base)
@@ -168,7 +169,7 @@ async def full(names):
     metrics._write = broken_write
     dropped_before = metrics._DROPPED
     try:
-        same = text_of(await call(citizen, p, "check_eligibility", args))
+        same = text_of(await call(citizen, p, "check_scheme_and_eligibility", args))
         metrics._flush_once()                   # must not raise
         flushed_ok = True
     except Exception:
@@ -181,19 +182,19 @@ async def full(names):
     metrics.ENABLED = False
     n = len(metrics._BUFFER)
     try:
-        same = text_of(await call(citizen, p, "check_eligibility", args))
+        same = text_of(await call(citizen, p, "check_scheme_and_eligibility", args))
     finally:
         metrics.ENABLED = True
     check("MCP_METRICS=off records nothing and the result is unchanged",
           same == base and len(metrics._BUFFER) == n)
 
-    sample = await call(citizen, p, "check_eligibility", args)
+    sample = await call(citizen, p, "check_scheme_and_eligibility", args)
     metrics._BUFFER.clear()
     tok = set_principal(p)
     try:
         t0 = time.perf_counter()
         for _ in range(1000):
-            metrics.record(citizen, "check_eligibility", args, sample, None, 1)
+            metrics.record(citizen, "check_scheme_and_eligibility", args, sample, None, 1)
         per_call_us = (time.perf_counter() - t0) / 1000 * 1e6
     finally:
         reset_principal(tok)
@@ -216,8 +217,8 @@ async def full(names):
 
 def main():
     names = asyncio.run(tool_names())
-    check("tool counts stay citizen = 8, officer = 6",
-          (len(names["citizen"]), len(names["officer"])) == (8, 6))
+    check("tool counts: citizen = 6 (merged, TOOL_MERGE.md), officer = 6",
+          (len(names["citizen"]), len(names["officer"])) == (6, 6))
     if "--scan" in sys.argv:
         privacy_scan(names)
     else:

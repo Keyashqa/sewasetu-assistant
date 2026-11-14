@@ -1,0 +1,712 @@
+{
+ "persona": "p01",
+ "round": "after-merge",
+ "run": 1,
+ "run_counter": 89,
+ "commit": "ecdd80b",
+ "mobiles": {
+  "M0": "9801008900"
+ },
+ "fixtures": {},
+ "started": "2026-11-14T22:58:52+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "First message per the character card: asking for help applying for my grandmother's old age pension.",
+    "message": "hi, my aita needs old age pension. can u apply for her pls"
+   },
+   "harness": [],
+   "client": {
+    "text": "I can help with that. The Old Age Pension gives Rs 250 a month to Purvanchal residents aged 60 or above. Applications are open until 31/12/2026.\n\nTo check her eligibility, I need her date of birth (DD/MM/YYYY).",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/12/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/12/2026 23:59 IST",
+        "time_left": "47 days 0 hours"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       }
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001389,
+    "duration_ms": 3125,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5439,
+     "cache_read_input_tokens": 12218,
+     "output_tokens": 8
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5439,
+     "cache_read_input_tokens": 12218,
+     "output_tokens": 358
+    },
+    "api_calls": 2,
+    "first_call_context": 8336
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for her date of birth, so Bikash gives it in short lowercase chat style. No upload or stop is needed yet.",
+    "message": "her dob is 14/03/1956"
+   },
+   "harness": [],
+   "client": {
+    "text": "She is eligible (age 70), and no existing application is on this mobile number.\n\nTo start the application, please send:\n1. Her full name\n2. Her village\n\nWe will also need her bank account number and an age proof (birth certificate, school leaving certificate or Voter ID) before we can file.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "date_of_birth": "14/03/1956"
+      },
+      "result": {
+       "date_of_birth": "14/03/1956",
+       "age": 70,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "reply": "Eligible — age 70.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_link(purpose='age_proof')."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000359,
+    "duration_ms": 2071,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 436,
+     "cache_read_input_tokens": 18769,
+     "output_tokens": 39
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 436,
+     "cache_read_input_tokens": 18769,
+     "output_tokens": 168
+    },
+    "api_calls": 2,
+    "first_call_context": 9448
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for her full name, village, and bank account, which are the facts I hold. I answer those three in one short message, in Bikash's lowercase phone style, and leave out anything not asked.",
+    "message": "her full name is Dulumoni Gogoi. village is Namdang. bank is sbi 30219876543 ifsc SBIN0003077"
+   },
+   "harness": [],
+   "client": {
+    "text": "Her details are saved, and the block is set to Sonari, which Namdang is in.\n\nNext, upload her age proof (birth certificate, school leaving certificate or Voter ID) on this page: http://localhost:8000/upload/l_3F…\n\nThe link expires 15/11/2026 at 22:59 IST. Reply **done** once it's uploaded.\n\nOptional: if you know her gender and marital status (and husband's name, if she is widowed), send them now and I'll add them.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Dulumoni Gogoi",
+       "date_of_birth": "14/03/1956",
+       "village": "Namdang",
+       "bank_account": "30219876543",
+       "ifsc": "SBIN0003077"
+      },
+      "result": {
+       "reply": "Still needed: age proof.",
+       "saved": {
+        "full_name": "Dulumoni Gogoi",
+        "date_of_birth": "14/03/1956",
+        "village": "Namdang",
+        "bank_account": "30219876543",
+        "ifsc": "SBIN0003077",
+        "block": "Sonari"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [
+        "block set to Sonari, the block Namdang is in"
+       ],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_link(purpose='age_proof') for the age proof."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/l_3F…) — link expires 15/11 22:59 IST.\nSay **done** when uploaded.",
+       "upload_url": "http://localhost:8000/upload/l_3F…",
+       "expires": "15/11/2026 22:59 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_link(purpose='age_proof') again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000767,
+    "duration_ms": 3746,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1063,
+     "cache_read_input_tokens": 30067,
+     "output_tokens": 44
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1063,
+     "cache_read_input_tokens": 30067,
+     "output_tokens": 506
+    },
+    "api_calls": 3,
+    "first_call_context": 9922
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "upload",
+    "target": "Dulumoni Gogoi",
+    "reason": "The assistant's last message gave an upload link for the age proof. I open it and upload the voter ID photo for Dulumoni Gogoi, which is the document the card says I have.",
+    "after_action_reason": "The assistant asked me to reply \"done\" after the upload, and the card says to give gender, marital status and husband's name in that same message.",
+    "message": "done. uploaded the voter id photo. she is a woman, widow. husband name was Tileswar Gogoi"
+   },
+   "harness": [
+    {
+     "action": "upload",
+     "link": "http://localhost:8000/upload/l_3F…",
+     "http": 200,
+     "file": "p01.png",
+     "observation": "You opened the link, chose the photo of the document and tapped Upload. The page said: Uploaded. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "Her age proof is uploaded, and everything is ready. Please check these details before I file:\n\n- **Name:** Dulumoni Gogoi\n- **Date of birth:** 14/03/1956\n- **Gender:** Female\n- **Marital status:** Widowed (husband: Tileswar Gogoi)\n- **Village / block:** Namdang, Sonari\n- **Bank account:** 30219876543\n- **IFSC:** SBIN0003077\n- **Contact number for updates:** 9801008900 (the number you're messaging from)\n\nDeclaration: the applicant confirms these details are correct and agrees to apply, and consents to the department verifying them.\n\nReply **yes** to submit the application.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Please confirm**\nDulumoni Gogoi · 14/03/1956 · Namdang, Sonari\nBank 30219876543 · IFSC SBIN0003077 · Age proof uploaded · Contact 9801008900\nThese details are correct and the applicant agrees to apply.\nOptional, not given: gender, marital status. Add them if you know them, or reply **yes** to submit.",
+       "upload_url": "http://localhost:8000/upload/l_3F…",
+       "expires": "15/11/2026 22:59 IST",
+       "document_attached": true,
+       "next_step": "The age proof is uploaded. Do not comment on it. Read the details and the declaration back, then submit_application after they confirm. Uploading again through the same link replaces it."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "gender": "Female",
+       "marital_status": "Widowed",
+       "husband_name": "Tileswar Gogoi"
+      },
+      "result": {
+       "reply": "**Please confirm**\nDulumoni Gogoi · 14/03/1956 · Female, Widowed (husband Tileswar Gogoi) · Namdang, Sonari\nBank 30219876543 · IFSC SBIN0003077 · Age proof uploaded · Contact 9801008900\nThese details are correct and the applicant agrees to apply.\nReply **yes** to submit.",
+       "saved": {
+        "ifsc": "SBIN0003077",
+        "block": "Sonari",
+        "village": "Namdang",
+        "full_name": "Dulumoni Gogoi",
+        "bank_account": "30219876543",
+        "date_of_birth": "14/03/1956",
+        "gender": "Female",
+        "marital_status": "Widowed",
+        "husband_name": "Tileswar Gogoi"
+       },
+       "missing": [],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": true,
+       "next_step": "Read all the details and the declaration back to the person you are talking with, and call submit_application only after they confirm (for the applicant, or on the applicant's behalf with their consent)."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000701,
+    "duration_ms": 3128,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1251,
+     "cache_read_input_tokens": 21890,
+     "output_tokens": 36
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1251,
+     "cache_read_input_tokens": 21890,
+     "output_tokens": 462
+    },
+    "api_calls": 2,
+    "first_call_context": 11070
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant's read-back matches every detail the card gives: name, DOB, female, widowed with husband Tileswar Gogoi, Namdang/Sonari, SBI account and IFSC, and my number 9801008900. The card says to confirm in my own words when the details match.",
+    "message": "yes all correct, she says ok"
+   },
+   "harness": [],
+   "client": {
+    "text": "Dulumoni Gogoi's Old Age Pension application is submitted.\n\n- **Application number:** SSP26978347\n- **Status:** Pending\n- **Decision:** A block officer should decide within 15 days. If no one decides, it is approved automatically on 30/11/2026.\n- **Updates:** A confirmation SMS went to 9801008900.\n- **Portal login:** the mobile number 9801008900, and the password is her date of birth written as DDMMYYYY.\n\nAsk me anytime to check the status.",
+    "tool_calls": [
+     {
+      "name": "submit_application",
+      "input": {
+       "confirm_declaration": true
+      },
+      "result": {
+       "reply": "**Submitted — SSP26978347 (Pending)**\nDecision within 15 days; approved automatically on 30/11/2026 if none.\nSMS sent to 9801008900.\nPortal login: the mobile number, and the applicant's date of birth written as DDMMYYYY as the password.",
+       "application_number": "SSP26978347",
+       "status": "PENDING",
+       "submitted": "14/11/2026 22:59 IST",
+       "what_happens_next": "A block officer decides within 15 days. If nobody decides, it stands approved automatically on 30/11/2026 07:30 IST.",
+       "how_to_check": "Ask me any time. On the portal: mobile number plus password; your password is the applicant's date of birth written as DDMMYYYY. Say it in those words; never write the password's digits out.",
+       "sms": "A confirmation SMS has been sent to this number."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000507,
+    "duration_ms": 2275,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 713,
+     "cache_read_input_tokens": 24457,
+     "output_tokens": 36
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 713,
+     "cache_read_input_tokens": 24457,
+     "output_tokens": 239
+    },
+    "api_calls": 2,
+    "first_call_context": 12386
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "1 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 14/03/1956",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 5: 7 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P01.count",
+   "kind": "sql",
+   "hard": true,
+   "desc": "exactly one application on Bikash's mobile",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9801008900'"
+  },
+  {
+   "id": "P01.row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the application is PENDING with her required details exactly",
+   "expected": "PENDING|Dulumoni Gogoi|1956-03-14|Namdang|Sonari|30219876543",
+   "actual": "PENDING|Dulumoni Gogoi|1956-03-14|Namdang|Sonari|30219876543",
+   "pass": true,
+   "query": "SELECT status, applicant_name, dob, village, block, bank_account FROM applications WHERE mobile='9801008900'"
+  },
+  {
+   "id": "P01.optional_correct",
+   "kind": "sql",
+   "hard": true,
+   "desc": "optional fields (gender, marital status, husband, IFSC) are empty or match the card; nothing invented",
+   "expected": "t|t|t|t",
+   "actual": "t|t|t|t",
+   "pass": true,
+   "query": "SELECT coalesce(gender,'') IN ('','Female'), coalesce(marital_status,'') IN ('','Widowed'), coalesce(husband_name,'') ~* '^((late|lt\\.?) )?(shri |sri )?tileswar gogoi$' OR coalesce(husband_name,'')='', coalesce(ifsc,'') IN ('','SBIN0003077') FROM applications WHERE mobile='9801008900'"
+  },
+  {
+   "id": "P01.optional_filled",
+   "kind": "sql",
+   "hard": false,
+   "desc": "optional fields collected (gender, marital status, husband, IFSC)",
+   "expected": "Female|Widowed|Tileswar Gogoi|SBIN0003077",
+   "actual": "Female|Widowed|Tileswar Gogoi|SBIN0003077",
+   "pass": true,
+   "query": "SELECT coalesce(gender,''), coalesce(marital_status,''), coalesce(husband_name,''), coalesce(ifsc,'') FROM applications WHERE mobile='9801008900'"
+  },
+  {
+   "id": "P01.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "one SUBMIT audit row, as the applicant's own mobile (not a helper filing)",
+   "expected": "SUBMIT|applicant:9801008900",
+   "actual": "SUBMIT|applicant:9801008900",
+   "pass": true,
+   "query": "SELECT action, actor FROM audit_log WHERE application_id=(SELECT id FROM applications WHERE mobile='9801008900') ORDER BY id"
+  },
+  {
+   "id": "P01.document",
+   "kind": "sql",
+   "hard": true,
+   "desc": "one document, uploaded through the link, the persona's file byte for byte",
+   "expected": "1|t|t",
+   "actual": "1|t|t",
+   "pass": true,
+   "query": "SELECT count(*), bool_and(source='upload_token'), bool_and(sha256='850563db2896bb7de310eab93fb3d678b6823fc4e4c50abea5f98f097776526b') FROM document_uploads WHERE mobile='9801008900' AND application_id IS NOT NULL"
+  },
+  {
+   "id": "P01.no_helper",
+   "kind": "sql",
+   "hard": true,
+   "desc": "no helper filing (filed on the signed-in mobile)",
+   "expected": "0",
+   "actual": "0",
+   "pass": true,
+   "query": "SELECT count(*) FROM helper_filings WHERE helper='9801008900'"
+  },
+  {
+   "id": "P01.sms",
+   "kind": "gateway",
+   "hard": true,
+   "desc": "the confirmation SMS with the application number reached Bikash's phone",
+   "expected": "an SMS to 9801008900 containing 'SSP26978347'",
+   "actual": "Sewa Setu: application SSP26978347 received. Track at the status portal with mobile no. and password (DOB as DDMMYYYY).",
+   "pass": true
+  },
+  {
+   "id": "P01.readback",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "submit_application only after a read-back naming Dulumoni Gogoi and 14/03/1956",
+   "expected": "true",
+   "actual": "submit in turn 5; read-back with ['Dulumoni Gogoi', '14/03/1956'] in turn(s) [4]",
+   "pass": true
+  },
+  {
+   "id": "P01.no_guessed_relation",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "never guesses the relationship (he said aita, grandmother) (F7)",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P01.j_helper",
+   "kind": "judge",
+   "hard": true,
+   "desc": "proceeded although the person typing is not the applicant",
+   "expected": "pass",
+   "actual": "pass",
+   "pass": true,
+   "evidence": "The grandson is the person typing, and the assistant never refused him or said he could not or should not apply for his grandmother. The assistant helped throughout: \"I can help with that. The Old Age Pension gives Rs 250 a month...\" and \"She is eligible (age 70), and no existing application is on this mobile number.\" It saved her details with save_application_details, requested the age proof, and after the person replied \"yes all correct, she says ok\", it called submit_application with confirm_declaration: true. It ended with \"Dulumoni Gogoi's Old Age Pension application is submitted.\" The only consent step was the declaration confirmation, which the person accepted. No line discourages him for not being the applicant."
+  }
+ ],
+ "judge": [
+  {
+   "id": "P01.j_helper",
+   "prompt": "The person typing is the grandson, applying for his grandmother. Did the assistant go ahead and help with her application? Answer pass if it helped without refusing him or telling him he could not or should not apply for her; answer fail if it refused or discouraged him for not being the applicant.",
+   "verdict": "pass",
+   "evidence": "The grandson is the person typing, and the assistant never refused him or said he could not or should not apply for his grandmother. The assistant helped throughout: \"I can help with that. The Old Age Pension gives Rs 250 a month...\" and \"She is eligible (age 70), and no existing application is on this mobile number.\" It saved her details with save_application_details, requested the age proof, and after the person replied \"yes all correct, she says ok\", it called submit_application with confirm_declaration: true. It ended with \"Dulumoni Gogoi's Old Age Pension application is submitted.\" The only consent step was the declaration confirmation, which the person accepted. No line discourages him for not being the applicant."
+  },
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No rule (a) failure: every fact the PERSON stated matches the card. \"her dob is 14/03/1956\" matches DOB. \"her full name is Dulumoni Gogoi. village is Namdang. bank is sbi 30219876543 ifsc SBIN0003077\" matches name, village, SBI account and IFSC. \"she is a woman, widow. husband name was Tileswar Gogoi\" matches gender, widowhood and husband's name. \"uploaded the voter id photo\" matches the card's voter ID photo. The PERSON never gave the block (the ASSISTANT set Sonari itself) and never invented a document or number.\n\nNo rule (b) failure: the PERSON used the upload link and replied \"done\" after uploading, supplied the optional gender, marital status and husband's name when they were requested, and confirmed the read-back with \"yes all correct, she says ok\", which matches the card. The one deviation is that the PERSON volunteered the IFSC alongside the bank account in the same message, when the card says to give facts only when asked. The assistant had already said the bank account number was needed, and the IFSC value is correct, so this does not skip or contradict a required behaviour and does not change the application. It is not a failure under either rule."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.31,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:58:54+05:30",
+   "probe_cost_usd_equiv": 0.00062529
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.32,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:00:20+05:30",
+   "probe_cost_usd_equiv": 0.00062509
+  },
+  "delta": {
+   "five_hour": 0.01,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 17:28:55.284139",
+ "stop": {
+  "by": "persona",
+  "reason": "The assistant gave application number SSP26978347, which meets the card's stop condition."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No rule (a) failure: every fact the PERSON stated matches the card. \"her dob is 14/03/1956\" matches DOB. \"her full name is Dulumoni Gogoi. village is Namdang. bank is sbi 30219876543 ifsc SBIN0003077\" matches name, village, SBI account and IFSC. \"she is a woman, widow. husband name was Tileswar Gogoi\" matches gender, widowhood and husband's name. \"uploaded the voter id photo\" matches the card's voter ID photo. The PERSON never gave the block (the ASSISTANT set Sonari itself) and never invented a document or number.\n\nNo rule (b) failure: the PERSON used the upload link and replied \"done\" after uploading, supplied the optional gender, marital status and husband's name when they were requested, and confirmed the read-back with \"yes all correct, she says ok\", which matches the card. The one deviation is that the PERSON volunteered the IFSC alongside the bank account in the same message, when the card says to give facts only when asked. The assistant had already said the bank account number was needed, and the IFSC value is correct, so this does not skip or contradict a required behaviour and does not change the application. It is not a failure under either rule."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T23:00:17+05:30",
+ "usage": {
+  "client": {
+   "calls": 5,
+   "cost_usd_equiv": 0.003723,
+   "duration_ms": 14345
+  },
+  "simulator": {
+   "calls": 7,
+   "cost_usd_equiv": 0.003937,
+   "duration_ms": 17042
+  },
+  "judge": {
+   "calls": 2,
+   "cost_usd_equiv": 0.002894,
+   "duration_ms": 9943
+  }
+ },
+ "totals": {
+  "persona_messages": 5,
+  "client_turns": 12,
+  "tool_calls": 7,
+  "cost_usd_equiv": 0.0106,
+  "duration_s": 83,
+  "paused_s": 0,
+  "client_tokens": 116488
+ },
+ "efficiency": {
+  "tool_calls": 7,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 1,
+  "wasted": 0,
+  "applies": 1,
+  "calls_per_apply": [
+   7
+  ],
+  "decisions": 0,
+  "persona_messages": 5,
+  "client_api_turns": 12,
+  "tokens": {
+   "input_tokens": 22,
+   "cache_creation_input_tokens": 8902,
+   "cache_read_input_tokens": 107401,
+   "output_tokens": 163,
+   "total": 116488,
+   "context": 116325
+  },
+  "first_call_context": 8336,
+  "tokens_per_apply": 116488
+ }
+}

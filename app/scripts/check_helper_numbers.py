@@ -140,24 +140,25 @@ def verify(client, token, mobile, html_out=None):
 
 async def descriptions():
     tools = {t.name: t for t in await citizen_mod.citizen.list_tools()}
-    check("citizen server lists 8 tools", len(tools) == 8, sorted(tools))
-    d = tools.get("get_number_verification_link")
-    check("get_number_verification_link exists", d is not None)
+    check("citizen server lists 6 tools", len(tools) == 6, sorted(tools))
+    d = tools.get("get_link")
+    check("get_link exists, with purpose verify_number", d is not None and "verify_number" in
+          str(d.inputSchema))
     check("verification tool: never asks for, sees or relays the OTP",
           d is not None and "never ask for, see or relay the OTP" in d.description)
     check("verification tool: on any reply, check verified_numbers before asking again",
-          d is not None and "check verified_numbers before asking them to verify again"
-          in d.description)
+          d is not None and "verified_numbers (verify_number) before asking them to upload or "
+          "verify again" in d.description)
     check("verification tool: only for another number / signed-in number already active",
           d is not None and "only when the person wants to file for someone else" in d.description
           and "already has an active application" in d.description)
-    for name in ("check_eligibility", "save_application_details", "get_document_upload_link",
+    for name in ("check_scheme_and_eligibility", "save_application_details", "get_link",
                  "submit_application"):
         props = tools[name].inputSchema.get("properties", {})
         check("%s takes optional applicant_mobile" % name,
               "applicant_mobile" in props
               and "applicant_mobile" not in tools[name].inputSchema.get("required", []))
-    for name in ("get_my_application", "withdraw_application", "get_scheme_info"):
+    for name in ("get_my_application", "withdraw_application"):
         check("%s has no applicant_mobile" % name,
               "applicant_mobile" not in tools[name].inputSchema.get("properties", {}))
     ins = citizen_mod.INSTRUCTIONS
@@ -168,12 +169,12 @@ async def descriptions():
 
 async def single_applicant(client):
     """The existing flow, unchanged: no applicant_mobile anywhere."""
-    e = await call(HELPER, "check_eligibility", date_of_birth="10/04/1950")
+    e = await call(HELPER, "check_scheme_and_eligibility", date_of_birth="10/04/1950")
     check("single: eligible on the signed-in number", e["eligible"] and "applicant_mobile" not in e, e)
     s = await call(HELPER, "save_application_details", full_name="Test Helper Own", **PERSON)
     check("single: details saved, no applicant_mobile in output",
           s["missing"] == [services.DOC_MISSING] and "applicant_mobile" not in s, s)
-    u = await call(HELPER, "get_document_upload_link")
+    u = await call(HELPER, "get_link", purpose="age_proof")
     check("single: upload page accepts the document", upload(client, u["upload_url"]) == 200)
     r = await call(HELPER, "submit_application", confirm_declaration=True)
     check("single: filed", r.get("status") == "PENDING", r)
@@ -190,13 +191,13 @@ async def single_applicant(client):
 
 
 async def unverified():
-    for tool, kw in (("check_eligibility", {"date_of_birth": "10/04/1950"}),
+    for tool, kw in (("check_scheme_and_eligibility", {"date_of_birth": "10/04/1950"}),
                      ("save_application_details", dict(full_name="Test Nobody", **PERSON)),
-                     ("get_document_upload_link", {}),
+                     ("get_link", {"purpose": "age_proof"}),
                      ("submit_application", {"confirm_declaration": True})):
         out = await call(HELPER, tool, applicant_mobile=A1, **kw)
-        check("unverified %s refused, names get_number_verification_link" % tool,
-              "error" in out and "get_number_verification_link" in out["error"], out)
+        check("unverified %s refused, names get_link(purpose='verify_number')" % tool,
+              "error" in out and "get_link(purpose='verify_number')" in out["error"], out)
     out = await call(HELPER, "save_application_details", full_name="X", applicant_mobile="12345")
     check("malformed applicant_mobile refused", "10-digit" in out.get("error", ""), out)
     with services.db() as cur:
@@ -206,8 +207,8 @@ async def unverified():
 
 
 async def verification_page(client):
-    link = await call(HELPER, "get_number_verification_link")
-    again = await call(HELPER, "get_number_verification_link")
+    link = await call(HELPER, "get_link", purpose="verify_number")
+    again = await call(HELPER, "get_link", purpose="verify_number")
     check("link: same link while unused", link["verify_url"] == again["verify_url"])
     check("link: reply says type the OTP on the page, not here",
           "type the OTP on that page (not here)" in link["reply"])
@@ -242,7 +243,7 @@ async def verification_page(client):
     _, html = page(client, token, action="check", otp=code or "")
     check("link is single-use", "This link has been used" in html)
 
-    after = await call(HELPER, "get_number_verification_link")
+    after = await call(HELPER, "get_link", purpose="verify_number")
     check("verified number listed for the helper", after["verified_numbers"] == [A1], after)
     check("a new link after the used one", after["verify_url"] != link["verify_url"])
     with services.db() as cur:
@@ -266,7 +267,7 @@ async def verification_page(client):
     check("second number verified", "Number verified" in html and bool(code2))
 
     # attempt limit and OTP expiry on A3
-    t3 = token_of((await call(HELPER, "get_number_verification_link"))["verify_url"])
+    t3 = token_of((await call(HELPER, "get_link", purpose="verify_number"))["verify_url"])
     before = max_sms_id(A3)
     page(client, t3, action="send", mobile=A3)
     code3 = otp_from(last_sms(A3, before) or {"text": ""})
@@ -284,19 +285,19 @@ async def verification_page(client):
     check("5 wrong OTPs lock the link", "Too many wrong OTPs" in html)
     _, html = page(client, t3, action="check", otp=code3 or "")
     check("locked link refuses even the right OTP", "Too many wrong OTPs" in html)
-    check("A3 not verified", A3 not in (await call(HELPER, "get_number_verification_link"))
+    check("A3 not verified", A3 not in (await call(HELPER, "get_link", purpose="verify_number"))
           ["verified_numbers"])
     status, _ = page(client, "not-a-real-token")
     check("unknown link: 404", status == 404)
 
 
 async def file_for(client, mobile, name):
-    e = await call(HELPER, "check_eligibility", date_of_birth="10/04/1950", applicant_mobile=mobile)
+    e = await call(HELPER, "check_scheme_and_eligibility", date_of_birth="10/04/1950", applicant_mobile=mobile)
     s = await call(HELPER, "save_application_details", full_name=name, applicant_mobile=mobile,
                    **PERSON)
-    u = await call(HELPER, "get_document_upload_link", applicant_mobile=mobile)
+    u = await call(HELPER, "get_link", purpose="age_proof", applicant_mobile=mobile)
     up = upload(client, u["upload_url"])
-    u2 = await call(HELPER, "get_document_upload_link", applicant_mobile=mobile)
+    u2 = await call(HELPER, "get_link", purpose="age_proof", applicant_mobile=mobile)
     before = max_sms_id(mobile)
     r = await call(HELPER, "submit_application", confirm_declaration=True, applicant_mobile=mobile)
     return e, s, u2, up, r, before

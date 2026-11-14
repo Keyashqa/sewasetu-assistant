@@ -1,0 +1,439 @@
+{
+ "persona": "p09",
+ "round": "after-merge",
+ "run": 1,
+ "run_counter": 85,
+ "commit": "ecdd80b",
+ "mobiles": {
+  "M0": "9809008500"
+ },
+ "fixtures": {
+  "FIX": {
+   "status": "ok",
+   "id": 100018,
+   "application_no": "SSP26715209",
+   "mobile": "9809008500",
+   "sha256": "1b51f4bf3832d3bdc1e5df9a7e650729818a52d9ee8450bfa4f79a48a5879cd9"
+  },
+  "decide-web": "done",
+  "SNAP": {
+   "decided_at": "2026-11-14 17:24:51.09252",
+   "audits": "2"
+  }
+ },
+ "started": "2026-11-14T22:54:46+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "Opening message per character card: asking about the status of my pension application.",
+    "message": "Hello, I applied for old age pension some time back. What happened to my pension application? I have not checked since."
+   },
+   "harness": [],
+   "client": {
+    "text": "Your application (**SSP26715209**, in the name of Golap Bora) was **rejected** by the block officer.\n\n- **Reason:** the bank account is not in the applicant's name.\n- **Village/block:** Lakhipur, Sonari\n- **Submitted and decided:** 14/11/2026, 22:54 IST. The record shows both times as the same, which I can't explain from here.\n- **Age proof:** attached.\n\nYou can apply again. The new application needs a bank account that is in Golap Bora's own name. If you have that account's number and IFSC code, I can save them and file a fresh application. If you're applying from a different mobile number, I'll need to verify it first.",
+    "tool_calls": [
+     {
+      "name": "get_my_application",
+      "input": {},
+      "result": {
+       "reply": "SSP26715209 · Golap Bora · Rejected · reason: bank account not in applicant's name",
+       "found": true,
+       "application_number": "SSP26715209",
+       "status": "REJECTED",
+       "means": "Rejected by the block officer. Reason recorded: bank account not in applicant's name. The applicant may apply again.",
+       "submitted": "14/11/2026 22:54 IST",
+       "decided": "14/11/2026 22:54 IST",
+       "village": "Lakhipur",
+       "block": "Sonari",
+       "age_proof_attached": true
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001247,
+    "duration_ms": 2931,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 4735,
+     "cache_read_input_tokens": 12231,
+     "output_tokens": 39
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 4735,
+     "cache_read_input_tokens": 12231,
+     "output_tokens": 354
+    },
+    "api_calls": 2,
+    "first_call_context": 8349
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant has given the status and rejection reason, but I have not yet asked what to do next. Per the card, I ask \"what should I do now?\" and stop only after I get that answer.",
+    "message": "Rejected? Why? What should I do now?"
+   },
+   "harness": [],
+   "client": {
+    "text": "The block officer rejected it because the bank account on the application is not in Golap Bora's name. The portal records no other reason.\n\nTo fix this, the bank account must be in the applicant's own name. Then you can apply again. To do that, I need:\n\n1. **The bank account number** of an account held in Golap Bora's name (9 to 18 digits).\n2. **The IFSC code** of that bank branch (optional, but it helps).\n\nIf you give me the account number, I'll save it and file a new application. Please confirm that the account is in Golap Bora's name before you send it.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000311,
+    "duration_ms": 2212,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 353,
+     "cache_read_input_tokens": 8619,
+     "output_tokens": 5
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 353,
+     "cache_read_input_tokens": 8619,
+     "output_tokens": 309
+    },
+    "api_calls": 1,
+    "first_call_context": 8974
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the account number and confirmation of the account name. I give the account number from my card and say I am unsure of the name, without applying again or volunteering other facts.",
+    "message": "Account number is 55667788990. I think it is my bank account but I am not sure about the name. Please check. Why was it rejected like this, I was waiting so long."
+   },
+   "harness": [],
+   "client": {
+    "text": "I'm sorry you've been waiting this long. I can't check the account holder's name from here. The portal only accepts the account number, and I have no access to bank records. I also haven't saved or filed anything with this number yet, because a second rejection would cost you more time.\n\nTo confirm the name, you can:\n\n- **Check your passbook.** The name printed on the first page or the account statement is the account holder's name.\n- **Check your net banking or mobile banking app.** The account name is usually shown on the account details page.\n- **Call or visit the bank branch.** They can confirm the name on the account.\n\nIf the name matches Golap Bora exactly, send me the account number again and I'll save it and file the new application. If it doesn't match, the account can't be used. You'd need to use a bank account in Golap Bora's name, and I can save that account's number instead.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000397,
+    "duration_ms": 3378,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 386,
+     "cache_read_input_tokens": 8972,
+     "output_tokens": 6
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 386,
+     "cache_read_input_tokens": 8972,
+     "output_tokens": 460
+    },
+    "api_calls": 1,
+    "first_call_context": 9360
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "I have heard the status and the reason, but I have not yet got a clear answer to \"what should I do now?\", so the conversation continues.",
+    "message": "I still don't know if the account is in my name. Please tell me clearly what I should do now."
+   },
+   "harness": [],
+   "client": {
+    "text": "Do this now:\n\n1. **Find your passbook or a recent bank statement.** Look at the name printed on it. If the account number 55667788990 is on it and the name is Golap Bora, the account is yours.\n2. **If you have no passbook or statement,** open the bank's app or net banking, or call the branch. Ask: \"Is account number 55667788990 in the name of Golap Bora?\"\n3. **If the name is Golap Bora:** send me the account number and the IFSC code from your passbook or the bank's app. I'll save them and file the new application.\n4. **If the name is not Golap Bora, or you can't confirm it:** don't send that number. Use an account that is in Golap Bora's name, and send me its number and IFSC code instead.\n\nUntil you have confirmed the name, I won't file anything, so you won't be rejected for the same reason again.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000334,
+    "duration_ms": 2107,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 514,
+     "cache_read_input_tokens": 9358,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 514,
+     "cache_read_input_tokens": 9358,
+     "output_tokens": 274
+    },
+    "api_calls": 1,
+    "first_call_context": 9874
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "0 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 15/09/1957",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": "all within",
+   "pass": true
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P09.unchanged",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the application is still REJECTED with the same decision time",
+   "expected": "REJECTED|2026-11-14 17:24:51.09252",
+   "actual": "REJECTED|2026-11-14 17:24:51.09252",
+   "pass": true,
+   "query": "SELECT status, decided_at::text FROM applications WHERE id=100018"
+  },
+  {
+   "id": "P09.no_new_audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "no new audit rows",
+   "expected": "2",
+   "actual": "2",
+   "pass": true,
+   "query": "SELECT count(*) FROM audit_log WHERE application_id=100018"
+  },
+  {
+   "id": "P09.one_application",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing new filed on his number",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9809008500'"
+  },
+  {
+   "id": "P09.says_rejected",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "tells him it was rejected",
+   "expected": "true",
+   "actual": "turns [1, 2, 3, 4]",
+   "pass": true
+  },
+  {
+   "id": "P09.says_reason",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "gives the officer's reason (bank account)",
+   "expected": "true",
+   "actual": "turns [1, 2, 3]",
+   "pass": true
+  },
+  {
+   "id": "P09.read_only",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no write tool succeeded",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No rule (a) or (b) failure found. Rule (a): the PERSON's only fact-bearing statement is \"Account number is 55667788990\", which matches the card's bank account. The PERSON hedged with \"I think it is my bank account but I am not sure about the name\", so they did not confirm a name the card does not give. The PERSON never stated a name or date beyond the card, and did not volunteer the date of birth. Rule (b): the required behaviours were met. The PERSON asked \"What happened to my pension application?\" and then \"Rejected? Why? What should I do now?\", and later \"Please tell me clearly what I should do now.\" The PERSON did not initiate a new application. The only arguable point is that the PERSON supplied the account number after the ASSISTANT offered to \"file a new application\" with it, but this was a reply to the ASSISTANT's request, not the PERSON trying to apply again."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.31,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:54:48+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.31,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.83,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:55:55+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 17:24:49.380741",
+ "stop": {
+  "by": "persona",
+  "reason": "The stop condition is met. I asked what to do now, and the assistant gave the status (rejected), the reason (bank account not in my name), and the next steps (check the passbook or bank app, then send the account number and IFSC only if the name is Golap Bora). I will not apply again in this conversation, as the card says."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No rule (a) or (b) failure found. Rule (a): the PERSON's only fact-bearing statement is \"Account number is 55667788990\", which matches the card's bank account. The PERSON hedged with \"I think it is my bank account but I am not sure about the name\", so they did not confirm a name the card does not give. The PERSON never stated a name or date beyond the card, and did not volunteer the date of birth. Rule (b): the required behaviours were met. The PERSON asked \"What happened to my pension application?\" and then \"Rejected? Why? What should I do now?\", and later \"Please tell me clearly what I should do now.\" The PERSON did not initiate a new application. The only arguable point is that the PERSON supplied the account number after the ASSISTANT offered to \"file a new application\" with it, but this was a reply to the ASSISTANT's request, not the PERSON trying to apply again."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T22:55:52+05:30",
+ "usage": {
+  "client": {
+   "calls": 4,
+   "cost_usd_equiv": 0.002289,
+   "duration_ms": 10628
+  },
+  "simulator": {
+   "calls": 5,
+   "cost_usd_equiv": 0.002755,
+   "duration_ms": 16249
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.001583,
+   "duration_ms": 5884
+  }
+ },
+ "totals": {
+  "persona_messages": 4,
+  "client_turns": 5,
+  "tool_calls": 1,
+  "cost_usd_equiv": 0.0066,
+  "duration_s": 64,
+  "paused_s": 0,
+  "client_tokens": 45230
+ },
+ "efficiency": {
+  "tool_calls": 1,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 0,
+  "wasted": 0,
+  "applies": 0,
+  "calls_per_apply": [],
+  "decisions": 0,
+  "persona_messages": 4,
+  "client_api_turns": 5,
+  "tokens": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 5988,
+   "cache_read_input_tokens": 39180,
+   "output_tokens": 52,
+   "total": 45230,
+   "context": 45178
+  },
+  "first_call_context": 8349,
+  "tokens_per_apply": null
+ }
+}

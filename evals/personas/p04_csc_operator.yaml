@@ -107,6 +107,6 @@ checks:
     contains_sql: SELECT application_no FROM applications WHERE mobile='{M2}'
   - id: P04.verify_used
     kind: transcript
-    desc: other numbers verified through get_number_verification_link
+    desc: other numbers verified through get_link (purpose verify_number)
     fn: tool_called
-    args: {name: get_number_verification_link}
+    args: {name: get_link, input_has: {purpose: verify_number}}

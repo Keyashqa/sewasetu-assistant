@@ -44,6 +44,6 @@ def existing_application_message(existing):
             "get_my_application to see where it stands. A different applicant cannot be filed "
             "on this mobile number while that one is active (one active application per mobile "
             "number); they can apply on another mobile number, such as their own or another "
-            "family member's (verify it with get_number_verification_link and pass it as "
+            "family member's (verify it with get_link(purpose='verify_number') and pass it as "
             "applicant_mobile), or at the block office." % (existing["application_no"],
                                                    existing["status"]))

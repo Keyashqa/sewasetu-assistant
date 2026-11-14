@@ -18,6 +18,8 @@ from pathlib import Path
 
 import yaml
 
+from .client import TOOLS as client_tools
+
 from . import mask, runner
 from .config import EVALS, REPO, RESULTS, admin_password
 
@@ -159,6 +161,38 @@ def scan(text):
         raise Unsafe("admin password in published data")
 
 
+def compare(before, after, before_label, after_label, note, method):
+    """index.json["comparison"]: the before/after table on /eval-dashboard, from the two
+    rounds' efficiency figures (evals/efficiency.py, every run, not only the latest)."""
+    from . import efficiency
+    b, a = efficiency.round_summary(before), efficiency.round_summary(after)
+
+    def fmt(n):
+        return "–" if n is None else ("{:,}".format(n) if isinstance(n, int) else "{:,.1f}".format(n))
+    rows = [
+        ("Conversations passed", "%d/%d" % (b["passed"], b["valid"]), "%d/%d" % (a["passed"], a["valid"])),
+        ("Tool calls per application filed (median)", fmt(b["calls_per_apply"]["median"]),
+         fmt(a["calls_per_apply"]["median"])),
+        ("Tool calls per conversation", fmt(b["tool_calls_per_run"]), fmt(a["tool_calls_per_run"])),
+        ("Wasted calls (errors, repeats)", "%d of %d" % (b["wasted"], round(b["tool_calls_per_run"] * b["valid"])),
+         "%d of %d" % (a["wasted"], round(a["tool_calls_per_run"] * a["valid"]))),
+        ("Assistant tokens per conversation", fmt(round(b["tokens_per_run"])), fmt(round(a["tokens_per_run"]))),
+        ("Assistant tokens per application filed", fmt(b["tokens_per_apply"]), fmt(a["tokens_per_apply"])),
+        ("Assistant steps per conversation", fmt(b["client_api_turns_per_run"]), fmt(a["client_api_turns_per_run"])),
+        ("Citizen server: tokens before any call", fmt((b["footprint"] or {}).get("citizen", {}).get("real")),
+         fmt((a["footprint"] or {}).get("citizen", {}).get("real"))),
+    ]
+    index_path = OUT / "index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    index["comparison"] = {"before": before, "after": after, "before_label": before_label,
+                           "after_label": after_label, "note": note, "method": method,
+                           "rows": [list(r) for r in rows]}
+    index_path.write_text(safe_dump(index), encoding="utf-8")
+    print("comparison written to index.json")
+    for r in rows:
+        print("  %-45s %-14s %s" % r)
+
+
 def publish(source, as_id=None, label=None, headline=False):
     rid = as_id or source
     runs = [compact_run(r) for r in latest_runs(source)]
@@ -176,6 +210,7 @@ def publish(source, as_id=None, label=None, headline=False):
         "invalid": sum(r["outcome"] == "invalid" for r in runs),
         "errors": sum(r["outcome"] == "error" for r in runs),
         "runs_per_persona": 1, "commits": commits, "simulator": sims,
+        "citizen_tools": len(client_tools["citizen"]),
         "client": (runs[0].get("models") or {}).get("client"),
         "claude_code": meta.get("claude_code"),
         "first_run": min(r["started"] for r in runs), "last_run": max(r["started"] for r in runs),

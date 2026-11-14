@@ -27,7 +27,7 @@ def main():
     stored = []                                     # everything the harness would write
 
     # verify-number: the link from the tool, the number typed on the page
-    v = c.call("get_number_verification_link")
+    v = c.call("get_link", purpose="verify_number")
     stored.append(v)
     links = pages.find_links(v["reply"], "verify")
     check("verify link is in the reply text", links == [v["verify_url"]], links)
@@ -35,7 +35,7 @@ def main():
     otps += new
     stored.append(step)
     check("page says verified", "Number verified" in step["observation"], step["observation"])
-    v2 = c.call("get_number_verification_link")
+    v2 = c.call("get_link", purpose="verify_number")
     stored.append(v2)
     check("verified_numbers contains M1", m1 in v2["verified_numbers"], v2["verified_numbers"])
 
@@ -43,7 +43,7 @@ def main():
     s = c.call("save_application_details", full_name="Kamala Das", date_of_birth="01/01/1960",
                village="Teliagaon", bank_account="33445566778", applicant_mobile=m1)
     stored.append(s)
-    u = c.call("get_document_upload_link", applicant_mobile=m1)
+    u = c.call("get_link", purpose="age_proof", applicant_mobile=m1)
     stored.append(u)
     links = pages.find_links(u["reply"], "upload")
     check("upload link is in the reply text", links == [u["upload_url"]], links)
@@ -53,7 +53,7 @@ def main():
     stored.append(step)
     check("page says uploaded", step["observation"].endswith("Uploaded. Go back to your chat and say done."),
           step["observation"])
-    u2 = c.call("get_document_upload_link", applicant_mobile=m1)
+    u2 = c.call("get_link", purpose="age_proof", applicant_mobile=m1)
     stored.append(u2)
     check("document_attached true", u2["document_attached"] is True, u2["document_attached"])
 
