@@ -1,0 +1,673 @@
+{
+ "persona": "p07",
+ "round": "after-merge-v2",
+ "run": 1,
+ "run_counter": 105,
+ "commit": "8fc06e4",
+ "mobiles": {
+  "M0": "9807010500"
+ },
+ "fixtures": {
+  "FIX": {
+   "status": "ok",
+   "id": 100043,
+   "application_no": "SSP26318086",
+   "mobile": "9807010500",
+   "sha256": "a540f38234c6149e93a82a428aa1ced746f9c8ad4687a53f11cf5b6b62234e1a"
+  }
+ },
+ "started": "2026-11-14T23:36:21+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "First message per character card: ask to apply for the old age pension. No link was given, so no action is taken.",
+    "message": "hello. I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "The Old Age Pension gives Rs 250 a month to residents of Purvanchal aged 60 or above. Applications are open until 31/12/2026, 23:59 IST.\n\nTo check eligibility, I need the applicant's date of birth. Please give it as DD/MM/YYYY.\n\nOnce I have it, I'll also need:\n- The applicant's full name\n- Their village\n- Their bank account number\n\nBefore we file, you'll need a document that proves age: a birth certificate, school leaving certificate or Voter ID. You'll upload it yourself through a link I'll send. A decision is due within 15 days, and if no officer decides in that time, the application is approved automatically.\n\nWho am I helping: is this for yourself or for someone else?",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/12/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/12/2026 23:59 IST",
+        "time_left": "47 days 0 hours"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       },
+       "next_step": "Next, call check_scheme_and_eligibility with the applicant's date of birth, on its own, and wait for its result. Save nothing until it says eligible."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001361,
+    "duration_ms": 3174,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5331,
+     "cache_read_input_tokens": 12260,
+     "output_tokens": 3
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5331,
+     "cache_read_input_tokens": 12260,
+     "output_tokens": 344
+    },
+    "api_calls": 2,
+    "first_call_context": 8357
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked whether the application is for me or someone else. Bhupen answers that it is for himself and repeats his request for the old age pension. He does not volunteer his date of birth or other details until asked.",
+    "message": "for myself. I want to apply for pension. old age pension"
+   },
+   "harness": [],
+   "client": {
+    "text": "Thanks. Your date of birth is the next thing I need, in DD/MM/YYYY format (for example, 10/04/1957). Once I have it, I'll check your eligibility.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000179,
+    "duration_ms": 1121,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 281,
+     "cache_read_input_tokens": 9236,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 281,
+     "cache_read_input_tokens": 9236,
+     "output_tokens": 61
+    },
+    "api_calls": 1,
+    "first_call_context": 9519
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for date of birth, so Bhupen gives it (20/06/1959) in his simple, repetitive style. He does not yet know about the existing application, so he keeps asking for a pension application.",
+    "message": "20/06/1959. I want to apply for pension. old age pension"
+   },
+   "harness": [],
+   "client": {
+    "text": "You're eligible by age: you're 67, and the application window is open.\n\nHowever, this mobile number already has an active application, **SSP26318086**, under the name **Bhupen Saikia** (village Bhekulajan, Sonari block). It was submitted on 14/11/2026 and is still pending. Only one active application is allowed per mobile number.\n\nIs that application yours? Please tell me which of these applies:\n\n1. **It's yours (or your name is Bhupen Saikia).** Nothing new is needed. It will be automatically approved on 30/11/2026 at 07:30 IST if no officer decides before then.\n2. **It's not yours.** You can apply on your own mobile number. Give me that number, and I'll send you a link to verify it with an OTP on the page. Don't type the OTP in this chat.\n3. **You want to replace it** with a new application, for example because the details are wrong. I can withdraw the existing one, but only after you confirm, and the withdrawal can't be undone.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "date_of_birth": "20/06/1959"
+      },
+      "result": {
+       "date_of_birth": "20/06/1959",
+       "age": 67,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": {
+        "application_no": "SSP26318086",
+        "status": "PENDING"
+       },
+       "eligible": false,
+       "reply": "This number already has application SSP26318086 (Pending).\nTo apply for someone else, **use their own mobile number**.",
+       "message": "This mobile number already has an active application, SSP26318086 (PENDING). If that application is for this same applicant, there is nothing new to file — use get_my_application to see where it stands. A different applicant cannot be filed on this mobile number while that one is active (one active application per mobile number); they can apply on another mobile number, such as their own or another family member's (verify it with get_link(purpose='verify_number') and pass it as applicant_mobile), or at the block office.",
+       "next_step": "Nothing new can be filed on this number; save nothing for it. If this is a different applicant, file on another mobile number: get_link(purpose='verify_number'), then applicant_mobile."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_my_application",
+      "input": {},
+      "result": {
+       "reply": "SSP26318086 · Bhupen Saikia · Pending · auto-approval 30/11/2026",
+       "found": true,
+       "application_number": "SSP26318086",
+       "status": "PENDING",
+       "means": "The block officer has not decided yet. This is normal.",
+       "submitted": "14/11/2026 23:36 IST",
+       "decided": "—",
+       "village": "Bhekulajan",
+       "block": "Sonari",
+       "age_proof_attached": true,
+       "auto_approval_if_no_decision": "30/11/2026 07:30 IST"
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000769,
+    "duration_ms": 4925,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 935,
+     "cache_read_input_tokens": 29250,
+     "output_tokens": 49
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 935,
+     "cache_read_input_tokens": 29250,
+     "output_tokens": 578
+    },
+    "api_calls": 3,
+    "first_call_context": 9627
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant told me an active application already exists, but my character does not remember applying. I respond as he would: insist on a new application because the old one may be lost, without asking to withdraw anything.",
+    "message": "no no, make a new one. the old one maybe lost. I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "I can't file a second application on this number while SSP26318086 is active. There are two ways forward:\n\n1. **Withdraw SSP26318086 and apply again on this number.** This cannot be undone. Once it's withdrawn, you'll need to reapply, and the new application will go through the same steps. Do you confirm you want to withdraw it? Please reply \"yes, withdraw\" if so.\n2. **Apply on a different mobile number**, such as your own if this one belongs to someone else. I'd verify that number first with an OTP on the page, and the existing application stays as it is.\n\nWhichever you choose, I'll also need these details for the new application:\n- Your full name\n- Your village\n- Your bank account number (and the IFSC code, if you have it)\n\nWhich option do you want?",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000427,
+    "duration_ms": 2943,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 442,
+     "cache_read_input_tokens": 10452,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 442,
+     "cache_read_input_tokens": 10452,
+     "output_tokens": 467
+    },
+    "api_calls": 1,
+    "first_call_context": 10896
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant offered to withdraw the old application, which the card says to refuse. Bhupen does not remember the earlier application, so he repeats that he just wants his pension.",
+    "message": "no no, dont withdraw anything. I just want my pension. I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "Understood, I won't withdraw anything. The old application stays as it is.\n\nTo apply for yourself, I'll need a different mobile number, one that isn't already linked to an active application. Could you give me your own 10-digit mobile number? I'll then send you a link to verify it with an OTP on the page. Please don't type the OTP here in the chat.\n\nPlease also tell me your full name.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000311,
+    "duration_ms": 1710,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 527,
+     "cache_read_input_tokens": 10894,
+     "output_tokens": 3
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 527,
+     "cache_read_input_tokens": 10894,
+     "output_tokens": 192
+    },
+    "api_calls": 1,
+    "first_call_context": 11423
+   }
+  },
+  {
+   "i": 6,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for my own mobile number and full name, so I give them. The card says this is my phone number. I still don't remember the earlier application and keep asking to apply for the pension.",
+    "message": "my number is 9807010500. my name is Bhupen Saikia. I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "Here is the verification link for 9807010500:\n\nhttp://localhost:8000/verify-number/hGyN…\n\nOpen it on your phone, enter 9807010500, and type the OTP that arrives on that phone, on the page. The link expires at 23:52 IST today. Once the page says \"Number verified,\" reply **done**.\n\nBefore we continue, one thing to check. The active application SSP26318086 is also in the name Bhupen Saikia, so a second application for you would be a duplicate. If you're sure you want a new one, we can go ahead. If you're not sure whether the old one is yours, let me know and we can look at that first.\n\nMeanwhile, please send me your village and your bank account number.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "verify_number",
+       "applicant_mobile": "9807010500"
+      },
+      "result": {
+       "reply": "**Verify the applicant's number**\n[Open verification page](http://localhost:8000/verify-number/hGyN…) — enter the applicant's mobile number, then type the OTP on that page (not here).\nLink expires 23:52 IST. Say **done** when the page says \"Number verified\".",
+       "verify_url": "http://localhost:8000/verify-number/hGyN…",
+       "expires": "14/11/2026 23:52 IST",
+       "verified_numbers": [],
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call this tool again and check verified_numbers before asking them to verify again. A number in verified_numbers can be used as applicant_mobile until this sign-in ends; it does not need verifying again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000903,
+    "duration_ms": 5412,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1208,
+     "cache_read_input_tokens": 23097,
+     "output_tokens": 17
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1208,
+     "cache_read_input_tokens": 23097,
+     "output_tokens": 861
+    },
+    "api_calls": 2,
+    "first_call_context": 11678
+   }
+  },
+  {
+   "i": 7,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for my village and bank account, so I give those. I still don't remember the old application, so I insist on a new one, as the card says.",
+    "message": "village Bhekulajan. bank account 30112233445. no no, make a new one. the old one maybe lost. I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "I've noted your village (Bhekulajan) and bank account number. I can't save them yet, though. The details have to go onto the new mobile number, 9807010500, and that number isn't verified yet. Saving them to the current number would change the existing application.\n\nPlease open the verification link, enter 9807010500, and type the OTP on that page. Then reply **done**, and I'll save your details and check the application. The link expires at 23:52 IST today.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000321,
+    "duration_ms": 2253,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 319,
+     "cache_read_input_tokens": 12629,
+     "output_tokens": 5
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 319,
+     "cache_read_input_tokens": 12629,
+     "output_tokens": 261
+    },
+    "api_calls": 1,
+    "first_call_context": 12950
+   }
+  },
+  {
+   "i": 8,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant's last message did not include a link, so I can't take the verification action. I'm replying in chat as Bhupen, who is confused about the link and keeps asking for the pension.",
+    "message": "ok. where is the link? I want to apply for pension. old age pension please"
+   },
+   "harness": [],
+   "client": {
+    "text": "The link is:\n\nhttp://localhost:8000/verify-number/hGyN…\n\nOpen it on your phone, enter 9807010500, and type the OTP that arrives on that phone, on the page. When the page says \"Number verified,\" reply **done**.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000259,
+    "duration_ms": 1389,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 310,
+     "cache_read_input_tokens": 12948,
+     "output_tokens": 8
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 310,
+     "cache_read_input_tokens": 12948,
+     "output_tokens": 134
+    },
+    "api_calls": 1,
+    "first_call_context": 13260
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "0 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 20/06/1959",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 1: 8 lines (max 6)",
+    "turn 4: 8 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P07.one_active",
+   "kind": "sql",
+   "hard": true,
+   "desc": "still exactly one active application on his number",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9807010500' AND status IN ('PENDING','APPROVED','DEEMED_APPROVED')"
+  },
+  {
+   "id": "P07.same_row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application, untouched and pending; no second row",
+   "expected": "100043|PENDING",
+   "actual": "100043|PENDING",
+   "pass": true,
+   "query": "SELECT id, status FROM applications WHERE mobile='9807010500'"
+  },
+  {
+   "id": "P07.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the existing application has only its SUBMIT audit row",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM audit_log WHERE application_id=100043"
+  },
+  {
+   "id": "P07.shows_number",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the assistant tells him his existing application number",
+   "expected": "true",
+   "actual": "turns [3, 4, 6]",
+   "pass": true
+  },
+  {
+   "id": "P07.no_withdraw",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no withdraw_application with confirm=true",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No failure under rule (a) or (b). Every fact the PERSON gave matches the card: \"20/06/1959\" (DOB), \"my number is 9807010500\" (phone), \"my name is Bhupen Saikia\", \"village Bhekulajan. bank account 30112233445\" (village and bank account). The PERSON never confirmed a fact the card does not give. The PERSON also followed the required behaviours: \"for myself. I want to apply for pension. old age pension\" (asks for old age pension); \"no no, make a new one. the old one maybe lost\" (repeated after being told of the existing application, as the card requires); \"no no, dont withdraw anything. I just want my pension\" (declines withdrawal, as the card requires). The card's \"say thank you\" behaviour applies only \"once you understand the old application is there and still pending\". The transcript never shows that understanding (the PERSON keeps insisting on a new application and ends with \"where is the link?\"), so that trigger never fires and skipping thank-you is not a breach. Note: the transcript ends before the PERSON's stop condition is reached, but that is not a card violation."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.37,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:36:23+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.37,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:37:51+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 18:06:24.181531",
+ "stop": {
+  "by": "cap",
+  "reason": "max_messages 8"
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No failure under rule (a) or (b). Every fact the PERSON gave matches the card: \"20/06/1959\" (DOB), \"my number is 9807010500\" (phone), \"my name is Bhupen Saikia\", \"village Bhekulajan. bank account 30112233445\" (village and bank account). The PERSON never confirmed a fact the card does not give. The PERSON also followed the required behaviours: \"for myself. I want to apply for pension. old age pension\" (asks for old age pension); \"no no, make a new one. the old one maybe lost\" (repeated after being told of the existing application, as the card requires); \"no no, dont withdraw anything. I just want my pension\" (declines withdrawal, as the card requires). The card's \"say thank you\" behaviour applies only \"once you understand the old application is there and still pending\". The transcript never shows that understanding (the PERSON keeps insisting on a new application and ends with \"where is the link?\"), so that trigger never fires and skipping thank-you is not a breach. Note: the transcript ends before the PERSON's stop condition is reached, but that is not a card violation."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T23:37:49+05:30",
+ "usage": {
+  "client": {
+   "calls": 8,
+   "cost_usd_equiv": 0.00453,
+   "duration_ms": 22927
+  },
+  "simulator": {
+   "calls": 8,
+   "cost_usd_equiv": 0.004643,
+   "duration_ms": 21985
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.001768,
+   "duration_ms": 5797
+  }
+ },
+ "totals": {
+  "persona_messages": 8,
+  "client_turns": 12,
+  "tool_calls": 4,
+  "cost_usd_equiv": 0.0109,
+  "duration_s": 85,
+  "paused_s": 0,
+  "client_tokens": 130232
+ },
+ "efficiency": {
+  "tool_calls": 4,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 0,
+  "wasted": 0,
+  "applies": 0,
+  "calls_per_apply": [],
+  "decisions": 0,
+  "persona_messages": 8,
+  "client_api_turns": 12,
+  "tokens": {
+   "input_tokens": 24,
+   "cache_creation_input_tokens": 9353,
+   "cache_read_input_tokens": 120766,
+   "output_tokens": 89,
+   "total": 130232,
+   "context": 130143
+  },
+  "first_call_context": 8357,
+  "tokens_per_apply": null
+ }
+}

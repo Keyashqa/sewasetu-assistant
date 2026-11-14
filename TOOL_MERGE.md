@@ -142,3 +142,21 @@ What the transcripts show:
 4. **Fewer tools did not mean fewer calls.** The merges removed tool definitions, not
    steps; the call sequence was the same. A real saving would come from removing a step
    (for example, eligibility facts returned with the scheme facts so one call does both).
+
+## Second attempt (14/11/2026): two wording fixes, still **not deployed**
+
+Fixes: `check_scheme_and_eligibility` says to call it alone and wait, and to save nothing until
+eligible (description, scheme result, refusal next_steps); `save_application_details`
+returns "Refer to the applicant as <name>. Don't translate family words like aita/nani/amma."
+
+- Quick check (P01, P03, P07 × 2): **P03 and P07 saved nothing before the refusal (4/4)**: fix
+  works. P01: one run still said "your aunt" in its first reply, before any save, so the save
+  hint cannot reach it.
+- Full round (12 citizen personas, `after-merge-v2`): **9/11 valid passed vs 12/14 before**.
+  P06 failed G6: after the person pasted an OTP in the chat, the assistant re-called
+  `get_link(verify_number)` but did not show the link; the person could not find it. This
+  happened in both merged rounds and not in the baseline, so it counts as new behaviour.
+  P09 saved details in a status-only conversation (the baseline's P09 did the same).
+- Tokens (not gated): 159,595 per completed apply vs 137,082; footprint 4,618 real.
+
+Gate (pass rate not lower, no new odd behaviour) fails: production stays on 8 citizen tools.

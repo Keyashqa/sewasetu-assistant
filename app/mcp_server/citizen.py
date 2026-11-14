@@ -168,6 +168,10 @@ async def _scheme_info() -> dict:
         "blocks": s["blocks"],
         "villages_by_block": s["villages_by_block"],
     }
+    if w["open"]:
+        out["next_step"] = ("Next, call check_scheme_and_eligibility with the applicant's date of "
+                            "birth, on its own, and wait for its result. Save nothing until it "
+                            "says eligible.")
     if not w["open"]:
         out["next_step"] = ("Applications are closed. Answer with the reply exactly as written, "
                             "date as DD/MM/YYYY; add nothing about when or whether applications "
@@ -223,17 +227,17 @@ async def _eligibility(date_of_birth: str, applicant_mobile: str | None = None) 
                             "get_link(purpose='age_proof').")
     elif e["reasons"] == ["active_application"]:
         out["message"] = " ".join(messages)
-        out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
+        out["next_step"] = ("Nothing new can be filed on this number; save nothing for it. If this is a different "
                             "applicant, file on another mobile number: "
                             "get_link(purpose='verify_number'), then applicant_mobile.")
     elif "window_closed" in e["reasons"]:
         out["message"] = " ".join(messages)
-        out["next_step"] = ("Nothing can be filed now. Give the person the reply's closed-window "
+        out["next_step"] = ("Nothing can be filed now; save nothing. Give the person the reply's closed-window "
                             "sentence exactly as written; never suggest asking about or preparing "
                             "for a future window.")
     else:
         out["message"] = " ".join(messages)
-        out["next_step"] = "Nothing can be filed now. Explain this to the person."
+        out["next_step"] = "Nothing can be filed now; save nothing. Explain this to the person."
     return out
 
 
@@ -444,6 +448,8 @@ async def save_application_details(full_name: str | None = None,
                             "are talking with, and call submit_application only after they "
                             "confirm (for the applicant, or on the applicant's behalf with "
                             "their consent).")
+    out["refer_to_applicant"] = ("Refer to the applicant as %s. Don't translate family words like "
+                                 "aita/nani/amma." % (r["saved"].get("full_name") or "the applicant"))
     return await _note_active(out, mobile)
 
 
@@ -623,7 +629,8 @@ async def _verify_link() -> dict:
         "open; call this first when someone asks about the scheme. With date_of_birth (the "
         "applicant's, DD/MM/YYYY, day first, e.g. 10/04/1957; other formats are corrected): "
         "checks age 60 or above, the window, and whether this mobile number already has an "
-        "active application; call it before collecting details. The person asking may be the "
+        "active application. Call it on its own and wait for its result: save nothing until "
+        "it says eligible and the window is open. The person asking may be the "
         "applicant or someone helping them. " + APPLICANT_MOBILE_DOC + " Used only with "
         "date_of_birth."),
     annotations=ToolAnnotations(title="Scheme facts and eligibility", readOnlyHint=True))

@@ -1,0 +1,956 @@
+{
+ "persona": "p04",
+ "round": "after-merge-v2",
+ "run": 1,
+ "run_counter": 102,
+ "commit": "8fc06e4",
+ "mobiles": {
+  "M0": "9804010200",
+  "M1": "9804010201",
+  "M2": "9804010202"
+ },
+ "fixtures": {},
+ "started": "2026-11-14T23:33:38+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "Opening message of the scenario, sent as the card specifies. No link has been given yet, so no action is taken and the chat continues.",
+    "message": "Hi, Mridul here at CSC Namti Chariali. I'm filing for two people today: Jogen Phukan and his wife Rupa Phukan. Each one is on their own mobile, so please send the OTP to their own phones, not mine."
+   },
+   "harness": [],
+   "client": {
+    "text": "Hello Mridul. I can help you file for Jogen Phukan and Rupa Phukan, each from their own mobile number.\n\nTo start, I need:\n\n1. **Jogen Phukan's 10-digit mobile number**\n2. **Rupa Phukan's 10-digit mobile number**\n3. **Date of birth for each** (DD/MM/YYYY), so I can check they are 60 or above.\n\nOnce you send the numbers, I'll give you a verification link for each. You or they open it on the page, enter the number, and type the OTP that arrives on that phone. The OTP doesn't come through this chat, so please don't type it here.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001269,
+    "duration_ms": 4057,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 4509,
+     "cache_read_input_tokens": 3905,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 4509,
+     "cache_read_input_tokens": 3905,
+     "output_tokens": 655
+    },
+    "api_calls": 1,
+    "first_call_context": 8416
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for both mobile numbers and dates of birth. Per the card, I give one person's full details per message, so I send Jogen's now and Rupa's next. No link has been given yet, so no action.",
+    "message": "Jogen Phukan: mobile 9804010201, DOB 02/02/1950, male, married, Hatipara village, Namti block. Bank a/c 50100234567812, IFSC HDFC0001234. Rupa's details next."
+   },
+   "harness": [],
+   "client": {
+    "text": "Jogen's mobile number is ready to verify. Please open this link on Jogen's phone, or have him open it, enter 9804010201, and type the OTP that arrives on that phone:\n\n**[Open verification page](http://localhost:8000/verify-number/sh4t…)**\n\nThe link expires at 23:49 IST today. Reply **done** once the page says \"Number verified\", and I'll save Jogen's details and check his eligibility. Rupa's details can come next.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "verify_number",
+       "applicant_mobile": "9804010201"
+      },
+      "result": {
+       "reply": "**Verify the applicant's number**\n[Open verification page](http://localhost:8000/verify-number/sh4t…) — enter the applicant's mobile number, then type the OTP on that page (not here).\nLink expires 23:49 IST. Say **done** when the page says \"Number verified\".",
+       "verify_url": "http://localhost:8000/verify-number/sh4t…",
+       "expires": "14/11/2026 23:49 IST",
+       "verified_numbers": [],
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call this tool again and check verified_numbers before asking them to verify again. A number in verified_numbers can be used as applicant_mobile until this sign-in ends; it does not need verifying again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000722,
+    "duration_ms": 3581,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1365,
+     "cache_read_input_tokens": 17588,
+     "output_tokens": 9
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1365,
+     "cache_read_input_tokens": 17588,
+     "output_tokens": 545
+    },
+    "api_calls": 2,
+    "first_call_context": 9176
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "verify_number",
+    "target": "Jogen Phukan",
+    "reason": "The assistant gave a verify-number link for Jogen Phukan's mobile, so I open it, enter 9804010201 and type the OTP that arrives on Jogen's phone.",
+    "after_action_reason": "Jogen's verification page said Number verified; replying done as the card requires, and the next step is Rupa's details.",
+    "message": "done - Jogen's number verified. Go ahead with Rupa's details next."
+   },
+   "harness": [
+    {
+     "action": "verify_number",
+     "link": "http://localhost:8000/verify-number/sh4t…",
+     "http": 200,
+     "observation": "You typed the number, got the OTP on that phone and typed it on the page. The page said: Number verified. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "Jogen's details are saved and he is eligible (age 76, application window open).\n\nThe last step for him is his age proof. Please upload a birth certificate, school leaving certificate or Voter ID here:\n\n**[Open upload page](http://localhost:8000/upload/IvUC…)** (expires 15/11/2026 at 23:34 IST)\n\nReply **done** once uploaded.\n\nFor Rupa, please send her:\n1. Her **10-digit mobile number**, so I can send her OTP link\n2. Her **date of birth** (DD/MM/YYYY)\n3. Her **full name**, **village**, and **bank account number** with **IFSC**\n4. Her gender and marital status, if you have them (if she is widowed, her husband's name too)",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "verify_number",
+       "applicant_mobile": "9804010201"
+      },
+      "result": {
+       "reply": "**Verified:** 9804010201\nTo verify another number: [Open verification page](http://localhost:8000/verify-number/JSXa…) — link expires 23:49 IST.",
+       "verify_url": "http://localhost:8000/verify-number/JSXa…",
+       "expires": "14/11/2026 23:49 IST",
+       "verified_numbers": [
+        "9804010201"
+       ],
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call this tool again and check verified_numbers before asking them to verify again. A number in verified_numbers can be used as applicant_mobile until this sign-in ends; it does not need verifying again."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "applicant_mobile": "9804010201",
+       "full_name": "Jogen Phukan",
+       "date_of_birth": "02/02/1950",
+       "village": "Hatipara",
+       "block": "Namti",
+       "bank_account": "50100234567812",
+       "ifsc": "HDFC0001234",
+       "gender": "Male",
+       "marital_status": "Married"
+      },
+      "result": {
+       "reply": "Still needed: age proof.",
+       "applicant_mobile": "9804010201",
+       "saved": {
+        "full_name": "Jogen Phukan",
+        "date_of_birth": "02/02/1950",
+        "village": "Hatipara",
+        "block": "Namti",
+        "bank_account": "50100234567812",
+        "gender": "Male",
+        "marital_status": "Married",
+        "ifsc": "HDFC0001234"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Namti",
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_link(purpose='age_proof') for the age proof.",
+       "refer_to_applicant": "Refer to the applicant as Jogen Phukan. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "applicant_mobile": "9804010201",
+       "date_of_birth": "02/02/1950"
+      },
+      "result": {
+       "date_of_birth": "02/02/1950",
+       "age": 76,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "applicant_mobile": "9804010201",
+       "reply": "Eligible — age 76.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_link(purpose='age_proof')."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof",
+       "applicant_mobile": "9804010201"
+      },
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/IvUC…) — link expires 15/11 23:34 IST.\nSay **done** when uploaded.",
+       "applicant_mobile": "9804010201",
+       "upload_url": "http://localhost:8000/upload/IvUC…",
+       "expires": "15/11/2026 23:34 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_link(purpose='age_proof') again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 5,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001417,
+    "duration_ms": 6406,
+    "usage": {
+     "input_tokens": 8,
+     "cache_creation_input_tokens": 2370,
+     "cache_read_input_tokens": 42249,
+     "output_tokens": 48
+    },
+    "usage_result": {
+     "input_tokens": 8,
+     "cache_creation_input_tokens": 2370,
+     "cache_read_input_tokens": 42249,
+     "output_tokens": 1040
+    },
+    "api_calls": 4,
+    "first_call_context": 10108
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "upload",
+    "target": "Jogen Phukan",
+    "reason": "The assistant's last message gave an upload link for Jogen Phukan's age proof, so I open it and upload his document photo. Rupa's details come after that.",
+    "after_action_reason": "Uploaded Jogen's document as the card requires; now replying done in chat.",
+    "message": "done - Jogen's age proof uploaded."
+   },
+   "harness": [
+    {
+     "action": "upload",
+     "link": "http://localhost:8000/upload/IvUC…",
+     "http": 200,
+     "file": "p04a.png",
+     "observation": "You opened the link, chose the photo of the document and tapped Upload. The page said: Uploaded. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "Age proof is attached for Jogen. Please check his details before I file:\n\n- **Name:** Jogen Phukan\n- **Date of birth:** 02/02/1950\n- **Gender / marital status:** Male, Married\n- **Village / block:** Hatipara, Namti\n- **Bank account:** 50100234567812\n- **IFSC:** HDFC0001234\n- **Contact number:** 9804010201\n\nDeclaration: the information is correct, and Jogen agrees to apply and to the department verifying it.\n\nReply **yes** to file his application now. Rupa's application can follow once I have her details.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof",
+       "applicant_mobile": "9804010201"
+      },
+      "result": {
+       "reply": "**Please confirm**\nJogen Phukan · 02/02/1950 · Male, Married · Hatipara, Namti\nBank 50100234567812 · IFSC HDFC0001234 · Age proof uploaded · Contact 9804010201\nThese details are correct and the applicant agrees to apply.\nReply **yes** to submit.",
+       "applicant_mobile": "9804010201",
+       "upload_url": "http://localhost:8000/upload/IvUC…",
+       "expires": "15/11/2026 23:34 IST",
+       "document_attached": true,
+       "next_step": "The age proof is uploaded. Do not comment on it. Read the details and the declaration back, then submit_application after they confirm. Uploading again through the same link replaces it."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000537,
+    "duration_ms": 2826,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 719,
+     "cache_read_input_tokens": 24606,
+     "output_tokens": 35
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 719,
+     "cache_read_input_tokens": 24606,
+     "output_tokens": 293
+    },
+    "api_calls": 2,
+    "first_call_context": 12459
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "Jogen's read-back matches the card exactly, so I confirm and ask the assistant to file his application. Rupa's details come after.",
+    "message": "yes, all correct for Jogen. File his application now. Rupa next, I'll send her details after."
+   },
+   "harness": [],
+   "client": {
+    "text": "Jogen Phukan's application is filed.\n\n- **Application number:** SSP26527386 (Pending)\n- **Contact:** 9804010201, where the confirmation SMS was sent\n- **Decision:** a block officer decides within 15 days. If nobody decides, it is approved automatically on 30/11/2026.\n- **Portal login:** his mobile number, with the password being his date of birth written as DDMMYYYY.\n\nFor Rupa, please send:\n1. Her **10-digit mobile number**\n2. Her **date of birth** (DD/MM/YYYY)\n3. Her **full name**, **village**, and **bank account number** with **IFSC**\n4. Her gender and marital status, if you have them (if she is widowed, her husband's name too)",
+    "tool_calls": [
+     {
+      "name": "submit_application",
+      "input": {
+       "applicant_mobile": "9804010201",
+       "confirm_declaration": true
+      },
+      "result": {
+       "reply": "**Submitted — SSP26527386 (Pending)**\nDecision within 15 days; approved automatically on 30/11/2026 if none.\nSMS sent to 9804010201.\nPortal login: the mobile number, and the applicant's date of birth written as DDMMYYYY as the password.",
+       "application_number": "SSP26527386",
+       "status": "PENDING",
+       "filed_on_mobile": "9804010201",
+       "submitted": "14/11/2026 23:34 IST",
+       "what_happens_next": "A block officer decides within 15 days. If nobody decides, it stands approved automatically on 30/11/2026 07:30 IST.",
+       "how_to_check": "Ask me any time in this chat: get_my_application lists it. On the portal: mobile number 9804010201 plus password; your password is the applicant's date of birth written as DDMMYYYY. Say it in those words; never write the password's digits out.",
+       "sms": "A confirmation SMS has been sent to 9804010201."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000578,
+    "duration_ms": 2544,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 727,
+     "cache_read_input_tokens": 25991,
+     "output_tokens": 40
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 727,
+     "cache_read_input_tokens": 25991,
+     "output_tokens": 345
+    },
+    "api_calls": 2,
+    "first_call_context": 13125
+   }
+  },
+  {
+   "i": 6,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for Rupa's mobile, DOB, name, village, bank details, and gender/marital status. The card says to give one person's full details in one message, so I send all of Rupa's details at once. No link has been given yet, so no action is taken.",
+    "message": "Rupa Phukan, file her next. Full details:\nMobile: 9804010202 (her own phone, please send OTP there)\nDOB: 19/07/1958\nGender: Female\nMarital status: Married (husband Jogen Phukan, applied today)\nVillage: Hatipara, Namti block\nBank a/c: 50100234567813\nIFSC: HDFC0001234"
+   },
+   "harness": [],
+   "client": {
+    "text": "Rupa's number, 9804010202, isn't verified yet. Please open this link on Rupa's phone, or have her open it, enter 9804010202, and type the OTP that arrives on that phone:\n\n**[Open verification page](http://localhost:8000/verify-number/JSXa…)** (expires 23:49 IST today)\n\nReply **done** once the page says \"Number verified\", and I'll save her details and check eligibility.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "verify_number",
+       "applicant_mobile": "9804010202"
+      },
+      "result": {
+       "reply": "**Verified:** 9804010201\nTo verify another number: [Open verification page](http://localhost:8000/verify-number/JSXa…) — link expires 23:49 IST.",
+       "verify_url": "http://localhost:8000/verify-number/JSXa…",
+       "expires": "14/11/2026 23:49 IST",
+       "verified_numbers": [
+        "9804010201"
+       ],
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call this tool again and check verified_numbers before asking them to verify again. A number in verified_numbers can be used as applicant_mobile until this sign-in ends; it does not need verifying again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.00061,
+    "duration_ms": 2700,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 806,
+     "cache_read_input_tokens": 27590,
+     "output_tokens": 35
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 806,
+     "cache_read_input_tokens": 27590,
+     "output_tokens": 346
+    },
+    "api_calls": 2,
+    "first_call_context": 13997
+   }
+  },
+  {
+   "i": 7,
+   "persona": {
+    "action": "verify_number",
+    "target": "Rupa Phukan",
+    "reason": "The assistant's last message gave a verify-number link for Rupa's mobile 9804010202. Per the card, I open it, type that number and the OTP that arrives on Rupa's phone.",
+    "after_action_reason": "Rupa's number is verified on her phone, so I reply done and ask the assistant to save her details and check eligibility, as the card's flow requires.",
+    "message": "done - Rupa's number verified. Save her details and check eligibility. Her details as sent: Rupa Phukan, DOB 19/07/1958, female, married (husband Jogen Phukan), Hatipara, Namti block, bank a/c 50100234567813, IFSC HDFC0001234, mobile 9804010202."
+   },
+   "harness": [
+    {
+     "action": "verify_number",
+     "link": "http://localhost:8000/verify-number/JSXa…",
+     "http": 200,
+     "observation": "You typed the number, got the OTP on that phone and typed it on the page. The page said: Number verified. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "Rupa's details are saved and she is eligible (age 68, application window open).\n\nHer age proof is the last step. Please upload a birth certificate, school leaving certificate or Voter ID here:\n\n**[Open upload page](http://localhost:8000/upload/_te1…)** (expires 15/11/2026 at 23:35 IST)\n\nReply **done** once uploaded.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "verify_number",
+       "applicant_mobile": "9804010202"
+      },
+      "result": {
+       "reply": "**Verified:** 9804010202, 9804010201\nTo verify another number: [Open verification page](http://localhost:8000/verify-number/Q7Xe…) — link expires 23:50 IST.",
+       "verify_url": "http://localhost:8000/verify-number/Q7Xe…",
+       "expires": "14/11/2026 23:50 IST",
+       "verified_numbers": [
+        "9804010202",
+        "9804010201"
+       ],
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call this tool again and check verified_numbers before asking them to verify again. A number in verified_numbers can be used as applicant_mobile until this sign-in ends; it does not need verifying again."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "applicant_mobile": "9804010202",
+       "full_name": "Rupa Phukan",
+       "date_of_birth": "19/07/1958",
+       "village": "Hatipara",
+       "block": "Namti",
+       "bank_account": "50100234567813",
+       "ifsc": "HDFC0001234",
+       "gender": "Female",
+       "marital_status": "Married"
+      },
+      "result": {
+       "reply": "Still needed: age proof.",
+       "applicant_mobile": "9804010202",
+       "saved": {
+        "full_name": "Rupa Phukan",
+        "date_of_birth": "19/07/1958",
+        "village": "Hatipara",
+        "block": "Namti",
+        "bank_account": "50100234567813",
+        "gender": "Female",
+        "marital_status": "Married",
+        "ifsc": "HDFC0001234"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Namti",
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_link(purpose='age_proof') for the age proof.",
+       "refer_to_applicant": "Refer to the applicant as Rupa Phukan. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "applicant_mobile": "9804010202",
+       "date_of_birth": "19/07/1958"
+      },
+      "result": {
+       "date_of_birth": "19/07/1958",
+       "age": 68,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "applicant_mobile": "9804010202",
+       "reply": "Eligible — age 68.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_link(purpose='age_proof')."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof",
+       "applicant_mobile": "9804010202"
+      },
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/_te1…) — link expires 15/11 23:35 IST.\nSay **done** when uploaded.",
+       "applicant_mobile": "9804010202",
+       "upload_url": "http://localhost:8000/upload/_te1…",
+       "expires": "15/11/2026 23:35 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_link(purpose='age_proof') again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 5,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001429,
+    "duration_ms": 4783,
+    "usage": {
+     "input_tokens": 8,
+     "cache_creation_input_tokens": 2266,
+     "cache_read_input_tokens": 60659,
+     "output_tokens": 109
+    },
+    "usage_result": {
+     "input_tokens": 8,
+     "cache_creation_input_tokens": 2266,
+     "cache_read_input_tokens": 60659,
+     "output_tokens": 736
+    },
+    "api_calls": 4,
+    "first_call_context": 14788
+   }
+  },
+  {
+   "i": 8,
+   "persona": {
+    "action": "upload",
+    "target": "Rupa Phukan",
+    "reason": "The assistant's last message gave an upload link for Rupa's age proof, so I open it and upload the document photo for Rupa Phukan.",
+    "after_action_reason": "I uploaded Rupa's age document on my phone and the page said Uploaded, so I reply done as Mridul.",
+    "message": "done - Rupa's age proof uploaded."
+   },
+   "harness": [
+    {
+     "action": "upload",
+     "link": "http://localhost:8000/upload/_te1…",
+     "http": 200,
+     "file": "p04b.png",
+     "observation": "You opened the link, chose the photo of the document and tapped Upload. The page said: Uploaded. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "Rupa's age proof is attached. Please check her details before I file:\n\n- **Name:** Rupa Phukan\n- **Date of birth:** 19/07/1958\n- **Gender / marital status:** Female, Married (husband Jogen Phukan)\n- **Village / block:** Hatipara, Namti\n- **Bank account:** 50100234567813\n- **IFSC:** HDFC0001234\n- **Contact number:** 9804010202\n\nDeclaration: the information is correct, and Rupa agrees to apply and to the department verifying it.\n\nReply **yes** to file her application now.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof",
+       "applicant_mobile": "9804010202"
+      },
+      "result": {
+       "reply": "**Please confirm**\nRupa Phukan · 19/07/1958 · Female, Married · Hatipara, Namti\nBank 50100234567813 · IFSC HDFC0001234 · Age proof uploaded · Contact 9804010202\nThese details are correct and the applicant agrees to apply.\nReply **yes** to submit.",
+       "applicant_mobile": "9804010202",
+       "upload_url": "http://localhost:8000/upload/_te1…",
+       "expires": "15/11/2026 23:35 IST",
+       "document_attached": true,
+       "next_step": "The age proof is uploaded. Do not comment on it. Read the details and the declaration back, then submit_application after they confirm. Uploading again through the same link replaces it."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000601,
+    "duration_ms": 2487,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 606,
+     "cache_read_input_tokens": 33526,
+     "output_tokens": 34
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 606,
+     "cache_read_input_tokens": 33526,
+     "output_tokens": 289
+    },
+    "api_calls": 2,
+    "first_call_context": 16861
+   }
+  },
+  {
+   "i": 9,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The read-back of Rupa's details matches what I sent, and her age proof is uploaded. Confirming with \"yes\" tells the assistant to file her application, as the card's flow requires.",
+    "message": "yes, all correct for Rupa. File her application now."
+   },
+   "harness": [],
+   "client": {
+    "text": "Rupa Phukan's application is filed, so both applications are now in.\n\n- **Rupa Phukan:** application SSP26697849 (Pending), contact 9804010202, confirmation SMS sent. Her portal login is her mobile number, with her date of birth written as DDMMYYYY as the password.\n- **Jogen Phukan:** application SSP26527386 (Pending), contact 9804010201, confirmation SMS sent. His portal login is his mobile number, with his date of birth written as DDMMYYYY as the password.\n\nBoth applications will be decided by a block officer within 15 days. If nobody decides, they are approved automatically on 30/11/2026.",
+    "tool_calls": [
+     {
+      "name": "submit_application",
+      "input": {
+       "applicant_mobile": "9804010202",
+       "confirm_declaration": true
+      },
+      "result": {
+       "reply": "**Submitted — SSP26697849 (Pending)**\nDecision within 15 days; approved automatically on 30/11/2026 if none.\nSMS sent to 9804010202.\nPortal login: the mobile number, and the applicant's date of birth written as DDMMYYYY as the password.",
+       "application_number": "SSP26697849",
+       "status": "PENDING",
+       "filed_on_mobile": "9804010202",
+       "submitted": "14/11/2026 23:35 IST",
+       "what_happens_next": "A block officer decides within 15 days. If nobody decides, it stands approved automatically on 30/11/2026 07:30 IST.",
+       "how_to_check": "Ask me any time in this chat: get_my_application lists it. On the portal: mobile number 9804010202 plus password; your password is the applicant's date of birth written as DDMMYYYY. Say it in those words; never write the password's digits out.",
+       "sms": "A confirmation SMS has been sent to 9804010202."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000648,
+    "duration_ms": 2464,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 709,
+     "cache_read_input_tokens": 34783,
+     "output_tokens": 42
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 709,
+     "cache_read_input_tokens": 34783,
+     "output_tokens": 316
+    },
+    "api_calls": 2,
+    "first_call_context": 17512
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 3 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "4 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 02/02/1950, 19/07/1958",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 3: 9 lines (max 6)",
+    "turn 5: 10 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P04.none_on_operator",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing filed on the operator's own number",
+   "expected": "0",
+   "actual": "0",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9804010200'"
+  },
+  {
+   "id": "P04.rows",
+   "kind": "sql",
+   "hard": true,
+   "desc": "two PENDING applications, each on its own number with its own details",
+   "expected": "9804010201|PENDING|Jogen Phukan|1950-02-02|Hatipara|Namti|50100234567812\n9804010202|PENDING|Rupa Phukan|1958-07-19|Hatipara|Namti|50100234567813",
+   "actual": "9804010201|PENDING|Jogen Phukan|1950-02-02|Hatipara|Namti|50100234567812\n9804010202|PENDING|Rupa Phukan|1958-07-19|Hatipara|Namti|50100234567813",
+   "pass": true,
+   "query": "SELECT mobile, status, applicant_name, dob, village, block, bank_account FROM applications WHERE mobile IN ('9804010201','9804010202') ORDER BY mobile"
+  },
+  {
+   "id": "P04.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "each filed by the operator as helper",
+   "expected": "9804010201|helper:9804010200 for 9804010201\n9804010202|helper:9804010200 for 9804010202",
+   "actual": "9804010201|helper:9804010200 for 9804010201\n9804010202|helper:9804010200 for 9804010202",
+   "pass": true,
+   "query": "SELECT a.mobile, l.actor FROM audit_log l JOIN applications a ON a.id=l.application_id WHERE a.mobile IN ('9804010201','9804010202') AND l.action='SUBMIT' ORDER BY 1"
+  },
+  {
+   "id": "P04.helper_filings",
+   "kind": "sql",
+   "hard": true,
+   "desc": "two helper filings by the operator",
+   "expected": "2",
+   "actual": "2",
+   "pass": true,
+   "query": "SELECT count(*) FROM helper_filings WHERE helper='9804010200' AND mobile IN ('9804010201','9804010202')"
+  },
+  {
+   "id": "P04.doc_jogen",
+   "kind": "sql",
+   "hard": true,
+   "desc": "Jogen's own document on his application",
+   "expected": "1|t",
+   "actual": "1|t",
+   "pass": true,
+   "query": "SELECT count(*), bool_and(sha256='a0e7575bc6465385b79f473e8e29b181d0e3baae94141bbb2b68739425a0b7a6') FROM document_uploads WHERE mobile='9804010201' AND application_id IS NOT NULL"
+  },
+  {
+   "id": "P04.doc_rupa",
+   "kind": "sql",
+   "hard": true,
+   "desc": "Rupa's own document on her application",
+   "expected": "1|t",
+   "actual": "1|t",
+   "pass": true,
+   "query": "SELECT count(*), bool_and(sha256='0c1ac1da2553a22d11eb0a1b5cd9462f0387b2f31b0ca54f31c6cce0f9563cb0') FROM document_uploads WHERE mobile='9804010202' AND application_id IS NOT NULL"
+  },
+  {
+   "id": "P04.sms_jogen",
+   "kind": "gateway",
+   "hard": true,
+   "desc": "Jogen's confirmation SMS on his phone",
+   "expected": "an SMS to 9804010201 containing 'SSP26527386'",
+   "actual": "Sewa Setu: application SSP26527386 received. Track at the status portal with mobile no. and password (DOB as DDMMYYYY).",
+   "pass": true
+  },
+  {
+   "id": "P04.sms_rupa",
+   "kind": "gateway",
+   "hard": true,
+   "desc": "Rupa's confirmation SMS on her phone",
+   "expected": "an SMS to 9804010202 containing 'SSP26697849'",
+   "actual": "Sewa Setu: application SSP26697849 received. Track at the status portal with mobile no. and password (DOB as DDMMYYYY).",
+   "pass": true
+  },
+  {
+   "id": "P04.verify_used",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "other numbers verified through get_link (purpose verify_number)",
+   "expected": "true",
+   "actual": "turns [2, 3, 6, 7]",
+   "pass": true
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No rule (a) or (b) failure found. Every fact the PERSON gave matches the card:\n- Opening: \"I'm filing for two people today: Jogen Phukan and his wife Rupa Phukan. Each one is on their own mobile, so please send the OTP to their own phones, not mine.\" (card: first message, two people, own numbers, SMS to own phones.)\n- Jogen: \"mobile 9804010201, DOB 02/02/1950, male, married, Hatipara village, Namti block. Bank a/c 50100234567812, IFSC HDFC0001234.\" All match the card.\n- Rupa: \"Mobile: 9804010202 ... DOB: 19/07/1958 ... Gender: Female ... Marital status: Married (husband Jogen Phukan) ... Village: Hatipara, Namti block ... Bank a/c: 50100234567813 ... IFSC: HDFC0001234.\" All match the card.\n- Verification: \"done - Jogen's number verified.\" then \"done - Rupa's number verified.\" Jogen was verified first, then Rupa, as the card requires.\n- Upload: \"done - Jogen's age proof uploaded.\" and \"done - Rupa's age proof uploaded.\" Each was done for the right person.\n- Read-backs: \"yes, all correct for Jogen\" and \"yes, all correct for Rupa.\" Both read-backs matched the card.\n- Stopping: the PERSON stopped after both SSP application numbers (SSP26527386, SSP26697849) were issued.\nThe bracketed \"[person's phone]\" lines are simulator narration, not PERSON statements, and they describe actions the card already requires. No OTP was typed into the chat."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.37,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:33:41+05:30",
+   "probe_cost_usd_equiv": 0.00062629
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.37,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:35:50+05:30",
+   "probe_cost_usd_equiv": 0.00062569
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 18:03:41.308691",
+ "stop": {
+  "by": "persona",
+  "reason": "Both applications are filed and both SSP application numbers have been received (Jogen: SSP26527386, Rupa: SSP26697849), which meets the card's stop condition."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No rule (a) or (b) failure found. Every fact the PERSON gave matches the card:\n- Opening: \"I'm filing for two people today: Jogen Phukan and his wife Rupa Phukan. Each one is on their own mobile, so please send the OTP to their own phones, not mine.\" (card: first message, two people, own numbers, SMS to own phones.)\n- Jogen: \"mobile 9804010201, DOB 02/02/1950, male, married, Hatipara village, Namti block. Bank a/c 50100234567812, IFSC HDFC0001234.\" All match the card.\n- Rupa: \"Mobile: 9804010202 ... DOB: 19/07/1958 ... Gender: Female ... Marital status: Married (husband Jogen Phukan) ... Village: Hatipara, Namti block ... Bank a/c: 50100234567813 ... IFSC: HDFC0001234.\" All match the card.\n- Verification: \"done - Jogen's number verified.\" then \"done - Rupa's number verified.\" Jogen was verified first, then Rupa, as the card requires.\n- Upload: \"done - Jogen's age proof uploaded.\" and \"done - Rupa's age proof uploaded.\" Each was done for the right person.\n- Read-backs: \"yes, all correct for Jogen\" and \"yes, all correct for Rupa.\" Both read-backs matched the card.\n- Stopping: the PERSON stopped after both SSP application numbers (SSP26527386, SSP26697849) were issued.\nThe bracketed \"[person's phone]\" lines are simulator narration, not PERSON statements, and they describe actions the card already requires. No OTP was typed into the chat."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T23:35:47+05:30",
+ "usage": {
+  "client": {
+   "calls": 9,
+   "cost_usd_equiv": 0.007811,
+   "duration_ms": 31848
+  },
+  "simulator": {
+   "calls": 14,
+   "cost_usd_equiv": 0.010118,
+   "duration_ms": 34153
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.002046,
+   "duration_ms": 6007
+  }
+ },
+ "totals": {
+  "persona_messages": 9,
+  "client_turns": 23,
+  "tool_calls": 14,
+  "cost_usd_equiv": 0.02,
+  "duration_s": 127,
+  "paused_s": 0,
+  "client_tokens": 285370
+ },
+ "efficiency": {
+  "tool_calls": 14,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 4,
+  "wasted": 0,
+  "applies": 2,
+  "calls_per_apply": [
+   7,
+   7
+  ],
+  "decisions": 0,
+  "persona_messages": 9,
+  "client_api_turns": 23,
+  "tokens": {
+   "input_tokens": 42,
+   "cache_creation_input_tokens": 14077,
+   "cache_read_input_tokens": 270897,
+   "output_tokens": 354,
+   "total": 285370,
+   "context": 285016
+  },
+  "first_call_context": 8416,
+  "tokens_per_apply": 142685
+ }
+}

@@ -1,0 +1,653 @@
+{
+ "persona": "p11",
+ "round": "after-merge-v2",
+ "run": 1,
+ "run_counter": 108,
+ "commit": "8fc06e4",
+ "mobiles": {
+  "M0": "9811010800"
+ },
+ "fixtures": {},
+ "started": "2026-11-14T23:39:13+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "First turn: the card says to open by asking to apply for the old age pension, in the formal, slow style, giving no other facts until asked.",
+    "message": "Good day. My good name is Hemanta Bordoloi. I wish to apply for the old age pension. Please help me."
+   },
+   "harness": [],
+   "client": {
+    "text": "Good day, Mr. Bordoloi. I'll start by checking the scheme details and whether applications are open.\n\nThe scheme is open until 31/12/2026. It pays Rs 250 a month to Purvanchal residents aged 60 or above, and a decision comes within 15 days. To check eligibility, I need your date of birth in DD/MM/YYYY form.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/12/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/12/2026 23:59 IST",
+        "time_left": "47 days 0 hours"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       },
+       "next_step": "Next, call check_scheme_and_eligibility with the applicant's date of birth, on its own, and wait for its result. Save nothing until it says eligible."
+      },
+      "is_error": false,
+      "after_text": 1
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001311,
+    "duration_ms": 2369,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5383,
+     "cache_read_input_tokens": 12281,
+     "output_tokens": 9
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5383,
+     "cache_read_input_tokens": 12281,
+     "output_tokens": 222
+    },
+    "api_calls": 2,
+    "first_call_context": 8378
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant has not yet given an upload link or asked for other details, so no phone action applies. I answered the date-of-birth question in character and kept the conversation going.",
+    "message": "Yes, my date of birth is 08/12/1950. Please continue with the application."
+   },
+   "harness": [],
+   "client": {
+    "text": "You are eligible: you are 75, the application window is open, and you have no existing application. To continue, I need two more details:\n\n1. Your village (and the block, if you know it)\n2. Your bank account number (9 to 18 digits)\n\nI'll use the name you gave, Hemanta Bordoloi, unless you want it written differently.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "date_of_birth": "08/12/1950"
+      },
+      "result": {
+       "date_of_birth": "08/12/1950",
+       "age": 75,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "reply": "Eligible — age 75.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_link(purpose='age_proof')."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000426,
+    "duration_ms": 2563,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 450,
+     "cache_read_input_tokens": 18713,
+     "output_tokens": 48
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 450,
+     "cache_read_input_tokens": 18713,
+     "output_tokens": 297
+    },
+    "api_calls": 2,
+    "first_call_context": 9427
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for village, block and bank account. Card says I know these and I am sure of the block, so I give them in one plain message and ask that the village be written as Bamungaon.",
+    "message": "My village is Bamungaon. The block is Khelua. I am sure of the block. My bank account number is 70809010203. Please write the village as Bamungaon."
+   },
+   "harness": [],
+   "client": {
+    "text": "Your details are saved. The only thing left before filing is the age proof.\n\n**Upload your age proof here:** [Open upload page](http://localhost:8000/upload/UD9C…)\n\n- Accepted documents: birth certificate, school leaving certificate or Voter ID\n- Formats: JPG, PNG or PDF, up to 5 MB\n- The link expires on 15/11/2026 at 23:39 IST\n\nOnce you have uploaded it, reply **done** and I will check it is attached.\n\nOptional: if you can tell me your gender and marital status (and your husband's name, if you are widowed) and your bank's IFSC code, I will add them. You can skip any of these.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Hemanta Bordoloi",
+       "date_of_birth": "08/12/1950",
+       "village": "Bamungaon",
+       "block": "Khelua",
+       "bank_account": "70809010203"
+      },
+      "result": {
+       "reply": "Still needed: age proof.\nVillage saved as given; it is not in the known list.",
+       "saved": {
+        "full_name": "Hemanta Bordoloi",
+        "date_of_birth": "08/12/1950",
+        "village": "Bamungaon",
+        "block": "Khelua",
+        "bank_account": "70809010203"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [
+        "Village 'Bamungaon' is not in the list of known villages. It has been saved as given, in Khelua block; the block officer will see this note."
+       ],
+       "suggested_block": null,
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_link(purpose='age_proof') for the age proof.",
+       "refer_to_applicant": "Refer to the applicant as Hemanta Bordoloi. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/UD9C…) — link expires 15/11 23:39 IST.\nSay **done** when uploaded.",
+       "upload_url": "http://localhost:8000/upload/UD9C…",
+       "expires": "15/11/2026 23:39 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_link(purpose='age_proof') again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.00086,
+    "duration_ms": 4256,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1298,
+     "cache_read_input_tokens": 30347,
+     "output_tokens": 43
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1298,
+     "cache_read_input_tokens": 30347,
+     "output_tokens": 593
+    },
+    "api_calls": 3,
+    "first_call_context": 10035
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "upload",
+    "target": "Hemanta Bordoloi",
+    "reason": "The assistant's last message gave an upload link for the age proof. The card says to use it, so I open the link and upload the document photo for Hemanta Bordoloi.",
+    "after_action_reason": "Hemanta uploaded the age proof on his phone and now reports it done in chat, as the card directs.",
+    "message": "Done. I have uploaded the document. The page said Uploaded."
+   },
+   "harness": [
+    {
+     "action": "upload",
+     "link": "http://localhost:8000/upload/UD9C…",
+     "http": 200,
+     "file": "p11.png",
+     "observation": "You opened the link, chose the photo of the document and tapped Upload. The page said: Uploaded. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "The age proof is attached. Please check these details before I file:\n\n- **Name:** Hemanta Bordoloi\n- **Date of birth:** 08/12/1950\n- **Village:** Bamungaon, Khelua block\n- **Bank account:** 70809010203\n- **Contact number:** 9811010800 (the number you are using now; status updates will go here)\n\nBy saying yes, you confirm these details are correct and that you agree to apply. The department will verify them.\n\nGender, marital status and IFSC are not filled in. You can add them now if you know them, or skip them.\n\nShall I submit the application? Please reply **yes** to file it.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Please confirm**\nHemanta Bordoloi · 08/12/1950 · Bamungaon, Khelua\nBank 70809010203 · Age proof uploaded · Contact 9811010800\nThese details are correct and the applicant agrees to apply.\nOptional, not given: gender, marital status, IFSC. Add them if you know them, or reply **yes** to submit.",
+       "upload_url": "http://localhost:8000/upload/UD9C…",
+       "expires": "15/11/2026 23:39 IST",
+       "document_attached": true,
+       "next_step": "The age proof is uploaded. Do not comment on it. Read the details and the declaration back, then submit_application after they confirm. Uploading again through the same link replaces it."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000532,
+    "duration_ms": 3112,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 672,
+     "cache_read_input_tokens": 22364,
+     "output_tokens": 40
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 672,
+     "cache_read_input_tokens": 22364,
+     "output_tokens": 348
+    },
+    "api_calls": 2,
+    "first_call_context": 11330
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant read back the details, which match the card, and asked for confirmation. I confirm and give the optional gender and marital status it offered, then ask it to file.",
+    "message": "Yes. The details are correct. Village is Bamungaon, Khelua block. I am male and a widower. Please file the application."
+   },
+   "harness": [],
+   "client": {
+    "text": "Your application has been filed, Mr. Hemanta Bordoloi.\n\n- **Application number:** SSP26514975\n- **Status:** Pending\n- **Submitted:** 14/11/2026, 23:40 IST\n- **Decision:** A block officer should decide within 15 days. If no decision is made, the application is approved automatically on 30/11/2026 at 07:30 IST.\n- **Updates:** A confirmation SMS has been sent to 9811010800.\n\nTo check the status on the portal, use your mobile number and, as the password, your date of birth written as DDMMYYYY. You can also ask me at any time for an update.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "gender": "Male",
+       "marital_status": "Widowed"
+      },
+      "result": {
+       "reply": "**Please confirm**\nHemanta Bordoloi · 08/12/1950 · Male, Widowed · Bamungaon, Khelua\nBank 70809010203 · Age proof uploaded · Contact 9811010800\nThese details are correct and the applicant agrees to apply.\nOptional, not given: IFSC, husband's name. Add them if you know them, or reply **yes** to submit.",
+       "saved": {
+        "block": "Khelua",
+        "village": "Bamungaon",
+        "full_name": "Hemanta Bordoloi",
+        "bank_account": "70809010203",
+        "date_of_birth": "08/12/1950",
+        "gender": "Male",
+        "marital_status": "Widowed"
+       },
+       "missing": [],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": null,
+       "ready_to_submit": true,
+       "next_step": "Read all the details and the declaration back to the person you are talking with, and call submit_application only after they confirm (for the applicant, or on the applicant's behalf with their consent).",
+       "refer_to_applicant": "Refer to the applicant as Hemanta Bordoloi. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "submit_application",
+      "input": {
+       "confirm_declaration": true
+      },
+      "result": {
+       "reply": "**Submitted — SSP26514975 (Pending)**\nDecision within 15 days; approved automatically on 30/11/2026 if none.\nSMS sent to 9811010800.\nPortal login: the mobile number, and the applicant's date of birth written as DDMMYYYY as the password.",
+       "application_number": "SSP26514975",
+       "status": "PENDING",
+       "submitted": "14/11/2026 23:40 IST",
+       "what_happens_next": "A block officer decides within 15 days. If nobody decides, it stands approved automatically on 30/11/2026 07:30 IST.",
+       "how_to_check": "Ask me any time. On the portal: mobile number plus password; your password is the applicant's date of birth written as DDMMYYYY. Say it in those words; never write the password's digits out.",
+       "sms": "A confirmation SMS has been sent to this number."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000926,
+    "duration_ms": 4420,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1466,
+     "cache_read_input_tokens": 36537,
+     "output_tokens": 45
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 1466,
+     "cache_read_input_tokens": 36537,
+     "output_tokens": 533
+    },
+    "api_calls": 3,
+    "first_call_context": 12059
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "1 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 08/12/1950",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 3: 7 lines (max 6)",
+    "turn 5: 7 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P11.row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "PENDING, with his own village and block",
+   "expected": "PENDING|Hemanta Bordoloi|1950-12-08|Bamungaon|Khelua",
+   "actual": "PENDING|Hemanta Bordoloi|1950-12-08|Bamungaon|Khelua",
+   "pass": true,
+   "query": "SELECT status, applicant_name, dob, village, block FROM applications WHERE mobile='9811010800'"
+  },
+  {
+   "id": "P11.document",
+   "kind": "sql",
+   "hard": true,
+   "desc": "his document, through the link",
+   "expected": "1|t",
+   "actual": "1|t",
+   "pass": true,
+   "query": "SELECT count(*), bool_and(sha256='e716ef686053331d6ef0529e8ccc5bc0ad9e7225a3565edf5f5a2d043cac94e2') FROM document_uploads WHERE mobile='9811010800' AND application_id IS NOT NULL"
+  },
+  {
+   "id": "P11.village_inputs",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no save_application_details with a village other than Bamungaon",
+   "expected": "true",
+   "actual": "all match",
+   "pass": true
+  },
+  {
+   "id": "P11.readback",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "submit only after a read-back with Bamungaon and 08/12/1950",
+   "expected": "true",
+   "actual": "submit in turn 5; read-back with ['Bamungaon', '08/12/1950'] in turn(s) [4]",
+   "pass": true
+  },
+  {
+   "id": "P11.j_accepts_village",
+   "kind": "judge",
+   "hard": false,
+   "desc": "accepted his village without pressuring him to pick a listed one",
+   "expected": "pass",
+   "actual": "pass",
+   "pass": true,
+   "evidence": "The person said: \"My village is Bamungaon. The block is Khelua. I am sure of the block... Please write the village as Bamungaon.\" The assistant then called save_application_details with \"village\": \"Bamungaon\", \"block\": \"Khelua\". No list of villages was offered at any point. The assistant's review message repeated \"Village: Bamungaon, Khelua block\", and the person confirmed: \"Village is Bamungaon, Khelua block.\" The assistant did not ask the person to pick from a list."
+  }
+ ],
+ "judge": [
+  {
+   "id": "P11.j_accepts_village",
+   "prompt": "Did the assistant accept his village, Bamungaon, as he gave it, without pressuring him to choose a village from a list instead?",
+   "verdict": "pass",
+   "evidence": "The person said: \"My village is Bamungaon. The block is Khelua. I am sure of the block... Please write the village as Bamungaon.\" The assistant then called save_application_details with \"village\": \"Bamungaon\", \"block\": \"Khelua\". No list of villages was offered at any point. The assistant's review message repeated \"Village: Bamungaon, Khelua block\", and the person confirmed: \"Village is Bamungaon, Khelua block.\" The assistant did not ask the person to pick from a list."
+  },
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "The PERSON stayed within the card. No failure of type (a) or (b) appears.\n\nFacts the PERSON gave all match the card:\n- \"My good name is Hemanta Bordoloi.\" (card: name)\n- \"my date of birth is 08/12/1950\" (card: DOB 08/12/1950)\n- \"My village is Bamungaon. The block is Khelua. I am sure of the block. My bank account number is 70809010203.\" (card: village, block, bank account)\n- \"I am male and a widower.\" (card: male, widower)\n\nBehaviours:\n- Asked to apply for the old age pension: \"I wish to apply for the old age pension.\"\n- Village correction: the assistant never suggested Sialmari or another village, so the \"No, Bamungaon\" rule was not triggered. The PERSON still wrote \"Please write the village as Bamungaon.\"\n- Upload link: \"Done. I have uploaded the document. The page said Uploaded.\" (card: use the link, then say done)\n- Read-back: \"Yes. The details are correct. Village is Bamungaon, Khelua block...\" (card: confirm if correct)\n- Stopped after the application number: the assistant returned SSP26514975 and the transcript ends there.\n\nThe PERSON never stated a fact outside the card, and the assistant's own values (contact number, read-back) were confirmed only where they match the card."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.38,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:39:15+05:30",
+   "probe_cost_usd_equiv": 0.00062509
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.38,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:40:31+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 18:09:16.127829",
+ "stop": {
+  "by": "persona",
+  "reason": "The assistant gave application number SSP26514975, which starts with SSP. That meets the stop condition, so I end the conversation."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "The PERSON stayed within the card. No failure of type (a) or (b) appears.\n\nFacts the PERSON gave all match the card:\n- \"My good name is Hemanta Bordoloi.\" (card: name)\n- \"my date of birth is 08/12/1950\" (card: DOB 08/12/1950)\n- \"My village is Bamungaon. The block is Khelua. I am sure of the block. My bank account number is 70809010203.\" (card: village, block, bank account)\n- \"I am male and a widower.\" (card: male, widower)\n\nBehaviours:\n- Asked to apply for the old age pension: \"I wish to apply for the old age pension.\"\n- Village correction: the assistant never suggested Sialmari or another village, so the \"No, Bamungaon\" rule was not triggered. The PERSON still wrote \"Please write the village as Bamungaon.\"\n- Upload link: \"Done. I have uploaded the document. The page said Uploaded.\" (card: use the link, then say done)\n- Read-back: \"Yes. The details are correct. Village is Bamungaon, Khelua block...\" (card: confirm if correct)\n- Stopped after the application number: the assistant returned SSP26514975 and the transcript ends there.\n\nThe PERSON never stated a fact outside the card, and the assistant's own values (contact number, read-back) were confirmed only where they match the card."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T23:40:28+05:30",
+ "usage": {
+  "client": {
+   "calls": 5,
+   "cost_usd_equiv": 0.004055,
+   "duration_ms": 16720
+  },
+  "simulator": {
+   "calls": 7,
+   "cost_usd_equiv": 0.003644,
+   "duration_ms": 17798
+  },
+  "judge": {
+   "calls": 2,
+   "cost_usd_equiv": 0.002639,
+   "duration_ms": 7044
+  }
+ },
+ "totals": {
+  "persona_messages": 5,
+  "client_turns": 12,
+  "tool_calls": 7,
+  "cost_usd_equiv": 0.0103,
+  "duration_s": 73,
+  "paused_s": 0,
+  "client_tokens": 129720
+ },
+ "efficiency": {
+  "tool_calls": 7,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 1,
+  "wasted": 0,
+  "applies": 1,
+  "calls_per_apply": [
+   7
+  ],
+  "decisions": 0,
+  "persona_messages": 5,
+  "client_api_turns": 12,
+  "tokens": {
+   "input_tokens": 24,
+   "cache_creation_input_tokens": 9269,
+   "cache_read_input_tokens": 120242,
+   "output_tokens": 185,
+   "total": 129720,
+   "context": 129535
+  },
+  "first_call_context": 8378,
+  "tokens_per_apply": 129720
+ }
+}

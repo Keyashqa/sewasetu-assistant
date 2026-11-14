@@ -1,0 +1,795 @@
+{
+ "persona": "p02",
+ "round": "after-merge-v2",
+ "run": 1,
+ "run_counter": 100,
+ "commit": "8fc06e4",
+ "mobiles": {
+  "M0": "9802010000"
+ },
+ "fixtures": {},
+ "started": "2026-11-14T23:31:56+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "Card says to start the conversation with something like \"pension apply\". No link has been given yet, so no action is needed.",
+    "message": "pension apply"
+   },
+   "harness": [],
+   "client": {
+    "text": "The Old Age Pension gives **Rs 250 a month** to Purvanchal residents aged 60 or above. Applications are open until **31/12/2026, 23:59 IST**, and a decision is due within 15 days. If no officer decides in that time, the application is approved automatically.\n\nTo check eligibility, I need the applicant's **date of birth** (DD/MM/YYYY).\n\nAre you applying for yourself or for someone else? If it's someone else, let me know, and I'll also need their name and village once we've checked eligibility.",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {},
+      "result": {
+       "reply": "**Old Age Pension** — Rs 250 a month for residents of Purvanchal aged 60 or above.\nAge proof: birth certificate, school leaving certificate or Voter ID.\nDecision within 15 days; approved automatically if none.\nApplications close 31/12/2026 23:59 IST.",
+       "amount": "Rs 250 per month",
+       "min_age": 60,
+       "residency": "resident of Purvanchal",
+       "documents_accepted": [
+        "Birth certificate",
+        "School leaving certificate",
+        "Voter ID"
+       ],
+       "formats": "JPG, PNG or PDF up to 5 MB",
+       "decision_days": 15,
+       "deemed_approval": "If no officer decides within 15 days, the application stands approved automatically.",
+       "window": {
+        "open": true,
+        "closes": "31/12/2026 23:59 IST",
+        "time_left": "47 days 0 hours"
+       },
+       "blocks": [
+        "Sonari",
+        "Rajapara",
+        "Dhemaji Pathar",
+        "Borgaon",
+        "Namti",
+        "Khelua"
+       ],
+       "villages_by_block": {
+        "Sonari": [
+         "Bhekulajan",
+         "Kakotibari",
+         "Lakhipur",
+         "Namdang"
+        ],
+        "Rajapara": [
+         "Dighaljan",
+         "Rajapara Gaon",
+         "Teliagaon"
+        ],
+        "Dhemaji Pathar": [
+         "Bordoloni",
+         "Kathoni",
+         "Nalbari Gaon"
+        ],
+        "Borgaon": [
+         "Borgaon Centre",
+         "Milanpur",
+         "Udaypur"
+        ],
+        "Namti": [
+         "Hatipara",
+         "Namti Chariali",
+         "Panidihing"
+        ],
+        "Khelua": [
+         "Chengelimara",
+         "Khelua Gaon",
+         "Sialmari"
+        ]
+       },
+       "next_step": "Next, call check_scheme_and_eligibility with the applicant's date of birth, on its own, and wait for its result. Save nothing until it says eligible."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001357,
+    "duration_ms": 3028,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5334,
+     "cache_read_input_tokens": 12247,
+     "output_tokens": 7
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5334,
+     "cache_read_input_tokens": 12247,
+     "output_tokens": 335
+    },
+    "api_calls": 2,
+    "first_call_context": 8344
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the applicant's date of birth, so I give it in words as Lakhi would. I hold off on the self-or-other question until it is asked.",
+    "message": "fifth January nineteen fifty four"
+   },
+   "harness": [],
+   "client": {
+    "text": "You're eligible: the applicant is 72, and the application window is open. There's no existing application on this mobile number.\n\nTo continue, I need:\n1. The applicant's **full name**\n2. The **village** they live in",
+    "tool_calls": [
+     {
+      "name": "check_scheme_and_eligibility",
+      "input": {
+       "date_of_birth": "05/01/1954"
+      },
+      "result": {
+       "date_of_birth": "05/01/1954",
+       "age": 72,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "reply": "Eligible — age 72.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_link(purpose='age_proof')."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000373,
+    "duration_ms": 2155,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 564,
+     "cache_read_input_tokens": 18729,
+     "output_tokens": 42
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 564,
+     "cache_read_input_tokens": 18729,
+     "output_tokens": 146
+    },
+    "api_calls": 2,
+    "first_call_context": 9492
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the applicant's full name and village. Lakhi answers the first request with her name only, in plain short text, as the card describes.",
+    "message": "Lakhi Bora"
+   },
+   "harness": [],
+   "client": {
+    "text": "Thanks, I've saved the name **Lakhi Bora** and date of birth 05/01/1954.\n\nNext, which **village** does Lakhi Bora live in? I'll fill in the block from that.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Lakhi Bora",
+       "date_of_birth": "05/01/1954"
+      },
+      "result": {
+       "reply": "**Still needed: village, block, bank account number, age proof** (and, if known: gender, marital status, husband's name if widowed, IFSC — optional).",
+       "saved": {
+        "full_name": "Lakhi Bora",
+        "date_of_birth": "05/01/1954"
+       },
+       "missing": [
+        "village",
+        "block",
+        "bank_account",
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": null,
+       "ready_to_submit": false,
+       "next_step": "Ask for the missing details: at most two at a time if the person's replies are short or unsure. Ask once for the optional ones if the reply lists them; never insist.",
+       "refer_to_applicant": "Refer to the applicant as Lakhi Bora. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000409,
+    "duration_ms": 2271,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 561,
+     "cache_read_input_tokens": 19707,
+     "output_tokens": 5
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 561,
+     "cache_read_input_tokens": 19707,
+     "output_tokens": 199
+    },
+    "api_calls": 2,
+    "first_call_context": 9906
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked which village Lakhi lives in. The card says she knows her village is Kathoni, so she answers that one question and nothing more.",
+    "message": "Kathoni"
+   },
+   "harness": [],
+   "client": {
+    "text": "Village saved as **Kathoni**, in the **Dhemaji Pathar** block.\n\nNext, I need Lakhi Bora's **bank account number**. If you know the IFSC code too, please send it. Gender, marital status and husband's name (if widowed) are optional.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "village": "Kathoni"
+      },
+      "result": {
+       "reply": "**Still needed: bank account number, age proof** (and, if known: gender, marital status, husband's name if widowed, IFSC — optional).",
+       "saved": {
+        "full_name": "Lakhi Bora",
+        "date_of_birth": "05/01/1954",
+        "village": "Kathoni",
+        "block": "Dhemaji Pathar"
+       },
+       "missing": [
+        "bank_account",
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [
+        "block set to Dhemaji Pathar, the block Kathoni is in"
+       ],
+       "warnings": [],
+       "suggested_block": "Dhemaji Pathar",
+       "ready_to_submit": false,
+       "next_step": "Ask for the missing details: at most two at a time if the person's replies are short or unsure. Ask once for the optional ones if the reply lists them; never insist.",
+       "refer_to_applicant": "Refer to the applicant as Lakhi Bora. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000397,
+    "duration_ms": 2193,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 549,
+     "cache_read_input_tokens": 20827,
+     "output_tokens": 35
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 549,
+     "cache_read_input_tokens": 20827,
+     "output_tokens": 157
+    },
+    "api_calls": 2,
+    "first_call_context": 10465
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the bank account number, so I gave it in a short reply. I did not send the IFSC because it was only an optional request.",
+    "message": "11223344556"
+   },
+   "harness": [],
+   "client": {
+    "text": "The bank account number 11223344556 is saved. The last step is the age proof.\n\nPlease open this upload page and upload one of these for Lakhi Bora: a birth certificate, school leaving certificate or Voter ID (JPG, PNG or PDF, up to 5 MB):\n\nhttp://localhost:8000/upload/_o2A…\n\nThe link expires on 15/11/2026 at 23:32 IST. Reply **done** once it's uploaded.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "bank_account": "11223344556"
+      },
+      "result": {
+       "reply": "Still needed: age proof.",
+       "saved": {
+        "block": "Dhemaji Pathar",
+        "village": "Kathoni",
+        "full_name": "Lakhi Bora",
+        "date_of_birth": "05/01/1954",
+        "bank_account": "11223344556"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Dhemaji Pathar",
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_link(purpose='age_proof') for the age proof.",
+       "refer_to_applicant": "Refer to the applicant as Lakhi Bora. Don't translate family words like aita/nani/amma."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/_o2A…) — link expires 15/11 23:32 IST.\nSay **done** when uploaded.",
+       "upload_url": "http://localhost:8000/upload/_o2A…",
+       "expires": "15/11/2026 23:32 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_link(purpose='age_proof') again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000659,
+    "duration_ms": 3054,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 854,
+     "cache_read_input_tokens": 33350,
+     "output_tokens": 65
+    },
+    "usage_result": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 854,
+     "cache_read_input_tokens": 33350,
+     "output_tokens": 309
+    },
+    "api_calls": 3,
+    "first_call_context": 11036
+   }
+  },
+  {
+   "i": 6,
+   "persona": {
+    "action": "upload",
+    "target": "Lakhi Bora",
+    "reason": "The assistant gave an upload link for the age proof. Per the card, I open it and upload the school leaving certificate photo for Lakhi Bora.",
+    "after_action_reason": "Lakhi uploaded the school leaving certificate photo via the link and the page said Uploaded, so she replies \"done\" as her card says.",
+    "message": "done"
+   },
+   "harness": [
+    {
+     "action": "upload",
+     "link": "http://localhost:8000/upload/_o2A…",
+     "http": 200,
+     "file": "p02.png",
+     "observation": "You opened the link, chose the photo of the document and tapped Upload. The page said: Uploaded. Go back to your chat and say done."
+    }
+   ],
+   "client": {
+    "text": "The age proof is uploaded. Please check these details before I file:\n\n- **Name:** Lakhi Bora\n- **Date of birth:** 05/01/1954\n- **Village:** Kathoni, Dhemaji Pathar block\n- **Bank account:** 11223344556\n- **Contact number:** 9802010000 (the number you're messaging from; status updates will go here)\n\nGender, marital status and IFSC aren't filled in. They're optional, so you can add them now or skip them.\n\nDo you confirm that these details are correct and that Lakhi Bora agrees to apply? Reply **yes** to submit.",
+    "tool_calls": [
+     {
+      "name": "get_link",
+      "input": {
+       "purpose": "age_proof"
+      },
+      "result": {
+       "reply": "**Please confirm**\nLakhi Bora · 05/01/1954 · Kathoni, Dhemaji Pathar\nBank 11223344556 · Age proof uploaded · Contact 9802010000\nThese details are correct and the applicant agrees to apply.\nOptional, not given: gender, marital status, IFSC. Add them if you know them, or reply **yes** to submit.",
+       "upload_url": "http://localhost:8000/upload/_o2A…",
+       "expires": "15/11/2026 23:32 IST",
+       "document_attached": true,
+       "next_step": "The age proof is uploaded. Do not comment on it. Read the details and the declaration back, then submit_application after they confirm. Uploading again through the same link replaces it."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000507,
+    "duration_ms": 3017,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 586,
+     "cache_read_input_tokens": 23736,
+     "output_tokens": 37
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 586,
+     "cache_read_input_tokens": 23736,
+     "output_tokens": 304
+    },
+    "api_calls": 2,
+    "first_call_context": 11971
+   }
+  },
+  {
+   "i": 7,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant read back the details, and they match what Lakhi gave (name, date of birth, Kathoni village, bank account). Per the card, she says \"yes\" to confirm. No action or stop is needed yet.",
+    "message": "yes"
+   },
+   "harness": [],
+   "client": {
+    "text": "The application for Lakhi Bora has been submitted.\n\n- **Application number:** SSP26184572\n- **Status:** Pending\n- **Decision:** A block officer will decide within 15 days. If no one decides by then, the application is approved automatically on 30/11/2026.\n- **Confirmation:** An SMS has been sent to 9802010000.\n- **Checking status:** Ask me any time. You can also log in on the portal with the mobile number and the applicant's date of birth written as DDMMYYYY.",
+    "tool_calls": [
+     {
+      "name": "submit_application",
+      "input": {
+       "confirm_declaration": true
+      },
+      "result": {
+       "reply": "**Submitted — SSP26184572 (Pending)**\nDecision within 15 days; approved automatically on 30/11/2026 if none.\nSMS sent to 9802010000.\nPortal login: the mobile number, and the applicant's date of birth written as DDMMYYYY as the password.",
+       "application_number": "SSP26184572",
+       "status": "PENDING",
+       "submitted": "14/11/2026 23:32 IST",
+       "what_happens_next": "A block officer decides within 15 days. If nobody decides, it stands approved automatically on 30/11/2026 07:30 IST.",
+       "how_to_check": "Ask me any time. On the portal: mobile number plus password; your password is the applicant's date of birth written as DDMMYYYY. Say it in those words; never write the password's digits out.",
+       "sms": "A confirmation SMS has been sent to this number."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000501,
+    "duration_ms": 2402,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 669,
+     "cache_read_input_tokens": 24973,
+     "output_tokens": 33
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 669,
+     "cache_read_input_tokens": 24973,
+     "output_tokens": 234
+    },
+    "api_calls": 2,
+    "first_call_context": 12622
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "1 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 05/01/1954",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 4 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 7: 6 lines (max 4)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P02.count",
+   "kind": "sql",
+   "hard": true,
+   "desc": "exactly one application on her mobile",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9802010000'"
+  },
+  {
+   "id": "P02.row",
+   "kind": "sql",
+   "hard": true,
+   "desc": "PENDING with her details; the date read day first",
+   "expected": "PENDING|Lakhi Bora|1954-01-05|Kathoni|Dhemaji Pathar|11223344556",
+   "actual": "PENDING|Lakhi Bora|1954-01-05|Kathoni|Dhemaji Pathar|11223344556",
+   "pass": true,
+   "query": "SELECT status, applicant_name, dob, village, block, bank_account FROM applications WHERE mobile='9802010000'"
+  },
+  {
+   "id": "P02.no_ifsc",
+   "kind": "sql",
+   "hard": true,
+   "desc": "no IFSC stored (she does not know it)",
+   "expected": "",
+   "actual": "",
+   "pass": true,
+   "query": "SELECT coalesce(ifsc,'') FROM applications WHERE mobile='9802010000'"
+  },
+  {
+   "id": "P02.optional_correct",
+   "kind": "sql",
+   "hard": true,
+   "desc": "gender, marital status and husband are empty or match the card; nothing invented",
+   "expected": "t|t|t",
+   "actual": "t|t|t",
+   "pass": true,
+   "query": "SELECT coalesce(gender,'') IN ('','Female'), coalesce(marital_status,'') IN ('','Widowed'), coalesce(husband_name,'') ~* '^((late|lt\\.?) )?ramesh bora$' OR coalesce(husband_name,'')='' FROM applications WHERE mobile='9802010000'"
+  },
+  {
+   "id": "P02.audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "one SUBMIT as the applicant",
+   "expected": "SUBMIT|applicant:9802010000",
+   "actual": "SUBMIT|applicant:9802010000",
+   "pass": true,
+   "query": "SELECT action, actor FROM audit_log WHERE application_id=(SELECT id FROM applications WHERE mobile='9802010000') ORDER BY id"
+  },
+  {
+   "id": "P02.document",
+   "kind": "sql",
+   "hard": true,
+   "desc": "her document, through the link",
+   "expected": "1|t|t",
+   "actual": "1|t|t",
+   "pass": true,
+   "query": "SELECT count(*), bool_and(source='upload_token'), bool_and(sha256='20766edbcb34d704b662318c0940fe16e72f6eff21e3b59d68e5993c6e4b558e') FROM document_uploads WHERE mobile='9802010000' AND application_id IS NOT NULL"
+  },
+  {
+   "id": "P02.sms",
+   "kind": "gateway",
+   "hard": true,
+   "desc": "confirmation SMS with the application number",
+   "expected": "an SMS to 9802010000 containing 'SSP26184572'",
+   "actual": "Sewa Setu: application SSP26184572 received. Track at the status portal with mobile no. and password (DOB as DDMMYYYY).",
+   "pass": true
+  },
+  {
+   "id": "P02.no_ifsc_input",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no IFSC was ever sent to save_application_details",
+   "expected": "true",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P02.readback",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "submit only after a read-back with her name and 05/01/1954",
+   "expected": "true",
+   "actual": "submit in turn 7; read-back with ['Lakhi Bora', '05/01/1954'] in turn(s) [3, 6]",
+   "pass": true
+  },
+  {
+   "id": "P02.j_simple",
+   "kind": "judge",
+   "hard": false,
+   "desc": "one or two things at a time, in plain words",
+   "expected": "pass",
+   "actual": "fail",
+   "pass": false,
+   "evidence": "Several turns ask for more than one or two things, and the wording is not plain enough for an elderly first-time phone user.\n\nTurn 1 asks for the date of birth, whether the applicant is self or someone else, and, conditionally, a name and village: \"To check eligibility, I need the applicant's **date of birth** (DD/MM/YYYY). Are you applying for yourself or for someone else? If it's someone else, let me know, and I'll also need their name and village once we've checked eligibility.\"\n\nTurn 3 asks for the bank account number, an optional IFSC code, and lists optional fields: \"Next, I need Lakhi Bora's **bank account number**. If you know the IFSC code too, please send it. Gender, marital status and husband's name (if widowed) are optional.\"\n\nThe final review asks for confirmation of several details and mentions more optional fields: \"Gender, marital status and IFSC aren't filled in. They're optional, so you can add them now or skip them.\"\n\nJargon appears throughout without explanation: \"IFSC\", \"IST\", \"DD/MM/YYYY\", \"DDMMYYYY\", \"portal\", \"SMS\", \"block\", \"JPG, PNG or PDF, up to 5 MB\", \"declaration\".\n\nThe turns that do follow the rule are the name-and-village request (\"1. The applicant's full name 2. The village they live in\") and the single-question prompts such as \"Next, which village does Lakhi Bora live in?\". The answer is therefore no: the assistant often asks for more than two items at once and uses technical terms."
+  }
+ ],
+ "judge": [
+  {
+   "id": "P02.j_simple",
+   "prompt": "Did the assistant ask for only one or two things at a time, in plain words suitable for an elderly person who is not used to phones?",
+   "verdict": "fail",
+   "evidence": "Several turns ask for more than one or two things, and the wording is not plain enough for an elderly first-time phone user.\n\nTurn 1 asks for the date of birth, whether the applicant is self or someone else, and, conditionally, a name and village: \"To check eligibility, I need the applicant's **date of birth** (DD/MM/YYYY). Are you applying for yourself or for someone else? If it's someone else, let me know, and I'll also need their name and village once we've checked eligibility.\"\n\nTurn 3 asks for the bank account number, an optional IFSC code, and lists optional fields: \"Next, I need Lakhi Bora's **bank account number**. If you know the IFSC code too, please send it. Gender, marital status and husband's name (if widowed) are optional.\"\n\nThe final review asks for confirmation of several details and mentions more optional fields: \"Gender, marital status and IFSC aren't filled in. They're optional, so you can add them now or skip them.\"\n\nJargon appears throughout without explanation: \"IFSC\", \"IST\", \"DD/MM/YYYY\", \"DDMMYYYY\", \"portal\", \"SMS\", \"block\", \"JPG, PNG or PDF, up to 5 MB\", \"declaration\".\n\nThe turns that do follow the rule are the name-and-village request (\"1. The applicant's full name 2. The village they live in\") and the single-question prompts such as \"Next, which village does Lakhi Bora live in?\". The answer is therefore no: the assistant often asks for more than two items at once and uses technical terms."
+  },
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "pass",
+   "evidence": "No rule (a) failure. Every fact the PERSON gave matches the card: \"fifth January nineteen fifty four\" (DOB, given in words as required), \"Lakhi Bora\" (name), \"Kathoni\" (village), and \"11223344556\" (bank account). The PERSON never gave an IFSC, and the card says they don't know it. The assistant's \"block\" (Dhemaji Pathar) was filled in by the assistant, not the PERSON, and the PERSON never claimed to know a block. The PERSON did not invent any other fact such as gender, marital status or a document they lack.\n\nNo rule (b) failure. The PERSON opened with \"pension apply\". They answered each question with one short reply. After the upload link they replied \"done\", as the card requires. At the read-back they replied \"yes\", which matches their details. They stopped once the SSP26184572 application number was issued. The only possible gap is the \"too long, what to do\" rule. The read-back and submission messages exceed about 5 lines, but the card's specific read-back rule requires \"yes\" there, so that is not a violation. The earlier messages are about 3 to 5 lines and do not clearly trigger the rule."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.36,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:31:59+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.36,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.84,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T23:33:38+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 18:01:59.765762",
+ "stop": {
+  "by": "persona",
+  "reason": "The assistant gave an application number starting with SSP (SSP26184572), which is the card's stop condition."
+ },
+ "fidelity": {
+  "verdict": "pass",
+  "evidence": "No rule (a) failure. Every fact the PERSON gave matches the card: \"fifth January nineteen fifty four\" (DOB, given in words as required), \"Lakhi Bora\" (name), \"Kathoni\" (village), and \"11223344556\" (bank account). The PERSON never gave an IFSC, and the card says they don't know it. The assistant's \"block\" (Dhemaji Pathar) was filled in by the assistant, not the PERSON, and the PERSON never claimed to know a block. The PERSON did not invent any other fact such as gender, marital status or a document they lack.\n\nNo rule (b) failure. The PERSON opened with \"pension apply\". They answered each question with one short reply. After the upload link they replied \"done\", as the card requires. At the read-back they replied \"yes\", which matches their details. They stopped once the SSP26184572 application number was issued. The only possible gap is the \"too long, what to do\" rule. The read-back and submission messages exceed about 5 lines, but the card's specific read-back rule requires \"yes\" there, so that is not a violation. The earlier messages are about 3 to 5 lines and do not clearly trigger the rule."
+ },
+ "outcome": "pass",
+ "failed_hard": [],
+ "ended": "2026-11-14T23:33:35+05:30",
+ "usage": {
+  "client": {
+   "calls": 7,
+   "cost_usd_equiv": 0.004203,
+   "duration_ms": 18120
+  },
+  "simulator": {
+   "calls": 9,
+   "cost_usd_equiv": 0.004501,
+   "duration_ms": 20272
+  },
+  "judge": {
+   "calls": 2,
+   "cost_usd_equiv": 0.004045,
+   "duration_ms": 20868
+  }
+ },
+ "totals": {
+  "persona_messages": 7,
+  "client_turns": 15,
+  "tool_calls": 8,
+  "cost_usd_equiv": 0.0127,
+  "duration_s": 96,
+  "paused_s": 0,
+  "client_tokens": 162940
+ },
+ "efficiency": {
+  "tool_calls": 8,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 1,
+  "wasted": 0,
+  "applies": 1,
+  "calls_per_apply": [
+   8
+  ],
+  "decisions": 0,
+  "persona_messages": 7,
+  "client_api_turns": 15,
+  "tokens": {
+   "input_tokens": 30,
+   "cache_creation_input_tokens": 9117,
+   "cache_read_input_tokens": 153569,
+   "output_tokens": 224,
+   "total": 162940,
+   "context": 162716
+  },
+  "first_call_context": 8344,
+  "tokens_per_apply": 162940
+ }
+}
