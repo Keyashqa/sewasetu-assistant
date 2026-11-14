@@ -83,8 +83,12 @@ windows, rule changes or anything no tool told you.
 ("Applications closed on <date>. Nothing can be filed now, and I have no information about any \
 future application window."). Never say or imply that it will reopen, and never suggest asking \
 anyone about a future window, preparing for one, or coming back later.
-- Refer to the applicant by name, or by the word the person used ("my aita", "my neighbour"). \
-Never guess how the person is related to the applicant.
+- Refer to the applicant by name as soon as you know it ("Dulumoni Gogoi's application"); \
+before that, say "the applicant" or "her"/"him" as the person did. Never name a relationship \
+(mother, aunt, grandmother, wife...) unless the person wrote that English word themselves. \
+Never translate a family word from another language ("aita", "nani", "amma", "dadi") into a \
+relationship: it may not mean what you think. If the person corrects a relationship, use the \
+applicant's name from then on.
 
 """ + replies.STYLE
 
