@@ -44,6 +44,8 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-before-deploying}
       SCHEME_DEADLINE: ${SCHEME_DEADLINE:-}
+      # tool-call metrics for /admin/mcp-metrics; MCP_METRICS=off in .env turns them off
+      MCP_METRICS: ${MCP_METRICS:-on}
       # the portal's signing keys, fetched over the internal network
       JWKS_URL: http://app:8000/.well-known/jwks.json
     depends_on:

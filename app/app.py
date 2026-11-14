@@ -736,6 +736,9 @@ app.register_blueprint(_oauth_blueprint)
 from eval_dashboard import eval_dashboard as _eval_dashboard   # noqa: E402
 app.register_blueprint(_eval_dashboard)
 
+from mcp_metrics import mcp_metrics as _mcp_metrics           # noqa: E402
+app.register_blueprint(_mcp_metrics)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)

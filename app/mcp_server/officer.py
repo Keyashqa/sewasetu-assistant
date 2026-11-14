@@ -7,13 +7,13 @@ body and passes the officer's username into services explicitly.
 """
 
 import anyio
-from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 import services
 from mcp_server import replies
 from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
+from mcp_server.metrics import MeteredFastMCP
 
 INSTRUCTIONS = """\
 Sewa Setu is the Government of Purvanchal's portal for the Old Age Pension: Rs 250 a month \
@@ -74,11 +74,12 @@ tool told you.
 
 """ + replies.STYLE
 
-officer = FastMCP(
+officer = MeteredFastMCP(
     "Sewa Setu — Old Age Pension (block officer)",
     instructions=INSTRUCTIONS,
     stateless_http=True,
     transport_security=transport_security(),
+    metrics_server="officer",
 )
 
 

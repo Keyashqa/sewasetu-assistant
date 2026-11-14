@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.mm-filter{margin:6px 0 18px;font-size:14px}
+.mm-filter a{margin-right:10px;color:#0b3d6e}
+.mm-filter b{margin-right:10px}
+.mm-tiles{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 6px}
+.mm-tile{flex:1 1 150px;border:1px solid #ccd;padding:10px 12px;background:#fafbfc}
+.mm-tile .v{font-size:22px;font-weight:bold;color:#0b3d6e}
+.mm-tile .k{font-size:13px;color:#555;margin-top:2px}
+.mm-wrap{overflow-x:auto}
+table.tbl td.n,table.tbl th.n{text-align:right;white-space:nowrap}
+.mm-sec{margin-top:28px}
+.mm-sec h3{margin-bottom:4px}
+.mm-sec .note{margin-top:0}
+dl.mm-def dt{font-weight:bold;font-size:14px;margin-top:10px}
+dl.mm-def dd{margin:2px 0 0 0;font-size:14px;color:#333}
+</style>
+
+<h2>MCP efficiency</h2>
+<p><a href="/admin/dashboard">&laquo; Dashboard</a></p>
+<p class="note">How efficiently AI assistants use the citizen and officer MCP servers, and how
+many tokens the servers cost an assistant. Counted by the servers themselves. No personal
+data is recorded: no names, mobile numbers or anything typed into a tool.</p>
+
+<div class="mm-filter">
+  Period:
+  {% for k, w in windows.items() %}
+    {% if k == window %}<b>{{ w[1] }}</b>{% else %}<a href="?window={{ k }}&server={{ server }}">{{ w[1] }}</a>{% endif %}
+  {% endfor %}
+  <br>Server:
+  {% for k, label in servers.items() %}
+    {% if k == server %}<b>{{ label }}</b>{% else %}<a href="?window={{ window }}&server={{ k }}">{{ label }}</a>{% endif %}
+  {% endfor %}
+</div>
+
+{% if not available %}
+<p>Metrics are not available right now. Please try again in a minute.</p>
+{% else %}
+{% set s = stats %}
+
+<div class="mm-sec">
+<h3>1. Summary</h3>
+<p class="note">What this means: how many tool calls an assistant needed to finish a task, and
+how many calls were wasted or ended without finishing.</p>
+{% if s.calls == 0 %}
+<p>No tool calls in this period yet.</p>
+{% else %}
+<div class="mm-tiles">
+  <div class="mm-tile"><div class="v">{{ s.calls }}</div><div class="k">tool calls</div></div>
+  <div class="mm-tile"><div class="v">{{ s.sessions }}</div><div class="k">sign-ins that used a tool</div></div>
+  <div class="mm-tile"><div class="v">{{ s.wasted_pct }}%</div><div class="k">wasted calls ({{ s.errors }} error{{ "" if s.errors == 1 else "s" }}, {{ s.repeats }} repeat{{ "" if s.repeats == 1 else "s" }})</div></div>
+  <div class="mm-tile"><div class="v">{{ s.abandoned_sessions }}</div><div class="k">abandoned sign-ins ({{ s.abandoned_applications }} with an unfinished application)</div></div>
+</div>
+<div class="mm-wrap">
+<table class="tbl" style="margin-top:10px">
+<tr><th>Completed task</th><th class="n">Times completed</th><th class="n">Calls per task (median)</th><th class="n">90% took at most</th><th class="n">Average</th></tr>
+{% set labels = {"apply": "Application filed", "decision": "Officer decision recorded", "status": "Status checked"} %}
+{% for t in process_types %}{% set p = s.processes[t] %}
+<tr><td>{{ labels[t] }}</td><td class="n">{{ p.n }}</td>
+<td class="n">{{ p.median if p.median is not none else "–" }}</td>
+<td class="n">{{ p.p90 if p.p90 is not none else "–" }}</td>
+<td class="n">{{ p.mean if p.mean is not none else "–" }}</td></tr>
+{% endfor %}
+</table>
+</div>
+<p class="note">{{ s.completed_sessions }} sign-ins completed at least one task; {{ s.in_progress_sessions }}
+are still active. Designed re-checks (polls) are not counted as waste: {{ s.polls }} in this period.
+{% if capped %}Only the most recent 50,000 calls are included.{% endif %}</p>
+{% endif %}
+</div>
+
+<div class="mm-sec">
+<h3>2. Per tool</h3>
+<p class="note">What this means: how often each tool is called, how often it fails, how long it
+takes, and how much text it returns to the assistant. "Refused" is the portal correctly
+saying no (for example, under 60), not a fault.</p>
+{% if not tools %}
+<p>No tool calls in this period yet.</p>
+{% else %}
+<div class="mm-wrap">
+<table class="tbl">
+<tr><th>Tool</th><th>Server</th><th class="n">Calls</th><th class="n">OK</th><th class="n">Refused</th><th class="n">Errors</th>
+<th class="n">Repeats</th><th class="n">Polls</th><th class="n">Median ms</th><th class="n">95% ms</th><th class="n">Reply ~tokens</th></tr>
+{% for t in tools %}
+<tr><td>{{ t.tool }}</td><td>{{ t.server }}</td><td class="n">{{ t.calls }}</td><td class="n">{{ t.ok }}</td>
+<td class="n">{{ t.refused }}</td><td class="n">{{ t.errors }}</td><td class="n">{{ t.repeats }}</td><td class="n">{{ t.polls }}</td>
+<td class="n">{{ t.p50 }}</td><td class="n">{{ t.p95 }}</td><td class="n">{{ t.resp_tokens }}</td></tr>
+{% endfor %}
+</table>
+</div>
+{% endif %}
+</div>
+
+<div class="mm-sec">
+<h3>3. Token footprint</h3>
+<p class="note">What this means: the tokens each server adds to an assistant's context before
+any call (its instructions plus every tool's name, description and input schema), largest
+tools first. Estimated at 3.5 characters per token, within about 20%.</p>
+{% if not footprint %}
+<p>Not computed yet.</p>
+{% else %}
+<div class="mm-tiles">
+{% for f in footprint %}
+  <div class="mm-tile"><div class="v">~{{ "{:,}".format(f.total) }}</div>
+  <div class="k">{{ f.server }}: {{ f.tool_count }} tools (~{{ "{:,}".format(f.definitions) }}) + instructions (~{{ "{:,}".format(f.instructions) }})</div></div>
+{% endfor %}
+</div>
+{% for f in footprint %}
+<p style="margin:14px 0 4px"><b>{{ f.server|capitalize }} server</b> <span class="note">(measured {{ f.computed_at }})</span></p>
+<div class="mm-wrap">
+<table class="tbl" style="max-width:520px">
+<tr><th>Tool</th><th class="n">~tokens</th></tr>
+{% for t in f.tools %}
+<tr><td>{{ t.name }}</td><td class="n">{{ t.tokens }}</td></tr>
+{% endfor %}
+<tr><td><i>Server instructions</i></td><td class="n">{{ f.instructions }}</td></tr>
+</table>
+</div>
+{% endfor %}
+{% endif %}
+</div>
+
+<div class="mm-sec">
+<h3>How these are counted</h3>
+<dl class="mm-def">
+<dt>Sign-in</dt>
+<dd>One person's sign-in through an assistant, from consent until it ends (2 hours for a
+citizen, 8 for an officer). Long-lived program tokens count a new sign-in after 30 minutes
+without a call.</dd>
+<dt>Completed task</dt>
+<dd>Something the server can see finished: an application filed (an application number
+returned), an officer decision recorded, or an application's status read. The calls for a
+task are those since the previous completed task in the same sign-in. A status check counts
+only in a sign-in that filed or decided nothing.</dd>
+<dt>Repeat and poll</dt>
+<dd>A repeat is the same tool called again with the same inputs, with nothing saved in
+between. Re-checking the upload link, the number-verification link or the application status
+after the person replies is asked for by design, so it is a poll, not a repeat.</dd>
+<dt>Wasted call</dt>
+<dd>An error (a tool given input it could not use, or a failure) or a repeat.</dd>
+<dt>Abandoned sign-in</dt>
+<dd>No task completed and no call for 30 minutes.</dd>
+<dt>Privacy</dt>
+<dd>Each call stores only the tool, the outcome, its timing and reply size. The person, the
+sign-in and the inputs are kept only as one-way keyed codes, used for counting. Kept 30 days.</dd>
+</dl>
+</div>
+{% endif %}
+{% endblock %}

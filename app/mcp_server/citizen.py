@@ -7,13 +7,13 @@ the mobile into services explicitly. No tool takes a mobile number as input.
 """
 
 import anyio
-from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 import services
 from mcp_server import fmt, replies
 from mcp_server.auth import current_principal
 from mcp_server.common import transport_security
+from mcp_server.metrics import MeteredFastMCP
 
 INSTRUCTIONS = """\
 Sewa Setu is the Government of Purvanchal's portal for the Old Age Pension: Rs 250 a month \
@@ -88,11 +88,12 @@ Never guess how the person is related to the applicant.
 
 """ + replies.STYLE
 
-citizen = FastMCP(
+citizen = MeteredFastMCP(
     "Sewa Setu — Old Age Pension (citizen)",
     instructions=INSTRUCTIONS,
     stateless_http=True,
     transport_security=transport_security(),
+    metrics_server="citizen",
 )
 
 

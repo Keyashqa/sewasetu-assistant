@@ -12,6 +12,7 @@ too, since they describe these servers.
 import app as portal                      # noqa: F401  MUST be first: oauth imports app
 import services                           # noqa: F401,E402
 
+import asyncio                                                # noqa: E402
 from contextlib import AsyncExitStack, asynccontextmanager    # noqa: E402
 
 from starlette.applications import Starlette                  # noqa: E402
@@ -21,6 +22,7 @@ from starlette.routing import Route                           # noqa: E402
 from mcp_server.auth import (CANONICAL, CITIZEN_URL, OFFICER_URL, AuthError,  # noqa: E402
                              authenticate, challenge_response, prm_response,
                              reset_principal, set_principal)
+from mcp_server import metrics                                # noqa: E402
 from mcp_server.citizen import citizen                        # noqa: E402
 from mcp_server.officer import officer                        # noqa: E402
 
@@ -66,7 +68,16 @@ async def lifespan(app):
     async with AsyncExitStack() as stack:
         await stack.enter_async_context(citizen.session_manager.run())
         await stack.enter_async_context(officer.session_manager.run())
-        yield
+        # tool-call metrics: never fatal (metrics.py); off with MCP_METRICS=off
+        flush_task = asyncio.create_task(metrics.flusher((citizen, officer)))
+        try:
+            yield
+        finally:
+            flush_task.cancel()
+            try:
+                await flush_task
+            except BaseException:
+                pass
 
 
 async def prm_citizen(request):

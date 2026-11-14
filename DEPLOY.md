@@ -210,6 +210,23 @@ same value so eval rounds run with production's configuration.
 `python -m evals publish <round> … --headline` writes `app/eval_data/`; commit and push it,
 then on the VM: backup, `sudo git pull --ff-only`, `dc build app && dc up -d --no-deps app`.
 
+### 2.3 MCP efficiency metrics (`/admin/mcp-metrics`)
+
+The `mcp` container records one row per tool call in `mcp_calls` (migration
+`005_mcp_metrics.sql`, applied when mcp starts) and each server's token footprint in
+`mcp_footprint` (rewritten at every mcp start). The page is behind the departmental login.
+
+- **No personal data:** no argument values or free text. The person, the sign-in and the
+  inputs are stored as truncated HMACs under `HMAC(SECRET_KEY, "mcp-metrics-v1")`.
+  Prove it on the VM (read-only): `dc exec -T mcp python /app/scripts/check_mcp_metrics.py --scan`.
+  The full check (without `--scan`) is local only.
+- **Never in a tool's way:** recording appends to an in-memory buffer (at most 2000 rows),
+  written every 10 s. A failed write drops rows; tools are unaffected.
+- **Retention:** 30 days, deleted once a day by the mcp container.
+- **Off switch:** `MCP_METRICS=off` in `.env`, then `dc up -d --force-recreate --no-deps mcp`.
+- **Rollback:** older code ignores the two tables; `DROP TABLE mcp_calls, mcp_footprint`
+  removes them if wanted.
+
 ## 3. Back up and restore
 
 ```bash
