@@ -79,10 +79,10 @@ async def scenario():
     c = lambda tool, label=None, **kw: call(citizen_mod, citizen(HELPER), tool, label, **kw)
     o = lambda tool, label=None, **kw: call(officer_mod, OFFICER, tool, label, **kw)
 
-    await c("get_scheme_info")
-    await c("check_eligibility", "eligibility: bad date", date_of_birth="31/31/1950")
-    await c("check_eligibility", "eligibility: under 60", date_of_birth="01/01/1990")
-    await c("check_eligibility", "eligibility: eligible", date_of_birth="10/04/1966")
+    await c("check_scheme_and_eligibility", "scheme info")
+    await c("check_scheme_and_eligibility", "eligibility: bad date", date_of_birth="31/31/1950")
+    await c("check_scheme_and_eligibility", "eligibility: under 60", date_of_birth="01/01/1990")
+    await c("check_scheme_and_eligibility", "eligibility: eligible", date_of_birth="10/04/1966")
     await c("get_my_application", "status: nothing yet")
     await c("save_application_details", "save: nothing given")
     await c("save_application_details", "save: unverified number", full_name="X",
@@ -104,7 +104,7 @@ async def scenario():
     sub = await c("submit_application", "submit: ok", confirm_declaration=True)
     samples["submitted"] = sub["reply"]
     await c("submit_application", "submit: duplicate", confirm_declaration=True)
-    await c("check_eligibility", "eligibility: active application", date_of_birth="10/04/1966")
+    await c("check_scheme_and_eligibility", "eligibility: active application", date_of_birth="10/04/1966")
     v = await c("get_number_verification_link", "verify: link")
     samples["verify link"] = v["reply"]
     # the helper verifies OTHER on the page (the OTP stays on the portal)

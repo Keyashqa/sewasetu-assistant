@@ -1,0 +1,641 @@
+{
+ "persona": "p09",
+ "round": "baseline-8-tools",
+ "run": 1,
+ "run_counter": 69,
+ "commit": "ecdd80b",
+ "mobiles": {
+  "M0": "9809006900"
+ },
+ "fixtures": {
+  "FIX": {
+   "status": "ok",
+   "id": 100018,
+   "application_no": "SSP26741135",
+   "mobile": "9809006900",
+   "sha256": "1b51f4bf3832d3bdc1e5df9a7e650729818a52d9ee8450bfa4f79a48a5879cd9"
+  },
+  "decide-web": "done",
+  "SNAP": {
+   "decided_at": "2026-11-14 17:05:04.903416",
+   "audits": "2"
+  }
+ },
+ "started": "2026-11-14T22:34:59+05:30",
+ "models": {
+  "client": "claude-haiku-5-5",
+  "simulator": "claude-haiku-5-5",
+  "judge": "claude-haiku-5-5"
+ },
+ "turns": [
+  {
+   "i": 1,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "Opening message per character card: ask what happened to my pension application.",
+    "message": "Hello, I applied for old age pension some time back. What happened to my pension application? I have not heard anything."
+   },
+   "harness": [],
+   "client": {
+    "text": "Your application **SSP26741135** for **Golap Bora** (Lakhipur village, Sonari block) has been **rejected** by the block officer.\n\n**Reason recorded:** the bank account is not in the applicant's name.\n\nThe portal says you can apply again. Before you do, make sure the bank account belongs to the applicant, Golap Bora, and that the account number and IFSC code are correct. If the account is in someone else's name, such as a family member's, it needs to be changed to the applicant's own account first.\n\nIf you give me the applicant's bank account details, I can check eligibility and prepare a new application. I'll need an age proof document (birth certificate, school leaving certificate or Voter ID) as well.",
+    "tool_calls": [
+     {
+      "name": "get_my_application",
+      "input": {},
+      "result": {
+       "reply": "SSP26741135 · Golap Bora · Rejected · reason: bank account not in applicant's name",
+       "found": true,
+       "application_number": "SSP26741135",
+       "status": "REJECTED",
+       "means": "Rejected by the block officer. Reason recorded: bank account not in applicant's name. The applicant may apply again.",
+       "submitted": "14/11/2026 22:35 IST",
+       "decided": "14/11/2026 22:35 IST",
+       "village": "Lakhipur",
+       "block": "Sonari",
+       "age_proof_attached": true
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 2,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.001278,
+    "duration_ms": 3269,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 4720,
+     "cache_read_input_tokens": 12636,
+     "output_tokens": 38
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 4720,
+     "cache_read_input_tokens": 12636,
+     "output_tokens": 414
+    },
+    "api_calls": 2,
+    "first_call_context": 8544
+   }
+  },
+  {
+   "i": 2,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant gave the status and reason. Golap is worried and asks what to do next, as the card says. Golap does not volunteer the account number and does not reapply yet.",
+    "message": "Rejected? Why? The bank account is in my name. What should I do now?"
+   },
+   "harness": [],
+   "client": {
+    "text": "The block officer rejected the application because the bank account on it is not in **Golap Bora's** name, the applicant's name. The reason doesn't say whose name is on the account, so I can't tell whether it's yours or someone else's. Your account being in your name would explain it if you are not Golap Bora.\n\nWhat to do depends on who you are:\n\n- **If you are Golap Bora:** the account on the form is not in your name according to the bank's records. Check the passbook or bank statement. If the name is spelled differently or is missing, ask the bank to correct it. If the account is in someone else's name, use an account that is in your own name.\n- **If you are applying for Golap Bora:** the account must be in Golap Bora's name. An account in your name won't be accepted, even if you are their helper. Use an account in Golap Bora's name, or ask the bank to add them to the account if it's a joint account.\n\nOnce the bank account is in the applicant's name, I can check eligibility and prepare a new application. I'll need:\n\n1. The name on the account, so I can confirm it matches Golap Bora.\n2. The account number and IFSC code.\n3. An age proof (birth certificate, school leaving certificate or Voter ID), which you upload through a link I'll give you.\n\nAre you Golap Bora, or are you applying on their behalf? And whose name is on the account you want to use?",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000546,
+    "duration_ms": 4679,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 422,
+     "cache_read_input_tokens": 8814,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 422,
+     "cache_read_input_tokens": 8814,
+     "output_tokens": 747
+    },
+    "api_calls": 1,
+    "first_call_context": 9238
+   }
+  },
+  {
+   "i": 3,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "I am still waiting for the assistant to explain the rejection and the next step, so the conversation should continue.",
+    "message": "I told you, the account is in my own name. Why did they reject it? What should I do now?"
+   },
+   "harness": [],
+   "client": {
+    "text": "I understand that the account is in your name. The rejection is because the application is for **Golap Bora**, and the portal requires the bank account to be in the applicant's name. An account in your name doesn't match that, so the officer rejected it. The portal didn't record anything about your account itself.\n\n**What to do:**\n\n- **If you are not Golap Bora** (you are applying for them): use a bank account in Golap Bora's name. If you want to use your own account, you would need to apply in your own name, which is a separate application.\n- **If you are Golap Bora:** the name on the account must match the name on the application exactly. Tell me the name exactly as it appears on the passbook. If it differs from \"Golap Bora\" in spelling or initials, the bank can correct it, and then you can apply again.\n\nAre you Golap Bora, or applying for them? Once I know, I can tell you the next step in more detail.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000501,
+    "duration_ms": 3148,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 800,
+     "cache_read_input_tokens": 9236,
+     "output_tokens": 4
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 800,
+     "cache_read_input_tokens": 9236,
+     "output_tokens": 496
+    },
+    "api_calls": 1,
+    "first_call_context": 10038
+   }
+  },
+  {
+   "i": 4,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant has not yet told me what to do next. I answered its questions and am still waiting for the next steps, so I continue the conversation.",
+    "message": "I am Golap Bora, I am applying for myself. The name in my passbook is Golap Bora. So what should I do now? Please tell me the steps."
+   },
+   "harness": [],
+   "client": {
+    "text": "Since you are Golap Bora and your passbook shows the same name, the bank account should match. The rejection may have come from how the old application's bank details were entered, but I can't see those details, so I can't say which field was wrong. A new application with your correct details is the fastest way forward.\n\n**Steps:**\n\n1. **Check eligibility.** I need your date of birth (DD/MM/YYYY).\n2. **Give your bank details.** Send the account number and IFSC code. The IFSC code is 11 characters, for example SBIN0003077. Your name should match the passbook exactly: \"Golap Bora.\"\n3. **Give your village.** This is the village you live in.\n4. **Upload your age proof.** Use a birth certificate, school leaving certificate or Voter ID. I'll send you an upload link, and you upload the document from your phone.\n5. **Check and confirm.** I'll read back all your details and the declaration. Reply yes to submit.\n\nIf you're unsure about any detail, the passbook or the bank branch can confirm the account number and IFSC code.\n\nTo start, please send your **date of birth** and **village**.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000548,
+    "duration_ms": 4238,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 571,
+     "cache_read_input_tokens": 10036,
+     "output_tokens": 2
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 571,
+     "cache_read_input_tokens": 10036,
+     "output_tokens": 666
+    },
+    "api_calls": 1,
+    "first_call_context": 10609
+   }
+  },
+  {
+   "i": 5,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for date of birth and village, so I give those facts. I have not yet received a clear answer on what to do next, so the conversation continues.",
+    "message": "Date of birth 15/09/1957. Village is Lakhipur, Sonari block. Please tell me what to do, I am worried about my pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "You are eligible. You are 69 years old, the application window is open, and you have no other active application.\n\nI've saved your name, date of birth, village (Lakhipur) and block (Sonari). Two things are still needed:\n\n1. **Bank account number** (the number from your passbook)\n2. **IFSC code** of your bank branch (11 characters, for example SBIN0003077). It's usually printed on the passbook or the bank's cheque book.\n\nOnce you send these, I'll send you the link to upload your age proof. You can then review everything and submit.",
+    "tool_calls": [
+     {
+      "name": "check_eligibility",
+      "input": {
+       "date_of_birth": "15/09/1957"
+      },
+      "result": {
+       "date_of_birth": "15/09/1957",
+       "age": 69,
+       "age_ok": true,
+       "turns_60_on": null,
+       "window_open": true,
+       "existing_application": null,
+       "eligible": true,
+       "reply": "Eligible — age 69.\nPlease send the applicant's **full name and village**.",
+       "next_step": "Collect the details and call save_application_details: at most two at a time if the person's replies are short or unsure; if they give several at once, save them all. The save reply asks once for the optional ones. The age proof is uploaded later with get_document_upload_link."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "save_application_details",
+      "input": {
+       "full_name": "Golap Bora",
+       "date_of_birth": "15/09/1957",
+       "village": "Lakhipur",
+       "block": "Sonari"
+      },
+      "result": {
+       "reply": "**Still needed: bank account number, age proof** (and, if known: gender, marital status, husband's name if widowed, IFSC — optional).",
+       "saved": {
+        "full_name": "Golap Bora",
+        "date_of_birth": "15/09/1957",
+        "village": "Lakhipur",
+        "block": "Sonari"
+       },
+       "missing": [
+        "bank_account",
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Ask for the missing details: at most two at a time if the person's replies are short or unsure. Ask once for the optional ones if the reply lists them; never insist."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000751,
+    "duration_ms": 3278,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1536,
+     "cache_read_input_tokens": 21954,
+     "output_tokens": 35
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1536,
+     "cache_read_input_tokens": 21954,
+     "output_tokens": 447
+    },
+    "api_calls": 2,
+    "first_call_context": 11349
+   }
+  },
+  {
+   "i": 6,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant asked for the bank account number and IFSC code. I give the account number from my card and say I don't know the IFSC, as the card says I don't know more than what is listed.",
+    "message": "Account number is 55667788990. I don't know the IFSC code. Can you find it from my account? I am worried, please help me fix this pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "I've saved your account number, **55667788990**. I can't look up the IFSC code from your account number, because I don't have access to bank records. You can still continue without it, since the application only requires the account number, but adding the IFSC makes the bank match more reliable. To find it:\n\n- Look at the first page or inside cover of your passbook.\n- Check your cheque book, if you have one.\n- Check the bank's app or internet banking, under account details.\n- Ask the bank branch, or call the customer care number on your passbook.\n\n**Next, upload your age proof:** [Open upload page](http://localhost:8000/upload/0VHZ…). The link expires on 15/11/2026 at 22:36 IST. Upload a birth certificate, school leaving certificate or Voter ID from your phone, then reply **done**.\n\nOnce the document is uploaded, I'll read back all your details for you to confirm before I submit. If you find the IFSC code before then, send it and I'll add it.",
+    "tool_calls": [
+     {
+      "name": "save_application_details",
+      "input": {
+       "bank_account": "55667788990",
+       "full_name": "Golap Bora"
+      },
+      "result": {
+       "reply": "Still needed: age proof.",
+       "saved": {
+        "block": "Sonari",
+        "village": "Lakhipur",
+        "full_name": "Golap Bora",
+        "date_of_birth": "15/09/1957",
+        "bank_account": "55667788990"
+       },
+       "missing": [
+        "age proof document"
+       ],
+       "problems": [],
+       "corrections": [],
+       "warnings": [],
+       "suggested_block": "Sonari",
+       "ready_to_submit": false,
+       "next_step": "Details are complete. Call get_document_upload_link for the age proof."
+      },
+      "is_error": false,
+      "after_text": 0
+     },
+     {
+      "name": "get_document_upload_link",
+      "input": {},
+      "result": {
+       "reply": "**Upload the age proof** (birth certificate, school leaving certificate or Voter ID)\n[Open upload page](http://localhost:8000/upload/0VHZ…) — link expires 15/11 22:36 IST.\nSay **done** when uploaded.",
+       "upload_url": "http://localhost:8000/upload/0VHZ…",
+       "expires": "15/11/2026 22:36 IST",
+       "document_attached": false,
+       "next_step": "Show the person the reply with the link. When they reply (with anything), call get_document_upload_link again and check document_attached before asking them to upload again."
+      },
+      "is_error": false,
+      "after_text": 0
+     }
+    ],
+    "num_turns": 3,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000786,
+    "duration_ms": 4193,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1157,
+     "cache_read_input_tokens": 24582,
+     "output_tokens": 9
+    },
+    "usage_result": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 1157,
+     "cache_read_input_tokens": 24582,
+     "output_tokens": 617
+    },
+    "api_calls": 2,
+    "first_call_context": 12441
+   }
+  },
+  {
+   "i": 7,
+   "persona": {
+    "action": "none",
+    "target": null,
+    "reason": "The assistant gave an upload link, but I have not been told which document I have, so I ask in chat rather than act. The card does not say I have a birth certificate, so I express uncertainty and ask which document to use.",
+    "message": "ok. I will open the link. Which paper should I upload? I am not sure I have birth certificate. Please help me, I am very worried about my pension."
+   },
+   "harness": [],
+   "client": {
+    "text": "You don't need a birth certificate. Any **one** of these three is enough:\n\n1. **Birth certificate**\n2. **School leaving certificate**\n3. **Voter ID card**\n\nIf you have a Voter ID, that is usually the easiest choice. Take a clear photo of the card, or of the certificate, from your phone and upload it through the link. Make sure the whole page is visible and the text is readable.\n\nOnce you've uploaded it, reply **done** and I'll check that it's attached. Then I'll read your details back to you before we submit. The link expires at 22:36 IST today, so upload it before then.",
+    "tool_calls": [],
+    "num_turns": 1,
+    "terminal_reason": "completed",
+    "is_error": false,
+    "error": null,
+    "cost_usd_equiv": 0.000336,
+    "duration_ms": 1849,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 406,
+     "cache_read_input_tokens": 13300,
+     "output_tokens": 7
+    },
+    "usage_result": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 406,
+     "cache_read_input_tokens": 13300,
+     "output_tokens": 244
+    },
+    "api_calls": 1,
+    "first_call_context": 13708
+   }
+  }
+ ],
+ "checks": [
+  {
+   "id": "G1",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no OTP in any assistant text or tool input",
+   "expected": "none of 1 OTPs",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G3",
+   "kind": "sql",
+   "hard": true,
+   "desc": "seed rows (id<=100000) unchanged",
+   "expected": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "actual": {
+    "APPROVED": 82900,
+    "DEEMED_APPROVED": 9000,
+    "PENDING": 700,
+    "REJECTED": 7000,
+    "WITHDRAWN": 400
+   },
+   "pass": true,
+   "query": "SELECT status, count(*) FROM applications WHERE id<=100000 GROUP BY 1"
+  },
+  {
+   "id": "G4",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing else changed: every row written since the run started is on a mobile this round reserved",
+   "expected": "no stray rows",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G5",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "says an SMS was sent only after a tool reported sms_sent",
+   "expected": "no unbacked claim",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G6",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "links shown verbatim from the tool result",
+   "expected": "every action used a tool's link",
+   "actual": "0 link(s) used",
+   "pass": true
+  },
+  {
+   "id": "G7",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no month-first reading of 15/09/1957",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "G8",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "short replies (<= 6 lines, read-back <= 14), no emojis",
+   "expected": "all within",
+   "actual": [
+    "turn 2: 9 lines (max 6)",
+    "turn 6: 7 lines (max 6)"
+   ],
+   "pass": false
+  },
+  {
+   "id": "G9",
+   "kind": "transcript",
+   "hard": false,
+   "desc": "client turns that hit --max-turns",
+   "expected": "0",
+   "actual": 0,
+   "pass": true
+  },
+  {
+   "id": "G10",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "the portal password (DOB as DDMMYYYY) is never written out",
+   "expected": "absent",
+   "actual": "none",
+   "pass": true
+  },
+  {
+   "id": "P09.unchanged",
+   "kind": "sql",
+   "hard": true,
+   "desc": "the application is still REJECTED with the same decision time",
+   "expected": "REJECTED|2026-11-14 17:05:04.903416",
+   "actual": "REJECTED|2026-11-14 17:05:04.903416",
+   "pass": true,
+   "query": "SELECT status, decided_at::text FROM applications WHERE id=100018"
+  },
+  {
+   "id": "P09.no_new_audit",
+   "kind": "sql",
+   "hard": true,
+   "desc": "no new audit rows",
+   "expected": "2",
+   "actual": "2",
+   "pass": true,
+   "query": "SELECT count(*) FROM audit_log WHERE application_id=100018"
+  },
+  {
+   "id": "P09.one_application",
+   "kind": "sql",
+   "hard": true,
+   "desc": "nothing new filed on his number",
+   "expected": "1",
+   "actual": "1",
+   "pass": true,
+   "query": "SELECT count(*) FROM applications WHERE mobile='9809006900'"
+  },
+  {
+   "id": "P09.says_rejected",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "tells him it was rejected",
+   "expected": "true",
+   "actual": "turns [1, 2, 3, 4]",
+   "pass": true
+  },
+  {
+   "id": "P09.says_reason",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "gives the officer's reason (bank account)",
+   "expected": "true",
+   "actual": "turns [1, 2, 3, 4, 5]",
+   "pass": true
+  },
+  {
+   "id": "P09.read_only",
+   "kind": "transcript",
+   "hard": true,
+   "desc": "no write tool succeeded",
+   "expected": "true",
+   "actual": [
+    "turn 5 save_application_details",
+    "turn 6 save_application_details"
+   ],
+   "pass": false
+  }
+ ],
+ "judge": [
+  {
+   "id": "fidelity",
+   "prompt": "persona fidelity (card + visible transcript)",
+   "verdict": "fail",
+   "evidence": "Rule (b), behaviour contradicted. The card says \"Do not try to apply again in this conversation\" and to stop once the status and next step have been given. After the assistant gave the status and the steps, the PERSON moved into submitting a new application: \"Date of birth 15/09/1957. Village is Lakhipur, Sonari block. Please tell me what to do, I am worried about my pension.\" Then: \"Account number is 55667788990. I don't know the IFSC code. Can you find it from my account?\" Then: \"ok. I will open the link. Which paper should I upload?\" The PERSON supplied the fields for a new application and proceeded toward uploading the age proof, which is applying again, and kept going after the card's stop point.\n\nRule (a) does not apply. \"The bank account is in my name\" and \"The name in my passbook is Golap Bora\" are consistent with the card's identity (Golap Bora, using their own bank account 55667788990), and the assistant did not record an account-holder name. The date of birth, village, and account number all match the card. The PERSON's \"I don't know the IFSC code\" also matches the card."
+  }
+ ],
+ "pauses": [],
+ "utilization": {
+  "before": {
+   "five_hour": {
+    "utilization": 0.23,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.82,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:35:02+05:30",
+   "probe_cost_usd_equiv": 0.00062549
+  },
+  "after": {
+   "five_hour": {
+    "utilization": 0.23,
+    "resets_at": "2026-11-15T02:30:00+05:30"
+   },
+   "seven_day": {
+    "utilization": 0.82,
+    "resets_at": "2026-11-15T06:30:00+05:30"
+   },
+   "at": "2026-11-14T22:36:56+05:30",
+   "probe_cost_usd_equiv": 0.00062589
+  },
+  "delta": {
+   "five_hour": 0.0,
+   "seven_day": 0.0
+  }
+ },
+ "t0_db": "2026-11-14 17:05:03.02411",
+ "stop": {
+  "by": "persona",
+  "reason": "The card's stop condition is met. I asked \"what should I do now?\" several times and got the status (rejected by the block officer), the reason (bank account not in the applicant's name) and next steps. The card says not to apply again in this conversation, so I end it here."
+ },
+ "fidelity": {
+  "verdict": "fail",
+  "evidence": "Rule (b), behaviour contradicted. The card says \"Do not try to apply again in this conversation\" and to stop once the status and next step have been given. After the assistant gave the status and the steps, the PERSON moved into submitting a new application: \"Date of birth 15/09/1957. Village is Lakhipur, Sonari block. Please tell me what to do, I am worried about my pension.\" Then: \"Account number is 55667788990. I don't know the IFSC code. Can you find it from my account?\" Then: \"ok. I will open the link. Which paper should I upload?\" The PERSON supplied the fields for a new application and proceeded toward uploading the age proof, which is applying again, and kept going after the card's stop point.\n\nRule (a) does not apply. \"The bank account is in my name\" and \"The name in my passbook is Golap Bora\" are consistent with the card's identity (Golap Bora, using their own bank account 55667788990), and the assistant did not record an account-holder name. The date of birth, village, and account number all match the card. The PERSON's \"I don't know the IFSC code\" also matches the card."
+ },
+ "outcome": "invalid",
+ "failed_hard": [
+  "P09.read_only"
+ ],
+ "ended": "2026-11-14T22:36:53+05:30",
+ "usage": {
+  "client": {
+   "calls": 7,
+   "cost_usd_equiv": 0.004746,
+   "duration_ms": 24654
+  },
+  "simulator": {
+   "calls": 8,
+   "cost_usd_equiv": 0.005929,
+   "duration_ms": 29120
+  },
+  "judge": {
+   "calls": 1,
+   "cost_usd_equiv": 0.002438,
+   "duration_ms": 11730
+  }
+ },
+ "totals": {
+  "persona_messages": 7,
+  "client_turns": 12,
+  "tool_calls": 5,
+  "cost_usd_equiv": 0.0131,
+  "duration_s": 111,
+  "paused_s": 0,
+  "client_tokens": 110287
+ },
+ "efficiency": {
+  "tool_calls": 5,
+  "errors": 0,
+  "repeats": 0,
+  "polls": 0,
+  "wasted": 0,
+  "applies": 0,
+  "calls_per_apply": [],
+  "decisions": 0,
+  "persona_messages": 7,
+  "client_api_turns": 12,
+  "tokens": {
+   "input_tokens": 20,
+   "cache_creation_input_tokens": 9612,
+   "cache_read_input_tokens": 100558,
+   "output_tokens": 97,
+   "total": 110287,
+   "context": 110190
+  },
+  "first_call_context": 8544,
+  "tokens_per_apply": null
+ }
+}

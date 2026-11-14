@@ -14,8 +14,9 @@ from . import claude_cli
 from .config import CLIENT_MODEL, MAX_TURNS_PER_MESSAGE
 
 TOOLS = {
-    "citizen": {"check_eligibility", "get_document_upload_link", "get_my_application",
-                "get_number_verification_link", "get_scheme_info", "save_application_details",
+    # 7 since TOOL_MERGE.md (get_scheme_info + check_eligibility -> check_scheme_and_eligibility)
+    "citizen": {"check_scheme_and_eligibility", "get_document_upload_link", "get_my_application",
+                "get_number_verification_link", "save_application_details",
                 "submit_application", "withdraw_application"},
     "officer": {"approve_application", "get_age_proof_link", "get_application",
                 "get_queue_summary", "list_applications", "reject_application"},

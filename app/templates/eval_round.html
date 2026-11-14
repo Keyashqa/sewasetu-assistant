@@ -3,6 +3,7 @@
 {% block body %}
 <p class="muted"><a href="/eval-dashboard">← dashboard</a></p>
 <h1>Detailed report</h1>
+{% if r.label and r.label != r.id %}<p class="muted">{{ r.label }}</p>{% endif %}
 <p><span class="badge {{ 'pass' if r.passed == r.valid else 'fail' }}">{{ r.passed }} / {{ r.valid }} passed</span>
   <span class="muted">· published {{ r.published|dmy }}</span></p>
 
@@ -18,7 +19,7 @@
   <dt>Published</dt><dd>{{ r.published[:16]|replace("T", " ") }} IST</dd>
 </dl>
 <ul class="plain">
-  <li><b>Real client.</b> Each person's messages go to stock Claude Code in print mode with a small model, the way an evaluator's assistant would. Its only tools are the Sewa Setu MCP server's (8 citizen or 6 officer tools); every turn asserts that nothing else is loaded. No extra system prompt: the only guidance is the server's own instructions and tool texts.</li>
+  <li><b>Real client.</b> Each person's messages go to stock Claude Code in print mode with a small model, the way an evaluator's assistant would. Its only tools are the Sewa Setu MCP server's ({{ r.citizen_tools or 8 }} citizen or 6 officer tools); every turn asserts that nothing else is loaded. No extra system prompt: the only guidance is the server's own instructions and tool texts.</li>
   <li><b>Simulated people.</b> Another model plays each person from a written card (who they are, what they know, how they talk, what they do), seeing only what that person would see. A judge marks a run invalid if the person broke their card; invalid runs are shown, not counted.</li>
   <li><b>Their hands.</b> Uploads and number verification happen on the portal's real pages, using only links the assistant showed in the chat. OTPs arrive on the simulated SMS gateway and are typed on the page; they never enter the chat (except where a simulated person deliberately pastes one, to test the assistant's refusal).</li>
   <li><b>Checks are mostly the database.</b> SQL against the portal after the conversation (status, details, audit trail, documents by hash, nothing else changed), the SMS inbox, and transcript checks (no OTPs, no password digits, no month-first dates, links shown verbatim, decisions only on the officer's instruction, audit notes in the officer's words). A model judges only a few listed items, with its evidence shown.</li>

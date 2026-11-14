@@ -53,7 +53,7 @@ opens the link, enters that mobile number and types the OTP sent to that phone o
 is not needed in the chat and to enter it on the page.
 - When the person replies after you gave the link (with anything), call \
 get_number_verification_link again and check verified_numbers before asking them to verify \
-again. Once the number is there, pass it as applicant_mobile to check_eligibility, \
+again. Once the number is there, pass it as applicant_mobile to check_scheme_and_eligibility, \
 save_application_details, get_document_upload_link and submit_application for that \
 applicant, every time. Keep each applicant's details separate.
 - withdraw_application only withdraws the signed-in number's own application.
@@ -139,14 +139,7 @@ def _for(mobile, p):
     return {} if mobile == p.mobile else {"applicant_mobile": mobile}
 
 
-@citizen.tool(
-    description=(
-        "Facts about the Purvanchal Old Age Pension: the amount, who qualifies, which "
-        "documents are needed, how long a decision takes, and whether the application "
-        "window is open right now. Call this first when the person asks what the scheme is, "
-        "who can get it, or what papers are needed. No input."),
-    annotations=ToolAnnotations(title="Scheme information", readOnlyHint=True))
-async def get_scheme_info() -> dict:
+async def _scheme_info() -> dict:
     s = await _run(services.scheme_info)
     w = s["window"]
     if w["open"]:
@@ -173,6 +166,10 @@ async def get_scheme_info() -> dict:
         "blocks": s["blocks"],
         "villages_by_block": s["villages_by_block"],
     }
+    if w["open"]:
+        out["next_step"] = ("Next, call check_scheme_and_eligibility with the applicant's date of "
+                            "birth, on its own, and wait for its result. Save nothing until it "
+                            "says eligible.")
     if not w["open"]:
         out["next_step"] = ("Applications are closed. Answer with the reply exactly as written, "
                             "date as DD/MM/YYYY; add nothing about when or whether applications "
@@ -181,16 +178,7 @@ async def get_scheme_info() -> dict:
     return out
 
 
-@citizen.tool(
-    description=(
-        "Checks whether the applicant can apply: age 60 or above from the applicant's date of "
-        "birth, the window still open, and whether this mobile number already has an active "
-        "application. The person asking may be the applicant or someone helping them; use the "
-        "applicant's date of birth. Call before collecting details. Input: date_of_birth as "
-        "DD/MM/YYYY (Indian order, day first), for example 10/04/1957. Other formats are "
-        "accepted and corrected. " + APPLICANT_MOBILE_DOC),
-    annotations=ToolAnnotations(title="Check eligibility", readOnlyHint=True))
-async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = None) -> dict:
+async def _eligibility(date_of_birth: str, applicant_mobile: str | None = None) -> dict:
     p = current_principal()
     mobile, err = await _applicant(p, applicant_mobile)
     if err:
@@ -237,17 +225,17 @@ async def check_eligibility(date_of_birth: str, applicant_mobile: str | None = N
                             "get_document_upload_link.")
     elif e["reasons"] == ["active_application"]:
         out["message"] = " ".join(messages)
-        out["next_step"] = ("Nothing new can be filed on this number. If this is a different "
+        out["next_step"] = ("Nothing new can be filed on this number; save nothing for it. If this is a different "
                             "applicant, file on another mobile number: "
                             "get_number_verification_link, then applicant_mobile.")
     elif "window_closed" in e["reasons"]:
         out["message"] = " ".join(messages)
-        out["next_step"] = ("Nothing can be filed now. Give the person the reply's closed-window "
+        out["next_step"] = ("Nothing can be filed now; save nothing. Give the person the reply's closed-window "
                             "sentence exactly as written; never suggest asking about or preparing "
                             "for a future window.")
     else:
         out["message"] = " ".join(messages)
-        out["next_step"] = "Nothing can be filed now. Explain this to the person."
+        out["next_step"] = "Nothing can be filed now; save nothing. Explain this to the person."
     return out
 
 
@@ -297,8 +285,8 @@ def _own_application(a):
                       "kept_until": draft["expires_at"]}
     if not a["found"]:
         out = {"found": False,
-               "message": "No application on this mobile number yet. Call check_eligibility "
-                          "to start one."}
+               "message": "No application on this mobile number yet. Call check_scheme_and_eligibility "
+                          "with the applicant's date of birth to start one."}
         if draft_note:
             out["draft_in_progress"] = draft_note
             out["message"] = ("No application has been filed on this mobile number yet, but "
@@ -635,7 +623,7 @@ async def submit_application(confirm_declaration: bool,
         "see or relay the OTP; if someone types an OTP in the chat, tell them to enter it on "
         "the page instead. When the person replies after that (with anything), call this tool "
         "again and check verified_numbers before asking them to verify again. Once the number "
-        "is there, pass it as applicant_mobile to check_eligibility, "
+        "is there, pass it as applicant_mobile to check_scheme_and_eligibility, "
         "save_application_details, get_document_upload_link and submit_application. No input."),
     annotations=ToolAnnotations(title="Verify another mobile number", readOnlyHint=False,
                                 destructiveHint=False, idempotentHint=True))
@@ -654,3 +642,26 @@ async def get_number_verification_link() -> dict:
                       "in verified_numbers can be used as applicant_mobile until this sign-in "
                       "ends; it does not need verifying again."),
     }
+
+
+# ---------------------------------------------------------------------------
+# Merged tool (TOOL_MERGE.md): dispatches to the unchanged helpers above, so every result
+# and every portal rule is exactly what get_scheme_info / check_eligibility returned.
+# ---------------------------------------------------------------------------
+
+@citizen.tool(
+    description=(
+        "The Old Age Pension's facts, and an eligibility check. Without date_of_birth: the "
+        "amount, who qualifies, documents needed, decision time and whether applications are "
+        "open; call this first when someone asks about the scheme. With date_of_birth (the "
+        "applicant's, DD/MM/YYYY, day first, e.g. 10/04/1957; other formats are corrected): "
+        "checks age 60 or above, the window, and whether this mobile number already has an "
+        "active application. Call it on its own and wait for its result: save nothing until "
+        "it says eligible and the window is open. The person asking may be the applicant or "
+        "someone helping them. " + APPLICANT_MOBILE_DOC + " Used only with date_of_birth."),
+    annotations=ToolAnnotations(title="Scheme facts and eligibility", readOnlyHint=True))
+async def check_scheme_and_eligibility(date_of_birth: str | None = None,
+                                       applicant_mobile: str | None = None) -> dict:
+    if date_of_birth is None or not str(date_of_birth).strip():
+        return await _scheme_info()
+    return await _eligibility(date_of_birth, applicant_mobile)

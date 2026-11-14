@@ -140,7 +140,7 @@ def verify(client, token, mobile, html_out=None):
 
 async def descriptions():
     tools = {t.name: t for t in await citizen_mod.citizen.list_tools()}
-    check("citizen server lists 8 tools", len(tools) == 8, sorted(tools))
+    check("citizen server lists 7 tools", len(tools) == 7, sorted(tools))
     d = tools.get("get_number_verification_link")
     check("get_number_verification_link exists", d is not None)
     check("verification tool: never asks for, sees or relays the OTP",
@@ -151,13 +151,13 @@ async def descriptions():
     check("verification tool: only for another number / signed-in number already active",
           d is not None and "only when the person wants to file for someone else" in d.description
           and "already has an active application" in d.description)
-    for name in ("check_eligibility", "save_application_details", "get_document_upload_link",
+    for name in ("check_scheme_and_eligibility", "save_application_details", "get_document_upload_link",
                  "submit_application"):
         props = tools[name].inputSchema.get("properties", {})
         check("%s takes optional applicant_mobile" % name,
               "applicant_mobile" in props
               and "applicant_mobile" not in tools[name].inputSchema.get("required", []))
-    for name in ("get_my_application", "withdraw_application", "get_scheme_info"):
+    for name in ("get_my_application", "withdraw_application"):
         check("%s has no applicant_mobile" % name,
               "applicant_mobile" not in tools[name].inputSchema.get("properties", {}))
     ins = citizen_mod.INSTRUCTIONS
@@ -168,7 +168,7 @@ async def descriptions():
 
 async def single_applicant(client):
     """The existing flow, unchanged: no applicant_mobile anywhere."""
-    e = await call(HELPER, "check_eligibility", date_of_birth="10/04/1950")
+    e = await call(HELPER, "check_scheme_and_eligibility", date_of_birth="10/04/1950")
     check("single: eligible on the signed-in number", e["eligible"] and "applicant_mobile" not in e, e)
     s = await call(HELPER, "save_application_details", full_name="Test Helper Own", **PERSON)
     check("single: details saved, no applicant_mobile in output",
@@ -190,7 +190,7 @@ async def single_applicant(client):
 
 
 async def unverified():
-    for tool, kw in (("check_eligibility", {"date_of_birth": "10/04/1950"}),
+    for tool, kw in (("check_scheme_and_eligibility", {"date_of_birth": "10/04/1950"}),
                      ("save_application_details", dict(full_name="Test Nobody", **PERSON)),
                      ("get_document_upload_link", {}),
                      ("submit_application", {"confirm_declaration": True})):
@@ -291,7 +291,7 @@ async def verification_page(client):
 
 
 async def file_for(client, mobile, name):
-    e = await call(HELPER, "check_eligibility", date_of_birth="10/04/1950", applicant_mobile=mobile)
+    e = await call(HELPER, "check_scheme_and_eligibility", date_of_birth="10/04/1950", applicant_mobile=mobile)
     s = await call(HELPER, "save_application_details", full_name=name, applicant_mobile=mobile,
                    **PERSON)
     u = await call(HELPER, "get_document_upload_link", applicant_mobile=mobile)

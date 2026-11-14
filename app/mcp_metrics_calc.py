@@ -32,6 +32,8 @@ WRITE_TOOLS = frozenset({"save_application_details", "submit_application",
 POLL_TOOLS = frozenset({"get_document_upload_link", "get_number_verification_link",
                         "get_my_application"})
 PROCESS_TYPES = ("apply", "decision", "status")
+# Citizen tools retired by the merge (TOOL_MERGE.md); rows logged before it keep these names.
+RETIRED_TOOLS = frozenset({"get_scheme_info", "check_eligibility"})
 
 # A result that is False on one of these keys is a refusal (the portal said no).
 REFUSAL_FLAGS = ("submitted", "approved", "rejected", "withdrawn", "eligible")

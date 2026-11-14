@@ -1,0 +1,206 @@
+{
+ "generated": "2026-11-15T00:50:52+05:30",
+ "rounds": [
+  {
+   "round": "baseline-8-tools",
+   "commits": [
+    "ecdd80b"
+   ],
+   "runs": 15,
+   "valid": 14,
+   "passed": 12,
+   "pass_rate": 0.857,
+   "applies": 11,
+   "calls_per_apply": {
+    "n": 11,
+    "median": 8,
+    "p90": 8,
+    "mean": 7.5
+   },
+   "tool_calls_per_run": 6.6,
+   "wasted": 0,
+   "errors": 0,
+   "repeats": 0,
+   "polls": 14,
+   "wasted_pct": 0.0,
+   "tokens_per_run": 126644.9,
+   "output_tokens_per_run": 153.8,
+   "tokens_per_apply": 137082,
+   "persona_messages_per_run": 5.6,
+   "client_api_turns_per_run": 12.2,
+   "footprint": {
+    "model": "claude-haiku-5-5",
+    "message": "Reply with the single word OK.",
+    "baseline_context": 3734,
+    "citizen": {
+     "tools": 8,
+     "context": 8521,
+     "real": 4787,
+     "estimate": 3979,
+     "estimate_error_pct": -16.9
+    },
+    "officer": {
+     "tools": 6,
+     "context": 7644,
+     "real": 3910,
+     "estimate": 2797,
+     "estimate_error_pct": -28.5
+    }
+   },
+   "by_persona": {
+    "p01": {
+     "runs": 4,
+     "passed": 2
+    },
+    "p02": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p03": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p04": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p05": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p06": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p07": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p08": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p10": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p11": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p15": {
+     "runs": 1,
+     "passed": 1
+    }
+   },
+   "failed": [
+    "p01-0073",
+    "p01-0074"
+   ],
+   "not_valid": [
+    "p09-0069: invalid"
+   ],
+   "label": "Before: 8 citizen tools"
+  },
+  {
+   "round": "after-scheme-merge",
+   "commits": [
+    "ecdd80b"
+   ],
+   "runs": 12,
+   "valid": 12,
+   "passed": 12,
+   "pass_rate": 1.0,
+   "applies": 8,
+   "calls_per_apply": {
+    "n": 8,
+    "median": 8,
+    "p90": 12,
+    "mean": 7.8
+   },
+   "tool_calls_per_run": 6.1,
+   "wasted": 0,
+   "errors": 0,
+   "repeats": 0,
+   "polls": 10,
+   "wasted_pct": 0.0,
+   "tokens_per_run": 128048.8,
+   "output_tokens_per_run": 161.8,
+   "tokens_per_apply": 156139,
+   "persona_messages_per_run": 5.3,
+   "client_api_turns_per_run": 11.4,
+   "footprint": {
+    "model": "claude-haiku-5-5",
+    "message": "Reply with the single word OK.",
+    "baseline_context": 3732,
+    "citizen": {
+     "tools": 7,
+     "context": 8453,
+     "real": 4721,
+     "estimate": 3931,
+     "estimate_error_pct": -16.7
+    },
+    "officer": {
+     "tools": 6,
+     "context": 7642,
+     "real": 3910,
+     "estimate": 2797,
+     "estimate_error_pct": -28.5
+    }
+   },
+   "by_persona": {
+    "p01": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p02": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p03": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p04": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p05": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p06": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p07": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p08": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p09": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p10": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p11": {
+     "runs": 1,
+     "passed": 1
+    },
+    "p15": {
+     "runs": 1,
+     "passed": 1
+    }
+   },
+   "failed": [],
+   "not_valid": [],
+   "label": "After: 7 citizen tools"
+  }
+ ]
+}
