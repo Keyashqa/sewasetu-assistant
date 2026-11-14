@@ -30,7 +30,20 @@ def main():
     pb.add_argument("--as", dest="as_id", help="published id (default: the source round's)")
     pb.add_argument("--label")
     pb.add_argument("--headline", action="store_true", help="make this the dashboard's headline")
+    cb = sub.add_parser("calibrate", help="real token footprint of each server (local stack)")
+    cb.add_argument("round", help="writes evals/results/<round>/calibration.json")
+    ef = sub.add_parser("efficiency", help="calls, waste and client tokens per round")
+    ef.add_argument("rounds", nargs="+")
     a = ap.parse_args()
+
+    if a.cmd == "calibrate":
+        from . import calibrate
+        calibrate.calibrate(a.round)
+        return 0
+    if a.cmd == "efficiency":
+        from . import efficiency
+        efficiency.write(a.rounds)
+        return 0
 
     if a.cmd == "stack":
         print("baseline", stack.reset())

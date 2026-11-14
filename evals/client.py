@@ -22,6 +22,10 @@ TOOLS = {
 }
 
 
+USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
+              "output_tokens")
+
+
 class IsolationBreach(Exception):
     pass
 
@@ -73,12 +77,16 @@ class Client:
                                             session_id=self.session)
         self.started = True
         texts, calls, by_id, result, ok_init = [], [], {}, None, False
+        api_usage = {}                  # message id -> usage of that API call (last seen)
         for ev in events:
             t = ev.get("type")
             if t == "system" and ev.get("subtype") == "init":
                 self._check_init(ev)
                 ok_init = True
             elif t == "assistant":
+                mid = ev["message"].get("id")
+                if mid and isinstance(ev["message"].get("usage"), dict):
+                    api_usage[mid] = ev["message"]["usage"]
                 for c in ev["message"].get("content", []):
                     if c.get("type") == "text" and c.get("text", "").strip():
                         texts.append(c["text"].strip())
@@ -104,6 +112,7 @@ class Client:
         cost = max(0.0, cost_total - self.cost_so_far)
         self.cost_so_far = max(self.cost_so_far, cost_total)
         usage = (result or {}).get("usage") or {}
+        calls_usage = list(api_usage.values())
         return {
             "text": "\n\n".join(texts),
             "tool_calls": calls,
@@ -114,8 +123,18 @@ class Client:
             (result or {}).get("result"),
             "cost_usd_equiv": round(cost, 6),
             "duration_ms": (result or {}).get("duration_ms"),
-            "usage": {k: usage.get(k) for k in ("input_tokens", "cache_creation_input_tokens",
-                                                "cache_read_input_tokens", "output_tokens")},
+            # Tokens of this invocation, summed over its API calls (assistant events). Checked
+            # 14/11/2026: result.usage is per invocation (not cumulative over --resume), while
+            # total_cost_usd is cumulative (hence cost_so_far above). usage_result keeps
+            # result.usage as a cross-check.
+            "usage": {k: sum(u.get(k) or 0 for u in calls_usage) for k in USAGE_KEYS}
+            if calls_usage else {k: usage.get(k) or 0 for k in USAGE_KEYS},
+            "usage_result": {k: usage.get(k) for k in USAGE_KEYS},
+            "api_calls": len(calls_usage),
+            # context size of the first API call: system prompt + tools + server
+            # instructions + history + this message
+            "first_call_context": (sum(calls_usage[0].get(k) or 0 for k in USAGE_KEYS[:3])
+                                   if calls_usage else None),
         }
 
     def close(self):

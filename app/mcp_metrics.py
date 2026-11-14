@@ -5,7 +5,9 @@ the servers cost a client in tokens. Departmental login only; read-only queries 
 mcp_calls and mcp_footprint (written by the mcp container, mcp_server/metrics.py).
 """
 
+import json
 import logging
+import os
 
 from flask import Blueprint, redirect, render_template, request, session
 
@@ -19,6 +21,17 @@ WINDOWS = {"24h": ("1 day", "last 24 hours"), "7d": ("7 days", "last 7 days"),
            "30d": ("30 days", "last 30 days")}
 SERVERS = {"all": "both servers", "citizen": "citizen", "officer": "officer"}
 ROW_CAP = 50000
+EVAL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_data", "mcp",
+                         "efficiency.json")
+
+
+def _eval_rounds():
+    """Section 4: eval rounds written by `python -m evals efficiency` (no database)."""
+    try:
+        with open(EVAL_FILE, encoding="utf-8") as f:
+            return json.load(f).get("rounds") or []
+    except Exception:
+        return []
 
 
 def _rows(cur, interval, server):
@@ -71,7 +84,7 @@ def page():
     server = server if server in SERVERS else "all"
 
     ctx = {"window": window, "server": server, "windows": WINDOWS, "servers": SERVERS,
-           "process_types": PROCESS_TYPES, "available": True}
+           "process_types": PROCESS_TYPES, "available": True, "eval_rounds": _eval_rounds()}
     conn = None
     try:
         conn = portal.get_db()

@@ -10,7 +10,7 @@ from datetime import datetime
 
 import yaml
 
-from . import checks, claude_cli, client, oauth, pages, simulator, stack
+from . import checks, claude_cli, client, efficiency, oauth, pages, simulator, stack
 from .claude_cli import LimitTooLong
 from .config import (CITIZEN_RESOURCE, CLIENT_MODEL, EVALS, MAX_TURNS_PER_MESSAGE, OFFICER_RESOURCE,
                      REPO, RESULTS)
@@ -221,6 +221,11 @@ def run_persona(pid, round_name, sim_model, allowed, baseline, index=1):
         "tool_calls": sum(len((t.get("client") or {}).get("tool_calls", [])) for t in rec["turns"]),
         "cost_usd_equiv": round(sum(b["cost_usd_equiv"] for b in usage.by.values()), 4),
         "duration_s": round(time.time() - t_start - waited), "paused_s": waited}
+    try:
+        rec["efficiency"] = efficiency.run_efficiency(rec)
+        rec["totals"]["client_tokens"] = rec["efficiency"]["tokens"]["total"]
+    except Exception as e:                  # a figure, never a reason to lose the run
+        rec["efficiency_error"] = str(e)[:300]
     try:
         rec["utilization"]["after"] = claude_cli.probe_utilization(pauses, ctx)
         rec["utilization"]["delta"] = {

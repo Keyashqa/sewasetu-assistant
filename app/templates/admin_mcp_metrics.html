@@ -122,6 +122,40 @@ tools first. Estimated at 3.5 characters per token, within about 20%.</p>
 </div>
 
 <div class="mm-sec">
+<h3>4. Eval runs: tokens and efficiency</h3>
+<p class="note">What this means: the same counts measured on our own test conversations (run
+locally, never on this server), with the real tokens the assistant used. Tokens include
+everything the assistant read on each step (its instructions, the tools, the conversation so
+far) plus what it wrote.</p>
+{% if not eval_rounds %}
+<p>No eval rounds measured yet.</p>
+{% else %}
+{% set er = eval_rounds %}
+<div class="mm-wrap">
+<table class="tbl">
+<tr><th></th>{% for r in er %}<th class="n">{{ r.label or r.round }}</th>{% endfor %}</tr>
+<tr><td>Conversations passed</td>{% for r in er %}<td class="n">{{ r.passed }}/{{ r.valid }}</td>{% endfor %}</tr>
+<tr><td>Applications filed</td>{% for r in er %}<td class="n">{{ r.applies }}</td>{% endfor %}</tr>
+<tr><td>Calls per application filed (median)</td>{% for r in er %}<td class="n">{{ r.calls_per_apply.median if r.calls_per_apply.median is not none else "–" }}</td>{% endfor %}</tr>
+<tr><td>Tool calls per conversation</td>{% for r in er %}<td class="n">{{ r.tool_calls_per_run }}</td>{% endfor %}</tr>
+<tr><td>Wasted calls</td>{% for r in er %}<td class="n">{{ r.wasted }} ({{ r.wasted_pct }}%)</td>{% endfor %}</tr>
+<tr><td>Assistant tokens per conversation</td>{% for r in er %}<td class="n">{{ "{:,.0f}".format(r.tokens_per_run) if r.tokens_per_run is not none else "–" }}</td>{% endfor %}</tr>
+<tr><td>Assistant tokens per application filed</td>{% for r in er %}<td class="n">{{ "{:,}".format(r.tokens_per_apply) if r.tokens_per_apply is not none else "–" }}</td>{% endfor %}</tr>
+<tr><td>Assistant steps per conversation</td>{% for r in er %}<td class="n">{{ r.client_api_turns_per_run }}</td>{% endfor %}</tr>
+{% for role in ("citizen", "officer") %}
+<tr><td>{{ role|capitalize }} server footprint: real / estimated tokens</td>{% for r in er %}{% set f = (r.footprint or {}).get(role) %}
+<td class="n">{% if f %}{{ "{:,}".format(f.real) }} / {{ "{:,}".format(f.estimate) }} ({{ f.tools }} tools){% else %}–{% endif %}</td>{% endfor %}</tr>
+{% endfor %}
+</table>
+</div>
+<p class="note">Real footprint: one assistant turn with and without the server; the difference
+is what the server's tools and instructions cost before any call. The estimate in section 3
+(3.5 characters per token) is lower than the real cost, because the assistant also adds its
+own wrapping around each tool.</p>
+{% endif %}
+</div>
+
+<div class="mm-sec">
 <h3>How these are counted</h3>
 <dl class="mm-def">
 <dt>Sign-in</dt>

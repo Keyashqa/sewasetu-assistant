@@ -32,6 +32,7 @@ from mcp.server.fastmcp import FastMCP
 from psycopg2.extras import Json, execute_values
 
 import services
+from mcp_metrics_calc import REASONS, classify as _classify  # noqa: F401  (REASONS: check script)
 from mcp_server import auth
 
 log = logging.getLogger("sewasetu.mcp_metrics")
@@ -47,18 +48,6 @@ _KEY = hmac.new(os.environ.get("SECRET_KEY", "").encode(), b"mcp-metrics-v1",
 
 _BUFFER = deque(maxlen=BUFFER_MAX)
 _DROPPED = 0
-
-# A result that is False on one of these keys is a refusal (the portal said no).
-REFUSAL_FLAGS = ("submitted", "approved", "rejected", "withdrawn", "eligible")
-# Codes the tools put in "status" / "reason". Anything else is stored as 'other'.
-REASONS = frozenset({
-    "not_found", "reason_required", "not_pending", "invalid", "no_file", "duplicate",
-    "too_large", "quote_required", "note_required", "not_verified", "no_match",
-    "no_document", "incomplete", "future_date", "expired", "declaration_required",
-    "blocked", "bad_type", "bad_status", "bad_reason", "bad_number", "bad_date", "bad_block",
-    "not_eligible", "input", "exception",
-})
-
 
 def _h(value):
     return hmac.new(_KEY, value.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
@@ -97,33 +86,6 @@ def _payload(result):
         except Exception:
             data = None
     return (data if isinstance(data, dict) else None), chars
-
-
-def _classify(tool, data):
-    """(outcome, reason, completion) from a tool's result."""
-    if data is None:
-        return "ok", None, None
-    if "error" in data:
-        return "error", "input", None
-    refused = any(data.get(k) is False for k in REFUSAL_FLAGS)
-    completion = None
-    # success shapes: submit -> application_number (and "submitted" is the filing time);
-    # approve / reject -> status "approved" / "rejected" (failures carry approved/rejected False)
-    if tool == "submit_application" and not refused and data.get("application_number"):
-        completion = "apply"
-    elif tool == "approve_application" and not refused and data.get("status") == "approved":
-        completion = "decision"
-    elif tool == "reject_application" and not refused and data.get("status") == "rejected":
-        completion = "decision"
-    elif tool == "get_my_application" and (data.get("found") is True or data.get("filed_for_others")):
-        completion = "status"
-    if not refused:
-        return "ok", None, completion
-    code = data.get("reason") if tool == "submit_application" else data.get("status")
-    if tool == "check_eligibility":
-        code = "not_eligible"
-    code = code if isinstance(code, str) and code in REASONS else "other"
-    return "refused", code, None
 
 
 def record(server, tool, arguments, result, error, duration_ms):
