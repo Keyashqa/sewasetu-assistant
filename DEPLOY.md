@@ -58,9 +58,36 @@ gcloud compute instances create sewasetu \
   --subnet=sewasetu-subnet-usc1 --address=sewasetu-ip --tags=sewasetu-web
 ```
 
-`sewasetu-net` has no rule other than `sewasetu-allow-web`, so 22/80/443 are the only ports
-open to the VM. Check with
+`sewasetu-net` has `sewasetu-allow-web` (22/80/443 from anywhere) and, temporarily,
+`sewasetu-allow-iap-ssh` (§1.1.1). Check with
 `gcloud compute firewall-rules list --filter="network=sewasetu-net"`.
+
+#### 1.1.1 IAP SSH rule (temporary: remove after the evaluation window ends, 31/12/2026)
+
+Added 14/11/2026 because some workstation networks block outbound port 22, which stops
+`gcloud compute ssh`. Identity-Aware Proxy tunnels SSH over HTTPS (443) instead; Google's IAP
+range then connects to the VM on 22.
+
+| | |
+|---|---|
+| name | `sewasetu-allow-iap-ssh` |
+| network / target | `sewasetu-net`, tag `sewasetu-web` |
+| source range | `35.235.240.0/20` (Google IAP TCP forwarding, nothing else) |
+| port | `tcp:22` only |
+
+```bash
+# created with
+gcloud compute firewall-rules create sewasetu-allow-iap-ssh --project=build4b \
+  --network=sewasetu-net --direction=INGRESS --action=allow --rules=tcp:22 \
+  --source-ranges=35.235.240.0/20 --target-tags=sewasetu-web
+# used as
+gcloud compute ssh sewasetu --zone=us-central1-a --tunnel-through-iap
+# remove after 31/12/2026
+gcloud compute firewall-rules delete sewasetu-allow-iap-ssh --project=build4b
+```
+
+Connections still need the project's IAM permission and the VM's SSH keys; the rule only lets
+the IAP tunnel reach port 22.
 
 ### 1.2 VM setup (`gcloud compute ssh sewasetu --zone=us-central1-a`)
 
